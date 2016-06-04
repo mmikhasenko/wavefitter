@@ -12,14 +12,19 @@ link_flags          := -s -pipe
 ####### *.o files
 OBJS = \
 deflib.o \
-MIsobar.o MCoupledChannelIsobar.o NoverD.o MStructureHolder.o MmatrixK.o
+MIsobar.o MCoupledChannelIsobar.o NoverD.o MmatrixK.o \
+mstructures.o MModel.o MRelationHolder.o 
+# MStructureHolder.o 
 
 SET :=  $(addprefix obj/, $(OBJS))
+
+####### libconfig
+LIBS += /usr/lib64/libconfig++.so
 
 ####### root- files
 
 ROOT_DIR  := -I$(shell root-config --incdir)
-ROOT_LIBS := $(shell root-config --libs) -lMathMore -lRooFit -lRooFitCore -lMinuit
+ROOT_LIBS := $(shell root-config --libs)# -lMathMore -lRooFit -lRooFitCore -lMinuit
 
 ROOT = $(ROOT_DIR) $(ROOT_LIBS)
 
