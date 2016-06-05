@@ -16,7 +16,6 @@
 #include <boost/numeric/ublas/triangular.hpp>
 #include <boost/numeric/ublas/lu.hpp>
 
-
 #include <MModel.h>
 
 namespace b = boost::numeric::ublas;

@@ -13,7 +13,7 @@ link_flags          := -s -pipe
 OBJS = \
 deflib.o \
 MIsobar.o MCoupledChannelIsobar.o NoverD.o MmatrixK.o \
-mstructures.o MModel.o MRelationHolder.o 
+mstructures.o MModel.o MRelationHolder.o MParKeeper.o
 # MStructureHolder.o 
 
 SET :=  $(addprefix obj/, $(OBJS))
