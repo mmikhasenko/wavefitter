@@ -66,6 +66,7 @@ class MmatrixK : public MModel {
   void setPars(const double *pars);
   cd getA(int i, double s, const double *pars);
   cd getA(int i, double s);
+  const b::matrix<cd>& getT(double s);
   // get constatns bach
   int getNch() const {return _Nch;}
   int getNp () const {return _Np ;}

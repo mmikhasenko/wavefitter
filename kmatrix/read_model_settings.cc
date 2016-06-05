@@ -154,6 +154,8 @@ int main(int argc, char *argv[]) {
                 << (std::vector<char>{'S', 'P', 'D', 'F', 'G', 'H'})[L] << "-wave"
                 << std::endl;
     }
+
+    // content of the model
     const libconfig::Setting &content = root["modelT"]["content"];
     count = content.getLength();
     for (int i = 0; i < count; ++i) {
@@ -171,7 +173,10 @@ int main(int argc, char *argv[]) {
       std::cout << "READ: " << type << " ("
                 << mass << ", " << couplings << "*)"
                 << std::endl;
-    }
+    }  // icount
+
+    // create the model
+    MmatrixK k(Nchannels, Npoles);
   }
   catch(const libconfig::SettingNotFoundException &nfex) {
     std::cerr << "Error <> libconfig::SettingNotFoundException" << std::endl;

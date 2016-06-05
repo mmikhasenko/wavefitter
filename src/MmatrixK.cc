@@ -124,6 +124,11 @@ const vector<cd>& MmatrixK::getA(double s) {
   return _A;
 }
 
+const matrix<cd>& MmatrixK::getT(double s) {
+  if (s != last_s || need_to_recalculate_T) calculateT(s);
+  return _T;
+}
+
 cd MmatrixK::getA(int i, double s, const double *pars) {
   if (i >= _Nch || i < 0) {std::cerr << "Error <MmatrixK::getA>: i > _Nch || i < 0!" << std::endl; return 0.;}
   return getA(s, pars)(i);

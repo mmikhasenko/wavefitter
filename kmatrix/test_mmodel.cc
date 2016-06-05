@@ -7,6 +7,9 @@
 #include <MmatrixK.h>
 #include <MRelationHolder.h>
 
+#include <boost/numeric/ublas/matrix_expression.hpp>
+namespace b = boost::numeric::ublas;
+
 int main(int argc, char *argv[]) {
   MmatrixK k(2, 3, {1, 2, 1});
   const double pars[] = {1.1, 1.2, 1.4,  2, 5,  10, 11,  20, 22,  100,  7, 2,  9};
@@ -25,6 +28,9 @@ int main(int argc, char *argv[]) {
   DP points;
   // read points
   rels.AddRelation(points, f0);
+
+  std::function<const b::matrix<cd> &(double)> ff =
+    [&](double s) -> const b::matrix<cd>& {return k.getT(s);};
 
   return 0;
 }
