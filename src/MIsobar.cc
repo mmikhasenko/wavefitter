@@ -6,22 +6,28 @@
 #include "Math/GaussIntegrator.h"
 
 #include "MIsobar.h"
-#include "./deflib.h"
+#include "deflib.h"
+#include "mintegrate.hh"
+
 #define SCALEX_FOR_CUT 2.
 #define SCALEY_FOR_CUT 10.0
 
+#define I_LOOKUP_NPOINT 150
+#define I_HLIM 16.0
+
 MIsobar::MIsobar(double Mi, double G0i,
                  double m1i, double m2i, double m3i,
-                 int Li, double Ri):
-  M(Mi), G0(G0i), m1(m1i), m2(m2i), m3(m3i), L(Li), R(Ri) {;}
+                 int Li, double Ri,
+                 bool Quasi):
+  M(Mi), G0(G0i), m1(m1i), m2(m2i), m3(m3i), L(Li), R(Ri), quasi(Quasi) {;}
 
-double MIsobar::rho(double s, double s12, double m3_2) const {
+double MIsobar::rho(double s, double s12, double m3_2) {
   return (sqrt(s) > sqrt(s12)+sqrt(m3_2)) ? 1./(8*M_PI)*sqrt( LAMBDA(s, s12, m3_2)/(s*s) ) : 0;
 }
-cd     MIsobar::rho(cd     s, cd     s12, double m3_2) const {
+cd     MIsobar::rho(cd     s, cd     s12, double m3_2) {
   return 1./(8*M_PI)*sqrt( LAMBDA(s, s12, m3_2)/(s*s) );
 }
-cd     MIsobar::rhoPi(cd     s, cd     s12, double m3_2) const {
+cd     MIsobar::rhoPi(cd     s, cd     s12, double m3_2) {
   return 1./(8*M_PI)*sqrtPi( LAMBDA(s, s12, m3_2)/(s*s) );
 }
 
@@ -52,110 +58,43 @@ cd     MIsobar::U(cd     s) const {
 ///  //  //  /////  ////      ///     ///  /   ///  //  ///      ///     /////
 //////////////////////////////////////////////////////////////////////////////
 
-double MIsobar::dph(double *x, double *par) const  {
-  double s = par[0];
-  double th1 = pow(m1+m2, 2);
-  double th2 = pow(sqrt(s)-m3, 2);
-  double s12 = th1+x[0]*(th2-th1);
-  double Ul = U(s12);
-  double rhol = rho(s, s12, m3*m3);
-  return (th2-th1)/(2.*M_PI)*Ul*rhol;
-}
-
-// double MIsobar::rdph(double *x, double *par) const {
-//  cd s(par[0],par[1]);
-//  cd th1 = pow(m1+m2,2);
-//  cd th2 = pow(sqrt(s)-m3,2);
-//  cd s12 = th1 + x[0]*(th2-th1);
-//  cd Ul = U(s12);
-//  cd rhol = rho(s,s12,m3*m3);
-//  return real( (th2-th1) / (2.*M_PI) * Ul * rhol );
-//}
-//
-//double MIsobar::idph(double *x, double *par) const {
-//  cd s(par[0],par[1]);
-//  cd th1 = pow(m1+m2,2);
-//  cd th2 = pow(sqrt(s)-m3,2);
-//  cd s12 = th1 + x[0]*(th2-th1);
-//  cd Ul = U(s12);
-//  cd rhol = rho(s,s12,m3*m3);
-//  //std::cout << "s12 = "<<s12<<", U = "<<Ul<<", rhol = "<<rhol << std::endl;
-//  return imag( (th2-th1) / (2.*M_PI) * Ul * rhol );
-//}
-
-double MIsobar::rho3(double s) const {
-
-  TF1 fdph("fdrho",this,&MIsobar::dph, 0,1 ,1,"MIsobar","dph");
-  fdph.SetParameter(0,s);
-  
-  ROOT::Math::WrappedTF1 wph(fdph);  ROOT::Math::GaussIntegrator igph;
-  igph.SetFunction(wph); igph.SetRelTolerance(1e-8);
-
-  return igph.Integral(0,1);
-}
-
-cd MIsobar::rho3(cd s) const {
-
-  //std::cout << "Limits " << real(pow(sqrtPi(s)-m3,2)) << " +i" << imag(pow(sqrtPi(s)-m3,2)) << std::endl;
-  double par[] = {real(s), imag(s)};
-  TF1 frdph("fdrho_re",this,&MIsobar::rdph, 0,1, 2,"MIsobar","rdph"); frdph.SetParameters(par);
-  TF1 fidph("fdrho_im",this,&MIsobar::idph, 0,1, 2,"MIsobar","idph"); fidph.SetParameters(par);
-  
-  ROOT::Math::WrappedTF1 wph_re(frdph);  ROOT::Math::GaussIntegrator igph_re; igph_re.SetFunction(wph_re); igph_re.SetRelTolerance(1e-8);
-  ROOT::Math::WrappedTF1 wph_im(fidph);  ROOT::Math::GaussIntegrator igph_im; igph_im.SetFunction(wph_im); igph_im.SetRelTolerance(1e-8);
-
-  double real_part = igph_re.Integral(0,1);
-  double imag_part = igph_im.Integral(0,1);
-
-  cd value(real_part,imag_part);
-
-  return value;
-
-}
-
-/* Triangle way to integrate */
-double MIsobar::rdph(double *x, double *par) const {
-  cd s(par[0],par[1]);
-  cd th1 = pow(m1+m2,2);
-  cd th2 = pow(sqrt(s)-m3,2);
-  cd thM(pow(m1+m2,2) + (real(th2)-pow(m1+m2,2))/SCALEX_FOR_CUT,
-	 imag(th2)/SCALEY_FOR_CUT);//(th2+th1)/2.0;
-
-  if(x[0]<=1./2.) {
-    cd s12 = th1 + 2*x[0]*(thM-th1);
-    cd Ul = U(s12);
-    cd rhol = rho(s,s12,m3*m3);
-    return real( 2.*(thM-th1) / (2.*M_PI) * Ul * rhol );
-  } else if(x[0]<=1.) { 
-    cd s12 = thM + 2*(x[0]-1./2.)*(th2-thM);
-    cd Ul = U(s12);
-    cd rhol = rho(s,s12,m3*m3);
-    return real( 2.*(th2-thM) / (2.*M_PI) * Ul * rhol );    
-  } else {
-    std::cerr<<"Error: inconsistency in MIsobar::rdph"<<std::endl;
-    return 0.;
-  }  
-}
-
-double MIsobar::idph(double *x, double *par) const {
-  cd s(par[0],par[1]);
-  cd th1 = pow(m1+m2,2);
-  cd th2 = pow(sqrt(s)-m3,2);
-  cd thM(pow(m1+m2,2) + (real(th2)-pow(m1+m2,2))/SCALEX_FOR_CUT,
-	 imag(th2)/SCALEY_FOR_CUT);//(th2+th1)/2.0;
-
-  if(x[0]<=1./2.) {
-    cd s12 = th1 + 2*x[0]*(thM-th1);
-    cd Ul = U(s12);
-    cd rhol = rho(s,s12,m3*m3);
-    return imag( 2.*(thM-th1) / (2.*M_PI) * Ul * rhol );
-  } else if(x[0]<=1.0) { 
-    cd s12 = thM + 2*(x[0]-1./2.)*(th2-thM);
-    cd Ul = U(s12);
-    cd rhol = rho(s,s12,m3*m3);
-    return imag( 2.*(th2-thM) / (2.*M_PI) * Ul * rhol );    
-  } else {
-    std::cerr<<"Error: inconsistency in MIsobar::rdph"<<std::endl;
-    return 0.;
+void MIsobar::makeLookupTable() {
+  ltable.resize(I_LOOKUP_NPOINT);
+  for (int i = 0; i < I_LOOKUP_NPOINT; i++) {
+    double s = POW2(m1+m2) + (I_HLIM-POW2(m1+m2))/(I_LOOKUP_NPOINT-1)*i;
+    ltable[i].first = s;
+    ltable[i].second = CalculateQuasiTwoBody(s);
   }
+}
+
+double MIsobar::CalculateQuasiTwoBody(double s) const {
+  std::function<double(double)> drho = [&](double s12)->double {
+    return 1./(2*M_PI)*U(s12)*rho(s, s12, POW2(m3));
+  };
+  return integrate(drho, POW2(m1+m2), POW2(sqrt(s)+m3));
+}
+
+cd MIsobar::CalculateQuasiTwoBodyStright(cd s) const {
+  std::function<cd(double)> drho = [&](double t)->cd {
+    cd s12 = POW2(m1+m2)+(POW2(sqrt(s)+m3)-POW2(m1+m2))*t;
+    return U(s12)*rho(s, s12, m3);
+  };
+  return (POW2(sqrt(s)+m3)-POW2(m1+m2))*cintegrate(drho, 0, 1);
+}
+
+cd MIsobar::CalculateQuasiTwoBodyEdge(cd s) const {
+  std::function<cd(double)> drho = [&](double t)->cd {
+    double th1 = POW2(m1+m2);
+    cd th2 = POW2(sqrt(s)-m3);
+    cd thM(th1 + (real(th2)-th1)/SCALEX_FOR_CUT,
+          imag(th2)/SCALEY_FOR_CUT);
+    if (t < 1.) {
+      cd s12 = th1+(thM-th1)*t;
+      return 1./(2*M_PI)*U(s12)*rho(s, s12, m3*m3)  *  (thM-th1);
+    } else {
+      cd s12 = thM+(th2-thM)*(t-1);
+      return 1./(2*M_PI)*U(s12)*rho(s, s12, m3*m3)  *  (th2-thM);
+    }
+  };
+  return cintegrate(drho, 0, 2);
 }

@@ -20,26 +20,36 @@ MParKeeper *MParKeeper::gI() {
   return _ref;
 }
 
-double MParKeeper::get(int i) const {
+double MParKeeper::get(uint i) const {
   if (i > _pars.size()) { std::cerr << "Error<MParKeeper::get>: i>=size\n"; return ERROR_VALUE; }
   return _pars[i];
 }
 
 double MParKeeper::get(std::string pname) const {
-  auto it = _map.find("");
+  auto it = _map.find(pname);
   if (it == _map.end()) { std::cerr << "Error<MParKeeper::get(string)>: not found in the map\n"; return ERROR_VALUE; }
   return _pars[it->second];
 }
 
-void MParKeeper::set(int i, double v) {
+void MParKeeper::set(uint i, double v) {
   if (i > _pars.size()) { std::cerr << "Error<MParKeeper::set>: i>=size\n"; return; }
   _pars[i] = v;
 }
 
-int MParKeeper::add(std::string pname, double v0) {
+void MParKeeper::set(std::string pname, double v) {
+  auto it = _map.find(pname);
+  if (it == _map.end()) { std::cerr << "Error<MParKeeper::set(string)>: " << pname << " not found in the map\n"; }
+  _pars[it->second] = v;
+}
+
+uint MParKeeper::add(std::string pname, double v0) {
   _pars.push_back(v0);
-  int index = _pars.size()-1;
+  uint index = _pars.size()-1;
   _map[pname] = index;
   if (_map.size() != _pars.size()) { std::cerr << "Error<MParKeeper::add>: _map, _pars mismatch\n"; return 0; }
   return index;
+}
+
+void MParKeeper::printAll() {
+  for (auto && it : _map) std::cout << it.first << ": " << _pars[it.second] << "\n";
 }

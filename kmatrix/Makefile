@@ -6,14 +6,15 @@ lDIR    := $(lSRC)
 CXFLAGS := -std=c++11 -O2 #-pg -g -std=c++0x  
 CFLAGS  := -std=gnu99 -O2 #-pg -g
 
-compile_flags       := -MMD -pipe # -Wall
+compile_flags       := -Wall # -MMD -pipe
 link_flags          := -s -pipe
 
 ####### *.o files
 OBJS = \
 deflib.o \
 MIsobar.o MCoupledChannelIsobar.o NoverD.o MmatrixK.o \
-mstructures.o MModel.o MRelationHolder.o MParKeeper.o
+mstructures.o mintegrate.o \
+MModel.o MRelationHolder.o MParKeeper.o MChannelPhysics.o MProductionPhysics.o
 # MStructureHolder.o 
 
 SET :=  $(addprefix obj/, $(OBJS))

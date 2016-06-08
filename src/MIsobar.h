@@ -1,22 +1,24 @@
 // Copyright [14.07.2015] Misha Mikhasenko
 
-#ifndef __ISOBARS_H__
-#define __ISOBARS_H__
+#ifndef SRC_MISOBAR_H_
+#define SRC_MISOBAR_H_
 
 #include <iostream>
 #include <complex>
 #define _USE_MATH_DEFINES
 #include <cmath>
+#include <vector>
+#include <utility>
 
-#include "./constants.h"
-
-typedef std::complex<double> cd;
+#include "constants.h"
+#include "deflib.h"
 
 class MIsobar{
  public:
   MIsobar(double M, double G0,
           double m1, double m2, double m3,
-          int L = 0, double R = 5/*GeV*/);
+          int L = 0, double R = 5/*GeV*/,
+          bool quasi = false);
 
  protected:
   double M;  // Breit-Wigner mass
@@ -24,6 +26,7 @@ class MIsobar{
   double m1, m2, m3;
   int L;
   double R;
+  bool quasi;
 
  public:
   double GetM() const { return M; }
@@ -35,102 +38,46 @@ class MIsobar{
 
   double GetL() const { return L; }
 
+  inline double GetTwoBodySth() const { return POW2(M+m3); }
+  inline double GetQuasiTwoBodySth() const { return POW2(m1+m2+m3); }
+  inline double sth() const { return (quasi) ? GetQuasiTwoBodySth() : GetTwoBodySth(); }
+
+  double GetTwoBodyBreakUpMom(double s) const { return 2*sqrt(LAMBDA(s, POW2(M), POW2(m3))/s); }
+  double GetQuasiTwoBodyBreakUpMom(double s) const { return 4*M_PI*sqrt(s)*GetQuasiTwoBodyRho(s); }
+  double p(double s) const { return (quasi) ? GetQuasiTwoBodyBreakUpMom(s) : GetTwoBodyBreakUpMom(s); }
+  double DumpC(double s) const { double q = p(s); return pow(q*q/(1./(R*R)+q*q), L); }
+
+  double CalculateQuasiTwoBody(double s) const;
+  double InterpolateQuasiTwoBody(double s) const {
+    if (!ltable.size()) return -1;
+    return getvalue(s, ltable);
+  }
+
+  cd CalculateQuasiTwoBodyStright(cd s) const;
+  cd CalculateQuasiTwoBodyEdge(cd s) const;
+
+  void makeLookupTable();
+
  public:
   virtual double U(double s12) const;
   virtual cd     U(cd s)       const;
-  double   rho(double s, double s12, double m3_2) const;
-  cd       rho(cd     s, cd     s12, double m3_2) const;
-  cd     rhoPi(cd     s, cd     s12, double m3_2) const;
-  double  rho3(double s) const;
-  cd      rho3(cd     s) const;
 
-  // static double Btatt_Weisskopf(int Li, double Ri, double pi);
-  // double BlttWsskpf(double pi);
+  // phase space
+  static double rho(double s, double s12, double m3_2);
+  static cd     rho(cd     s, cd     s12, double m3_2);
+  static cd   rhoPi(cd     s, cd     s12, double m3_2);
+
+  double   rho(double s) const { if (quasi) { return GetQuasiTwoBodyRho(s);} else {return GetTwoBodyRho(s); } }
+  double   GetTwoBodyRho(double s) const {return (s > GetTwoBodySth()) ? rho(s, POW2(M), POW2(m3)) : 0.;}
+  double   GetQuasiTwoBodyRho(double s) const {
+    if (s < GetQuasiTwoBodySth()) return 0;
+    if (ltable.size()) { return InterpolateQuasiTwoBody(s);
+    } else { return CalculateQuasiTwoBody(s); }
+  }
 
  private:
-  double  dph(double *x, double *par) const;
-  double rdph(double *x, double *par) const;
-  double idph(double *x, double *par) const;
+  std::vector<std::pair<double, double> > ltable;
+  std::vector<std::pair<double, cd> > dtable;
 };
 
-//
-//
-// double MIsobar::BlttWsskpf(double pi, int Li, double Ri) {
-//   if(L==0) return 1;
-//   if(L==1) return 1./(1+pow(pi*Ri,2));
-//   if(L==2) return 1./(3+pow(pi*Ri,2)+pow(pi*Ri,4));
-//   return 1./(1+pow(pi*Ri,2*L));
-// }
-//
-// double MIsobar::BlttWsskpf(double pi) {
-//   return BlttWsskpf(pi,L,R);
-// }
-//
-// double MIsobar::U(double s) {
-//   double p  = lambda(s    ,m1*m1,m2*m2)/(2*sqrt(s));
-//   double p0 = lambda(mI*mI,m1*m1,m2*m2)/(2*mI);
-//   double bw = BlttWsskpf(p), bw0  = BlttWsskpf(p0);
-//   double rho  = 2*p/sqrt(s), rho0 = 2*p0/mI;
-//   double G = G0*rho*bw*pow(p,2)/(rho0*bw*pow(p0,2));
-//   return 2*M*G/()
-// }
-//
-// double MIsobar::Rho3() {
-//  
-// }
-
-
-
-
-
-//
-//double UDynamicWidth(double s, double mI, double G0, double m1, double m2, double L, double R) {
-//  double p  = lambda(s    ,m1*m1,m2*m2)/(2*sqrt(s));
-//  double p0 = lambda(mI*mI,m1*m1,m2*m2)/(2*mI);    
-//  double bw  = 1./(1+pow(p *R,2*L)), bw0 = 1./(1+pow(p0*R,2*L));
-//  double rho  = 2*p/sqrt(s), rho0 = 2*p0/mI;
-//  double G = G0*rho*bw*pow(p,2*L)/(rho0*bw*pow(p0,2*L));
-//  double U = 2*mI*G/(pow(mI*mI-s,2)+pow(mI*G,2));
-//  return U;
-//}
-//
-//double U_rho(double s) {
-//  double U = UDynamicWidth(s,RHO_MASS,RHO_WIDTH,PI_MASS,PI_MASS,1,RHO_R);
-//  return U;
-//}
-//
-//double U_f2(double s) {
-//  double U = UDynamicWidth(s,F2_MASS,F2_WIDTH,PI_MASS,PI_MASS,2,F2_R);
-//  return U;
-//}
-//
-//double d_ph(double *x, double *par) {
-//  double s12 = x[0];
-//  double s = par[0];
-//  double mI=par[1], G0=par[2], R=par[3],
-//    m1=par[4], m2=par[5], m3=par[6];
-//
-//  double p  = lambda(s,s12,m3*m3)/(2*sqrt(s));
-//  double rho = 1./(8*M_PI)*2*p/sqrt(s);
-//  double U = U_rho(s12,mI,G0,m1,m2,R);
-//  return U*rho;
-//}
-//
-//
-//double phase_space_rho(double s, 
-//		       double mI, double G0, double R,
-//		       double m1, double m2, double m3) {
-//  TF1 fre("fi", d_ph,pow(m1+m2,2),pow(sqrt(s)-m3,2),7);
-//  double pars[] = {real(s),imag(s),k,s0,sl,sr};
-//  fre.SetParameters(pars);
-//
-//  ROOT::Math::WrappedTF1 wre(fre);  ROOT::Math::GaussIntegrator igre;
-//  
-//  igre.SetFunction(wre); igre.SetRelTolerance(0.01);
-//
-//  return igre.Integral(0, 1./sr);
-//}
-
-
-
-#endif
+#endif  // SRC_MISOBAR_H_

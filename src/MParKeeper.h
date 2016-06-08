@@ -14,14 +14,17 @@ class MParKeeper {
  public:
   static MParKeeper *getInstance();
   static MParKeeper *gI();
-  double get(int i) const;
+  double get(uint i) const;
   double get(std::string pname) const;
-  void set(int i, double v);
-  int add(std::string pname, double v0 = 0);
+  void set(uint i, double v);
+  void set(std::string pname, double v);
+  uint add(std::string pname, double v0 = 0);
+
+  void printAll();
 
  private:
   static MParKeeper *_ref;
-  std::map<std::string, int> _map;
+  std::map<std::string, uint> _map;
   std::vector<double> _pars;
 };
 

@@ -9,14 +9,7 @@
 
 #include "mstructures.hh"
 
-// relation make_relation(const DP & data, double (*func)(double s, int flag)) {
-//   relation lrel;
-//   lrel.data = data;
-//   lrel.func = func;
-//   return lrel;
-// }
 using std::vector;
-
 
 TGraphErrors *draw(const DP & data) {
   const uint nPoints = data.data.size();
@@ -32,13 +25,13 @@ TGraphErrors *draw(const DP & data) {
   return lgr;
 }
 
-TGraph *draw(double (*func)(double s), double lrange, double rrange, uint nPoints) {
-  double x[nPoints], y[nPoints], dy[nPoints];
-  for (int i = 0; i < nPoints; i++) {
-    x[i] = (rrange-lrange)/(nPoints-1)*i;
-    y[i] = func(x[i]);
+TGraph *draw(std::function<double(double)> func, double lrange, double rrange, uint nPoints) {
+  TGraph *lgr = new TGraph(nPoints);
+  for (uint i = 0; i < nPoints; i++) {
+    lgr->GetX()[i] = lrange + (rrange-lrange)/(nPoints-1)*i;
+    lgr->GetY()[i] = func(lgr->GetX()[i]);
   }
-  TGraph *lgr = new TGraph(nPoints, x, y);
+  return lgr;
 }
 
 TGraph *style(TGraph *lgr, double color, double style) {
