@@ -41,7 +41,7 @@ void MmatrixK::SetNpoles(uint Npoles) {
   for (uint ipole = 0; ipole < Npoles; ipole++) {
     // generate name
     std::ostringstream mname; mname << "m" << ipole + 1;
-    _mass[ipole] = MParKeeper::gI()->add(mname.str(), 1.7);
+    _mass[ipole] = MParKeeper::gI()->add(mname.str(), 1.702);
     for (uint jch = 0; jch < _Nch; jch++) {
       std::ostringstream gname; gname << char(103+ipole + ((ipole >= 7) ? 1 : 0))
                                       << jch+1;

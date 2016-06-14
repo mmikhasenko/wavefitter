@@ -50,6 +50,25 @@ uint MParKeeper::add(std::string pname, double v0) {
   return index;
 }
 
+void MParKeeper::setPool(const double *pars) {
+  for (uint i=0; i < pool.size(); i++) pool[i] = pars[i];
+}
+
+void MParKeeper::makePool(std::vector<std::string> names) {
+  const uint size = names.size();
+  pool.resize(size);
+  for (uint i=0; i < size; i++) {
+    auto it = _map.find(names[i]);
+    if (it == _map.end()) { std::cerr << "Error<MParKeeper::makePool(string)>: not found in the map\n"; return; }
+    pool[i] = it->second;
+  }
+}
+void MParKeeper::makePool(std::vector<uint> indexes) {
+  const uint size = indexes.size();
+  pool.resize(size);
+  for (uint i=0; i < size; i++) pool[i] = indexes[i];
+}
+
 void MParKeeper::printAll() {
   for (auto && it : _map) std::cout << it.first << ": " << _pars[it.second] << "\n";
 }

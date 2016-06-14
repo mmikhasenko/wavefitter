@@ -12,12 +12,20 @@
 
 class MRelationHolder {
  public:
+  static MRelationHolder *getInstance();
+  static MRelationHolder *gI();
+ private:
+  MRelationHolder();
+
+ public:
+  // relation beetween data and function
   void AddRelation(const DP & intensity, std::function<double(double)> func);
 
  public:
   double CalculateChi2();
 
  private:
+  static MRelationHolder *_ref;
   // intensity
   std::vector<relation> store;
 

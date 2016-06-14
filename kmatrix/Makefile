@@ -12,11 +12,11 @@ link_flags          := -s -pipe
 ####### *.o files
 OBJS = \
 deflib.o \
+mstructures.o mintegrate.o \
 MChannel.o MTwoBodyChannel.o MIsobarChannel.o \
 MIsobar.o MCoupledChannelIsobar.o NoverD.o MmatrixK.o \
-mstructures.o mintegrate.o \
-MModel.o MRelationHolder.o MParKeeper.o MChannelPhysics.o MProductionPhysics.o
-# MStructureHolder.o 
+MRelationHolder.o MParKeeper.o \
+MChannelPhysics.o MProductionPhysics.o
 
 SET :=  $(addprefix obj/, $(OBJS))
 

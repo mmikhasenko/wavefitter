@@ -2,6 +2,21 @@
 
 #include "MRelationHolder.h"
 
+MRelationHolder *MRelationHolder::_ref = 0;
+
+MRelationHolder::MRelationHolder() {
+  std::cout << "--------MRelationHolder.Constructor--------" << "\n";
+}
+
+MRelationHolder *MRelationHolder::getInstance() {
+  if (!_ref) _ref = new MRelationHolder();
+  return _ref;
+}
+MRelationHolder *MRelationHolder::gI() {
+  if (!_ref) _ref = new MRelationHolder();
+  return _ref;
+}
+
 void MRelationHolder::AddRelation(const DP &intensity,
                                   std::function<double(double)> func) {
   relation r {intensity, func};

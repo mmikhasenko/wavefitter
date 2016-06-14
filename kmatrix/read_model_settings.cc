@@ -14,8 +14,19 @@
 
 #include <libconfig.h++>
 
+#include "MIsobar.h"
+#include "MIsobarChannel.h"
+#include "MParKeeper.h"
+#include "MmatrixK.h"
+#include "MProductionPhysics.h"
+#include "MRelationHolder.h"
+
 #include "TGraphErrors.h"
 #include "TCanvas.h"
+#include "Math/MinimizerOptions.h"
+#include "Math/Minimizer.h"
+#include "Math/Factory.h"
+#include "Math/Functor.h"
 
 #include "mstructures.hh"
 
@@ -116,6 +127,7 @@ int main(int argc, char *argv[]) {
     whole_data[i].lrange = 0.;
     whole_data[i].rrange = 3.;
   }
+
   TCanvas c1("c1");
   c1.Divide(Nhist, 2);
   for (uint i = 0; i < Nhist; i++) {
@@ -124,10 +136,19 @@ int main(int argc, char *argv[]) {
   }
   c1.SaveAs("/tmp/1.pdf");
   std::cout << "\n";
+
   ///////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////
   ////////////////////////////// m o d e l   a d j u s t m e n t ////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////
+
+  // channels
+  std::vector<MIsobarChannel*> iset;
+  // standard isobars
+  MIsobar rho_iso(RHO_MASS, RHO_WIDTH, PI_MASS, PI_MASS, 1, 5.);
+  MIsobar  f2_iso(F2_MASS, F2_WIDTH,  PI_MASS, PI_MASS, 2, 5.);
+  // model content is vector to fill K-matrix
+  std::vector<std::pair<std::string, std::string> > model_content;
 
   try {
     const libconfig::Setting &modelT = root["modelT"];
@@ -153,6 +174,17 @@ int main(int argc, char *argv[]) {
                 << particles[0] << " " << particles[1] << " "
                 << (std::vector<char>{'S', 'P', 'D', 'F', 'G', 'H'})[L] << "-wave"
                 << std::endl;
+
+      if (type != "quasi-two-body") {
+        std::cerr << "Error: type of model channel can be only quasi-two-body";
+        return EXIT_FAILURE;
+      }
+      if (particles[0] == "rho") { iset.push_back(new MIsobarChannel(rho_iso, PI_MASS, L));
+      } else if (particles[0] == "f2") { iset.push_back(new MIsobarChannel(f2_iso, PI_MASS, L));
+      } else {
+        std::cerr << "Error: isobar is not rho/f2. Only them are available.";
+        return EXIT_FAILURE;
+      }
     }
 
     // content of the model
@@ -173,16 +205,86 @@ int main(int argc, char *argv[]) {
       std::cout << "READ: " << type << " ("
                 << mass << ", " << couplings << "*)"
                 << std::endl;
+      if (type != "pole") {
+        std::cerr << "Error: model blok is not a pole. Only poles are available.";
+        return EXIT_FAILURE;
+      }
+      model_content.push_back(std::make_pair(mass, couplings));
     }  // icount
-
     // create the model
-    MmatrixK k(Nchannels, Npoles);
+    // MmatrixK k(Nchannels, Npoles);
   }
   catch(const libconfig::SettingNotFoundException &nfex) {
     std::cerr << "Error <> libconfig::SettingNotFoundException" << std::endl;
     // Ignore.
   }
 
+  MmatrixK km(iset, model_content.size());
+  MProductionPhysics pr(iset);
+  pr.addScattering([&](double s)->b::matrix<cd>{return km.getValue(s);});
+  pr.addShortRange();
+
+  MParKeeper::gI()->printAll();
+
+  // Relation holder
+  // map comes from user
+  std::vector<uint> assignment = {1, 3, 2};
+  for (int i=0; i < assignment.size(); i++)
+    MRelationHolder::gI()->AddRelation(whole_data[i], [&](double s)->double{
+        auto v = pr.getValue(s); return norm(v(assignment[i]));
+      });
+
+
+  ///////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////// f i t  s e t t i n g s /////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////
+
+  // TODO(mikhasenko): make config reading for the fit settings
+  std::vector<std::string> pars_input = {"m1",
+                                         "g1", "g2", "g3",
+                                         "m2",
+                                         "h1", "h2", "h3",
+                                         "c1", "c2", "c3"};
+  const uint nPars = pars_input.size();
+  if (nPars != MParKeeper::gI()->nPars()) {
+    std::cerr << "Error: number of the specified parameters does not much to number of recerved parameters!";
+    return EXIT_FAILURE;
+  }
+
+  const uint nAttempt = 10;
+  for (uint e = 0; e < nAttempt; e++) {
+    std::cout << "---------- Attempt " << e << " -----------"<< std::endl;
+    std::cout << "------------------------------------------"<< std::endl;
+
+    /**************************************MINIMIZE******************************************/
+    /****************************************************************************************/
+    // Build minimizer
+    ROOT::Math::Minimizer* min =
+      ROOT::Math::Factory::CreateMinimizer("Minuit2", "Migrad");
+
+    // set tolerance , etc...
+    min->SetMaxFunctionCalls(100000);
+    min->SetTolerance(0.001);
+    min->SetStrategy(1);
+    min->SetPrintLevel(3);
+    min->Options().Print();
+
+    // Create funciton wrapper for minmizer a IMultiGenFunction type
+    ROOT::Math::Functor functor([&](const double *pars)->double {
+        MParKeeper::gI()->setPool(pars);
+        return MRelationHolder::gI()->CalculateChi2();
+      }, nPars);
+    min->SetFunction(functor);
+    // specify parameters
+    for (int i=0; i < nPars; i++) min->SetVariable(i, pars_input[i].c_str(), 0, 0.1);
+    // minimize
+    min->Minimize();
+
+    MParKeeper::gI()->printAll();
+
+    delete min;
+  }
 
   return(EXIT_SUCCESS);
 }

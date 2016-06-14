@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
   MParKeeper::gI()->set("m1", 1.502);
   MParKeeper::gI()->set("m2", 1.701);
   // couplings
-  MParKeeper::gI()->set("g1", 1.);
+  MParKeeper::gI()->set("g1", 4.);
   MParKeeper::gI()->set("g2", 1.);
   MParKeeper::gI()->set("h1", 1.);
   MParKeeper::gI()->set("h2", 4.);

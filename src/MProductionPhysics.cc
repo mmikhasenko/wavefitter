@@ -27,7 +27,7 @@ void MProductionPhysics::addLongRange(const std::vector<std::function<cd(double)
   _fB.resize(_Nch);
   // fill long range term
   for (uint i = 0; i < _Nch; i++) {
-    std::ostringstream ss; ss << "b" << i;
+    std::ostringstream ss; ss << "b" << i+1;
     _fB[i] = MParKeeper::gI()->add(ss.str(), 0.0);
   }
 }
@@ -38,7 +38,7 @@ void MProductionPhysics::addShortRange() {
   // fill short range term
   _fC.resize(_Nch);
   for (uint i = 0; i < _Nch; i++) {
-    std::ostringstream ss; ss << "c" << i;
+    std::ostringstream ss; ss << "c" << i+1;
     _fC[i] = MParKeeper::gI()->add(ss.str(), 0.0);
   }
 }
