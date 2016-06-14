@@ -8,7 +8,7 @@ MModel::MModel() {
 }
 
 void MModel::SetParameters(const double* pars) {
-  for (int i = 0; i < pool_pointer.size(); i++) *pool_pointer[i] = pars[i];
+  for (uint i = 0; i < pool_pointer.size(); i++) *pool_pointer[i] = pars[i];
 }
 
 uint MModel::CreatePool(std::vector<std::string> names) {

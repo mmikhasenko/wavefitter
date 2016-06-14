@@ -8,13 +8,13 @@
 #include <vector>
 #include <iostream>
 
-#include "MIsobar.h"
+#include "MIsobarChannel.h"
 
 template<class typeT>
 class MChannelPhysics {
  public:
   explicit MChannelPhysics(uint Nchannels);
-  explicit MChannelPhysics(const std::vector<MIsobar*> &channels);
+  explicit MChannelPhysics(const std::vector<MIsobarChannel*> &channels);
 
   void setPhSp(uint i, double (&ph)(double));
 
@@ -22,7 +22,7 @@ class MChannelPhysics {
 
  protected:
   uint _Nch;
-  std::vector<MIsobar*> _iso;
+  std::vector<MIsobarChannel*> _iso;
 
   virtual void calculate(double s) = 0;
 
@@ -44,7 +44,7 @@ _Nch(Nchannels), _iso(Nchannels),
   last_s(ERROR_VALUE) {
 }
 
-template<class typeT> MChannelPhysics<typeT>::MChannelPhysics(const std::vector<MIsobar*> &channels) :
+template<class typeT> MChannelPhysics<typeT>::MChannelPhysics(const std::vector<MIsobarChannel*> &channels) :
 _Nch(channels.size()), _iso(channels.size()),
   need_for_recalculation(true),
   last_s(ERROR_VALUE) {

@@ -10,7 +10,7 @@
 
 #define UB_HLIM 4.0
 
-MProductionPhysics::MProductionPhysics(const std::vector<MIsobar*> &channels) :
+MProductionPhysics::MProductionPhysics(const std::vector<MIsobarChannel*> &channels) :
   MChannelPhysics<b::vector<cd> > (channels),
   _fB(0), _fC(0) {
   std::cout << "------------------------------------\n";
@@ -57,9 +57,10 @@ void MProductionPhysics::unitarize() {
     for (uint t = 0; t < UB_LOOKUP_NPOINT; t++) {
       double s = sth + (UB_HLIM - sth)/(UB_LOOKUP_NPOINT-1)*t;
       _ubLookup[i][t].first = s;
-      _ubLookup[i][t].second = 1./(2.*M_PI)*cintegrate([&](double uprime)->cd{
-          return _iso[i]->rho(1./uprime)*_getB[i](1./uprime)*_iso[i]->DumpC(1./uprime)/(1./uprime-s);},
-        0, 1./sth);
+      _ubLookup[i][t].second = 1./(2.*M_PI)*cintegrate([&](double up)->cd{
+          double sp = 1./up;
+          return _iso[i]->rho(sp)*_getB[i](sp)*_iso[i]->DumpC(sp)/(sp-s-cd(0., 1.e-6)) * 1./(up*up);
+        }, 0, 1./sth);
     }
   }
 }

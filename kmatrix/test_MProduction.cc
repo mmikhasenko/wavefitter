@@ -13,10 +13,17 @@ int main(int argc, char *argv[]) {
   const double Hlim = 2.5*2.5;
 
   // stable
-  MIsobar rho(0.77, 0.15, 0.14, 0.14, 0.14, 1, 5, true); rho.makeLookupTable();
-  MIsobar  f2(1.23, 0.2,  0.14, 0.14, 0.14, 2, 5, true); f2.makeLookupTable();
+  MIsobar rho(0.77, 0.15, 0.14, 0.14, 1, 5.);
+  MIsobar  f2(1.23, 0.2,  0.14, 0.14, 2, 5.);
+  MIsobarChannel rho_q(rho, 0.14);
+  MIsobarChannel  f2_q(f2,  0.14);
+  rho_q.makeLookupTable(rho_q.sth(), 10., 100);
+  f2_q.makeLookupTable(rho_q.sth(), 10., 100);
 
-  std::vector<MIsobar*> iset = {&rho, &f2};
+  rho_q.makeDisperseLookupTable(0, 10., 100);
+  f2_q .makeDisperseLookupTable(0, 10., 100);
+
+  std::vector<MIsobarChannel*> iset = {&rho_q, &f2_q};
   MmatrixK km(iset, 2);
   MProductionPhysics pr(iset);
   pr.addScattering([&](double s)->b::matrix<cd>{return km.getValue(s);});
@@ -25,7 +32,7 @@ int main(int argc, char *argv[]) {
   MParKeeper::gI()->set("m1", 1.502);
   MParKeeper::gI()->set("m2", 1.701);
   // couplings
-  MParKeeper::gI()->set("g1", 4.);
+  MParKeeper::gI()->set("g1", 1.);
   MParKeeper::gI()->set("g2", 1.);
   MParKeeper::gI()->set("h1", 1.);
   MParKeeper::gI()->set("h2", 4.);
@@ -34,16 +41,14 @@ int main(int argc, char *argv[]) {
   MParKeeper::gI()->printAll();
 
   TCanvas c1("c1");
-//  combine(
-//          draw([&](double s)->double{ b::matrix<cd> m = km.getValue(s); return norm(m(0, 0)+m(0, 1));},
-//               rho.sth(), 5.1, 200),
-//          draw([&](double s)->double{ b::matrix<cd> m = km.getValue(s); return norm(m(1, 0)+m(1, 1));},
-//               f2.sth(), 5.1, 200) )->Draw("apl");
   combine(
-          draw([&](double s)->double{ b::vector<cd> v = pr.getValue(s); return norm(v(0));},
-               rho.sth(), 5.1, 200),
-          draw([&](double s)->double{ b::vector<cd> v = pr.getValue(s); return norm(v(1));},
-               f2.sth(), 5.1, 200) )->Draw("apl");
+          SET2(draw([&](double s)->double{ auto v = pr.getValue(s); return norm(v(0));},
+                    rho_q.sth(), 5.1, 400),
+               SetLineColor(kRed), SetLineStyle(2)),
+          SET2(draw([&](double s)->double{ auto v = pr.getValue(s); return norm(v(1));},
+                    f2_q.sth(), 5.1, 400),
+               SetLineColor(kBlack), SetLineStyle(1) ) )
+    ->Draw("al");
 
   c1.SaveAs("/tmp/a.pdf");
 

@@ -14,12 +14,13 @@
 #include <boost/numeric/ublas/triangular.hpp>
 
 #include <MChannelPhysics.h>
+#include <MIsobarChannel.h>
 
 namespace b = boost::numeric::ublas;
 
 class MmatrixK : public MChannelPhysics<b::matrix<cd> > {
  public:
-  explicit MmatrixK(const std::vector<MIsobar*> &channels, uint Npoles = 0);
+  explicit MmatrixK(const std::vector<MIsobarChannel*> &channels, uint Npoles = 0);
   MmatrixK(uint Nchannels, uint Npoles);
 
   void SetNpoles(uint Npoles);

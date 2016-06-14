@@ -16,7 +16,7 @@
 #include <boost/numeric/ublas/lu.hpp>
 
 #include "MChannelPhysics.h"
-#include "MIsobar.h"
+#include "MIsobarChannel.h"
 
 #define UB_LOOKUP_NPOINT 150
 
@@ -24,7 +24,7 @@ namespace b = boost::numeric::ublas;
 
 class MProductionPhysics : public MChannelPhysics<b::vector<cd> >  {
  public:
-  explicit MProductionPhysics(const std::vector<MIsobar*> &channels);
+  explicit MProductionPhysics(const std::vector<MIsobarChannel*> &channels);
 
  private:
   void calculate(double s);

@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include <functional>
+#include <algorithm>
 
 #include "TGraph.h"
 #include "TGraphErrors.h"
@@ -37,15 +38,34 @@ typedef struct {
 
 TGraphErrors *draw(const DP & data);
 
-TGraph *draw(double (*func)(double s),
-             double lrange, double rrange, uint nPoints);
+TGraph *draw(std::function<double(double)> funct,
+             double lrange, double rrange, uint nPoints = 100);
 
 TGraph *style(TGraph *lgr, double color, double style = 1);
 
+#define SET1(f, a) ([&]()->TGraph* {TGraph *g = f; g->a; return g;})()
+#define SET2(f, a, b) ([&]()->TGraph* {TGraph *g = f; g->a; g->b; return g;})()
+#define SET3(f, a, b, c) ([&]()->TGraph* {TGraph *g = f; g->a; g->b; g->c; return g;})()
+#define SET4(f, a, b, c, d) ([&]()->TGraph* {TGraph *g = f; g->a; g->b; g->c; g->d; return g;})()
+#define SET5(f, a, b, c, d, e) ([&]()->TGraph* {TGraph *g = f; g->a; g->b; g->c; g->d; g->e; return g;})()
+
 TMultiGraph *combine(std::list<TGraph*> grs);
+TMultiGraph *combine(TGraph* g1);
 TMultiGraph *combine(TGraph* g1, TGraph* g2);
 TMultiGraph *combine(TGraph* g1, TGraph* g2, TGraph* g3);
 TMultiGraph *combine(TGraph* g1, TGraph* g2, TGraph* g3, TGraph* g4);
+
+template<class Array>
+TGraph *draw(const Array &a) {
+  const uint nPoints = a.size();
+  TGraph *lgr = new TGraph(nPoints);
+  for (int i = 0; i < nPoints; i++) {
+    lgr->GetX()[i] = a[i].first;
+    lgr->GetY()[i] = a[i].second;
+  }
+  lgr->SetTitle("");
+  return lgr;
+}
 
 #endif  // SRC_MSTRUCTURES_H_
 

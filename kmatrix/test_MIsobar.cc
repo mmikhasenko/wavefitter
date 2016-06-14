@@ -3,6 +3,8 @@
 #include "TGraph.h"
 #include "TCanvas.h"
 #include "MIsobar.h"
+#include "MIsobarChannel.h"
+#include "MTwoBodyChannel.h"
 #include "mstructures.hh"
 
 int main(int argc, char *argv[]) {
@@ -10,14 +12,56 @@ int main(int argc, char *argv[]) {
   const double Hlim = 2.5*2.5;
 
   // stable
-  MIsobar rho_s(0.77, 0.15, 0.14, 0.14, 0.14, 1, 5, false);
-  MIsobar rho_q(0.77, 0.15, 0.14, 0.14, 0.14, 1, 5, true);
-  rho_q.makeLookupTable();
+  MIsobar rho(0.77, 0.15, 0.14, 0.14, 1, 5.);
+  MIsobarChannel rho_q(rho, 0.14, 2, 5.);
+  MTwoBodyChannel rho_s(rho.GetM(), 0.14, 2, 5.);
+  rho_q.makeLookupTable(0.0, 10.0, 100);
 
   TCanvas c1("c1");
-  draw([&](double e)->double{return rho_s.rho(e*e);}, 0., 2.5)->Draw("alp");
-  draw([&](double e)->double{return rho_q.rho(e*e);}, 0., 2.5)->Draw("same");
+  combine(
+          SET1(
+               draw([&](double e)->double{return rho_s.rho(e*e);}, 0.1, 2.5),
+               SetLineColor(kBlue) ),
+          SET1(
+               draw([&](double e)->double{return rho_q.rho(e*e);}, 0.1, 2.5),
+               SetLineColor(kGreen) )
+          )
+    ->Draw("al");
   c1.SaveAs("/tmp/a.pdf");
+
+  // disperse integral
+  rho_q.makeDisperseLookupTable(0.0, 10.0, 100);
+  rho_s.makeDisperseLookupTable(0.0, 10.0, 100);
+  combine(
+          SET1(
+               draw([&](double e)->double{return real(rho_q.rholtilde(e*e));}, 0.001, 2.5, 100),
+               SetLineColor(kBlack) ),
+          SET1(
+               draw([&](double e)->double{return imag(rho_q.rholtilde(e*e));}, 0.001, 2.5, 100),
+               SetLineColor(kRed) ),
+          SET2(
+               draw([&](double e)->double{return real(rho_s.rholtilde(e*e));}, 0.001, 2.5, 100),
+               SetLineColor(kBlack), SetLineStyle(kDashed) ),
+          SET2(
+               draw([&](double e)->double{return imag(rho_s.rholtilde(e*e));}, 0.001, 2.5, 100),
+               SetLineColor(kRed), SetLineStyle(kDashed) )
+               )
+    ->Draw("al");
+  c1.SaveAs("/tmp/b.pdf");
+
+
+//  // rho_s.makeDisperseLookupTable();
+//  combine(
+//          SET1(
+//               draw([&](double e)->double{return real(rho_s.rholtilde(e*e));}, 0.001, 5, 200),
+//               SetLineColor(kBlack) ),
+//          SET1(
+//               draw([&](double e)->double{return imag(rho_s.rholtilde(e*e));}, 0.001, 5, 200),
+//               SetLineColor(kRed) )
+//          )
+//    ->Draw("al");
+//  c1.SaveAs("/tmp/c.pdf");
+
 
   return 0;
 }

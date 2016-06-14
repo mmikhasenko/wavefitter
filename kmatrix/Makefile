@@ -12,6 +12,7 @@ link_flags          := -s -pipe
 ####### *.o files
 OBJS = \
 deflib.o \
+MChannel.o MTwoBodyChannel.o MIsobarChannel.o \
 MIsobar.o MCoupledChannelIsobar.o NoverD.o MmatrixK.o \
 mstructures.o mintegrate.o \
 MModel.o MRelationHolder.o MParKeeper.o MChannelPhysics.o MProductionPhysics.o

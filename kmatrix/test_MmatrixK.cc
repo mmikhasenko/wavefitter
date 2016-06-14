@@ -12,10 +12,12 @@ int main(int argc, char *argv[]) {
   const double Hlim = 2.5*2.5;
 
   // stable
-  MIsobar rho(0.77, 0.15, 0.14, 0.14, 0.14, 1, 5, true); rho.makeLookupTable();
-  MIsobar  f2(1.23, 0.2,  0.14, 0.14, 0.14, 2, 5, true); f2.makeLookupTable();
+  MIsobar rho(0.77, 0.15, 0.14, 0.14, 1, 5.);
+  MIsobar  f2(1.23, 0.2,  0.14, 0.14, 2, 5.);
+  MIsobarChannel rho_q(rho, 0.14);
+  MIsobarChannel  f2_q(f2,  0.14);
 
-  MmatrixK km({&rho, &f2}, 2);
+  MmatrixK km({&rho_q, &f2_q}, 2);
   // masses
   MParKeeper::gI()->set("m1", 1.502);
   MParKeeper::gI()->set("m2", 1.701);

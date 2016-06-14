@@ -45,6 +45,9 @@ TMultiGraph *combine(std::list<TGraph*> grs) {
   for (auto && gr : grs) lm->Add(gr);
   return lm;
 }
+TMultiGraph *combine(TGraph* g1) {
+  return combine({g1});
+}
 TMultiGraph *combine(TGraph* g1, TGraph* g2) {
   return combine({g1, g2});
 }
@@ -54,4 +57,3 @@ TMultiGraph *combine(TGraph* g1, TGraph* g2, TGraph* g3) {
 TMultiGraph *combine(TGraph* g1, TGraph* g2, TGraph* g3, TGraph* g4) {
   return combine({g1, g2, g3, g4});
 }
-
