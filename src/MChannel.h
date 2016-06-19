@@ -14,20 +14,25 @@ class MChannel {
 
  protected:
   uint L;
-  uint R;
+  double R;
 
  public:
   virtual double sth() const = 0;
   virtual double rho(double s) const = 0;
+  virtual cd rho(cd s) const = 0;
   virtual double p(double s) const {return 4*M_PI*sqrt(s)*rho(s);}
-  virtual double DumpC(double s) const { double q = p(s); return pow(q*q/(1./(R*R)+q*q), L); }
+  virtual cd p(cd s) const {return 4*M_PI*sqrt(s)*rho(s);}
+  virtual double DumpC(double s) const { double q = p(s); return pow(POW2(R*q)/(1.+POW2(R*q)), L/2.); }
+  virtual     cd DumpC(cd s)     const {     cd q = p(s); return pow(POW2(R*q)/(1.+POW2(R*q)), L/2.); }
   virtual cd rholtilde(double s) const {
     if (dtable.size()) { return InterpolateRhoLtilda(s);
     } else { return DisperceRhoLtilda(s); }
   }
+  virtual cd rholtilde(cd s) const { return DisperceRhoLtilda(s); }
 
   void makeDisperseLookupTable(double from, double to, uint Npoints);
   cd DisperceRhoLtilda(double s) const;
+  cd DisperceRhoLtilda(cd s) const;
   cd InterpolateRhoLtilda(double s) const;
 
  public:

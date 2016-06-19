@@ -38,7 +38,7 @@ void MParKeeper::set(uint i, double v) {
 
 void MParKeeper::set(std::string pname, double v) {
   auto it = _map.find(pname);
-  if (it == _map.end()) { std::cerr << "Error<MParKeeper::set(string)>: " << pname << " not found in the map\n"; }
+  if (it == _map.end()) { std::cerr << "Error<MParKeeper::set(string)>: " << pname << " not found in the map\n"; return;}
   _pars[it->second] = v;
 }
 

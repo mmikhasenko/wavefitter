@@ -8,23 +8,25 @@
 #include <vector>
 #include <iostream>
 
-#include "MIsobarChannel.h"
+#include "MChannel.h"
 
 template<class typeT>
 class MChannelPhysics {
  public:
   explicit MChannelPhysics(uint Nchannels);
-  explicit MChannelPhysics(const std::vector<MIsobarChannel*> &channels);
+  explicit MChannelPhysics(const std::vector<MChannel*> &channels);
 
   void setPhSp(uint i, double (&ph)(double));
 
   typeT getValue(double s);
+  typeT getValue(cd s);
 
  protected:
   uint _Nch;
-  std::vector<MIsobarChannel*> _iso;
+  std::vector<MChannel*> _iso;
 
   virtual void calculate(double s) = 0;
+  virtual void calculate(cd s) = 0;
 
   double last_s;
   bool need_for_recalculation;
@@ -40,11 +42,11 @@ class MChannelPhysics {
 
 template<class typeT> MChannelPhysics<typeT>::MChannelPhysics(uint Nchannels) :
 _Nch(Nchannels), _iso(Nchannels),
-  need_for_recalculation(true),
-  last_s(ERROR_VALUE) {
+  last_s(ERROR_VALUE),
+  need_for_recalculation(true) {
 }
 
-template<class typeT> MChannelPhysics<typeT>::MChannelPhysics(const std::vector<MIsobarChannel*> &channels) :
+template<class typeT> MChannelPhysics<typeT>::MChannelPhysics(const std::vector<MChannel*> &channels) :
 _Nch(channels.size()), _iso(channels.size()),
   need_for_recalculation(true),
   last_s(ERROR_VALUE) {
@@ -60,6 +62,12 @@ template<class typeT> void MChannelPhysics<typeT>::Print() {
 
 template<class typeT> typeT MChannelPhysics<typeT>::getValue(double s) {
   if (s != last_s || need_for_recalculation) calculate(s);
+  return _value;
+}
+
+template<class typeT> typeT MChannelPhysics<typeT>::getValue(cd s) {
+  need_for_recalculation = true;
+  calculate(s);
   return _value;
 }
 

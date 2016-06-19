@@ -24,6 +24,16 @@ cd MChannel::DisperceRhoLtilda(double s) const {
   return cd(0, -1./(M_PI))*(integral+add_term);
 }
 
+cd MChannel::DisperceRhoLtilda(cd s) const {
+  std::function<cd(double)> drhoLtilda = [&](double up)->cd{
+    double sp = 1./up;
+    return rho(sp)*DumpC(sp)/(sp*(sp-s-cd(0., 1.e-6))) * 1./(up*up);  // minus in taken in integration range
+  };
+  cd integral = cintegrate(drhoLtilda, 0.0, 1./sth());
+  return s*cd(0, -1.)*integral/(M_PI);
+}
+
+
 cd MChannel::InterpolateRhoLtilda(double s) const {
   if (!dtable.size()) return -1.;
   if (s >= dtable[dtable.size()-1].first || s <= dtable[0].first) return 0.0;

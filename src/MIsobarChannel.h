@@ -46,6 +46,7 @@ class MIsobarChannel : public MChannel {
     if (ltable.size()) { return InterpolateQuasiTwoBody(s);
     } else { return CalculateQuasiTwoBody(s); }
   }
+  cd rho(cd s) const { return CalculateQuasiTwoBodyStright(s); }
 
  private:
   double _SHAPE_FROM;

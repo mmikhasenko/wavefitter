@@ -19,7 +19,7 @@ MmatrixK::MmatrixK(uint Nch,
   std::cout << "MmatrixK instance is created!" << std::endl;
 }
 
-MmatrixK::MmatrixK(const std::vector<MIsobarChannel*> &channels, uint Npoles) :
+MmatrixK::MmatrixK(const std::vector<MChannel*> &channels, uint Npoles) :
   // mother class
   MChannelPhysics<b::matrix<cd> >(channels),
   _Np(0) {
@@ -51,7 +51,9 @@ void MmatrixK::SetNpoles(uint Npoles) {
   std::cout << "parameters for " << _Np << " poles are allocated!" << std::endl;
 }
 
-void MmatrixK::calculate(double s) {
+
+template<typename sType>
+void MmatrixK::tmpl_calculate(sType s) {
   // clear K
   b::symmetric_matrix<cd, b::upper> K = b::zero_matrix<cd>(_Nch);  // (_Nch) K*=0.;
   for (uint i = 0; i < _Np; i++) {
@@ -69,7 +71,7 @@ void MmatrixK::calculate(double s) {
   // possibly add some background
   for (uint i = 0; i < _Nch; i++)
     for (uint j = 0; j < _Nch; j++)
-      mrho(i, j) = (i == j) ? _iso[i]->rho(s) : 0.0;
+      mrho(i, j) = (i == j) ? _iso[i]->rholtilde(s) : 0.0;
 
   b::matrix<cd> irhoK = cd(0, 1)*prod(mrho, K);
   b::matrix<cd> din = b::identity_matrix<cd>(_Nch) - irhoK;
@@ -82,8 +84,30 @@ void MmatrixK::calculate(double s) {
   // finally
   _value = prod(K, din_inv);
   // change the flag
-  last_s = s; need_for_recalculation = false;
+  cd cds = s;
+  if (imag(cds) == 0.0) {
+    last_s = real(cds); need_for_recalculation = false;
+  }
 }
+
+b::matrix<cd> MmatrixK::getSSInverseValue(cd s) {
+  b::matrix<cd> T1 = getValue(s);
+
+  bool sing = false;
+  b::matrix<cd> T1_inv = gjinverse(T1, sing);
+  if (sing) {std::cerr << "ERROR: SINGULAR" << std::endl;}  // exit(); }
+
+  // ph.sp.matrix
+  b::symmetric_matrix<cd, b::upper> mrho(_Nch);
+  // possibly add some background
+  for (uint i = 0; i < _Nch; i++)
+    for (uint j = 0; j < _Nch; j++)
+      mrho(i, j) = (i == j) ? _iso[i]->rho(s)*_iso[i]->DumpC(s) : 0.0;
+
+  b::matrix<cd> T2_inv = T1_inv + cd(0, 2)*mrho;
+  return T2_inv;
+}
+
 
 void MmatrixK::Print() {
   std::cout << "------------ " << _Nch << "-channel K-matrix --------------" << std::endl;

@@ -14,16 +14,18 @@
 #include <boost/numeric/ublas/triangular.hpp>
 
 #include <MChannelPhysics.h>
-#include <MIsobarChannel.h>
+#include <MChannel.h>
 
 namespace b = boost::numeric::ublas;
 
 class MmatrixK : public MChannelPhysics<b::matrix<cd> > {
  public:
-  explicit MmatrixK(const std::vector<MIsobarChannel*> &channels, uint Npoles = 0);
+  explicit MmatrixK(const std::vector<MChannel*> &channels, uint Npoles = 0);
   MmatrixK(uint Nchannels, uint Npoles);
 
   void SetNpoles(uint Npoles);
+
+  b::matrix<cd> getSSInverseValue(cd s);  // second sheet value
 
  private:
   uint _Np;
@@ -34,7 +36,11 @@ class MmatrixK : public MChannelPhysics<b::matrix<cd> > {
   std::vector<uint> _coupling;
 
  private:
-  void calculate(double s);
+  void calculate(double s) {tmpl_calculate<double>(s);}
+  void calculate(cd s)     {tmpl_calculate<cd>(s);}
+
+  template<typename sType>
+    void tmpl_calculate(sType s);
 
  public:
   uint getNp () const {return _Np ;}

@@ -231,9 +231,10 @@ int main(int argc, char *argv[]) {
   std::vector<uint> assignment = {1, 3, 2};
   for (int i=0; i < assignment.size(); i++)
     MRelationHolder::gI()->AddRelation(whole_data[i], [&](double s)->double{
-        auto v = pr.getValue(s); return norm(v(assignment[i]));
+        auto v = pr.getValue(s);
+        uint iCh = assignment[i];
+        return norm(v(iCh))*iset[iCh]->rho(s);
       });
-
 
   ///////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////

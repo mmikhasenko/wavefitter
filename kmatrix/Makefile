@@ -7,7 +7,7 @@ CXFLAGS := -std=c++11 -O2 #-pg -g -std=c++0x
 CFLAGS  := -std=gnu99 -O2 #-pg -g
 
 compile_flags       := -Wall # -MMD -pipe
-link_flags          := -s -pipe
+link_flags          := # -llzma # -s -pipe
 
 ####### *.o files
 OBJS = \
@@ -38,9 +38,9 @@ ALL: $(EXES)
  #---------------------------------------------------------------------------------#
 
 %: %.cc $(SET)
-	g++ $(CXFLAGS) -o $@  $(LIBS) \
-	$(addprefix -I,${lDIR}) $^ \
-	$(ROOT)
+	g++ $(link_flags) $(CXFLAGS) -o $@ \
+	$(ROOT) $(LIBS) \
+	$(addprefix -I,${lDIR}) $^ 
 
 test: test.cc $(SET)
 	g++ $(CXFLAGS) -o $@  $(LIBS) \

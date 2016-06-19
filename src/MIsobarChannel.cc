@@ -37,7 +37,7 @@ double MIsobarChannel::CalculateQuasiTwoBody(double s) const {
 cd MIsobarChannel::CalculateQuasiTwoBodyStright(cd s) const {
   std::function<cd(double)> drho = [&](double t)->cd {
     cd s12 = _iso.sth()+(POW2(sqrt(s)+m3)-_iso.sth())*t;
-    return _iso.U(s12)*RHO(s, s12, m3*m3);
+    return 1./(2*M_PI)*_iso.U(s12)*RHO_PI(s, s12, m3*m3);
   };
   return (POW2(sqrt(s)+m3)-_iso.sth())*cintegrate(drho, 0, 1);
 }
@@ -50,10 +50,10 @@ cd MIsobarChannel::CalculateQuasiTwoBodyEdge(cd s) const {
           imag(th2)/SCALEY_FOR_CUT);
     if (t < 1.) {
       cd s12 = th1+(thM-th1)*t;
-      return 1./(2*M_PI)*_iso.U(s12)*RHO(s, s12, m3*m3)  *  (thM-th1);
+      return 1./(2*M_PI)*_iso.U(s12)*RHO_PI(s, s12, m3*m3)  *  (thM-th1);
     } else {
       cd s12 = thM+(th2-thM)*(t-1);
-      return 1./(2*M_PI)*_iso.U(s12)*RHO(s, s12, m3*m3)  *  (th2-thM);
+      return 1./(2*M_PI)*_iso.U(s12)*RHO_PI(s, s12, m3*m3)  *  (th2-thM);
     }
   };
   return cintegrate(drho, 0, 2);

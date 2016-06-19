@@ -30,6 +30,9 @@ class MTwoBodyChannel : public MChannel {
     if (s < sth()) { return 0;
     } else { return RHO(s, m1*m1, m2*m2); }
   }
+  virtual cd rho(cd s) const {
+    return RHO_PI(s, m1*m1, m2*m2);
+  }
 };
 
 #endif  // SRC_MTWOBODYCHANNEL_H_

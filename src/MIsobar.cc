@@ -22,7 +22,7 @@ double MIsobar::U(double s) const {
 }
 
 cd     MIsobar::U(cd     s) const {
-  cd G = G0/RHO(M*M, m1*m1, m2*m2)  *  RHO_PI(s, m1*m1, m2*m2);
+  cd G = G0/RHO(M*M, m1*m1, m2*m2)  *  RHO(s, m1*m1, m2*m2);
   const cd p_2 = LAMBDA(s, m1*m1, m2*m2)/(4.*s);
   const double p0_2 = LAMBDA(M*M, m1*m1, m2*m2)/(4.*M*M);
   G *=  pow(p_2/p0_2 * (1.+R*R*p0_2)/(1.+R*R*p_2), L);

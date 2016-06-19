@@ -10,7 +10,7 @@
 
 #define UB_HLIM 4.0
 
-MProductionPhysics::MProductionPhysics(const std::vector<MIsobarChannel*> &channels) :
+MProductionPhysics::MProductionPhysics(const std::vector<MChannel*> &channels) :
   MChannelPhysics<b::vector<cd> > (channels),
   _fB(0), _fC(0) {
   std::cout << "------------------------------------\n";
