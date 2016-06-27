@@ -8,14 +8,11 @@
 #include "mstructures.hh"
 
 int main(int argc, char *argv[]) {
-  const int Np = 116;
-  const double Hlim = 2.5*2.5;
-
   // stable
   MIsobar rho(0.77, 0.15, 0.14, 0.14, 1, 5.);
   MIsobarChannel rho_q(rho, 0.14, 2, 5.);
   MTwoBodyChannel rho_s(rho.GetM(), 0.14, 2, 5.);
-  rho_q.makeLookupTable(0.0, 10.0, 100);
+  rho_q.makeLookupTable(0.0, 6.0, 100);
 
   TCanvas c1("c1");
   combine(
@@ -48,20 +45,6 @@ int main(int argc, char *argv[]) {
                )
     ->Draw("al");
   c1.SaveAs("/tmp/b.pdf");
-
-
-//  // rho_s.makeDisperseLookupTable();
-//  combine(
-//          SET1(
-//               draw([&](double e)->double{return real(rho_s.rholtilde(e*e));}, 0.001, 5, 200),
-//               SetLineColor(kBlack) ),
-//          SET1(
-//               draw([&](double e)->double{return imag(rho_s.rholtilde(e*e));}, 0.001, 5, 200),
-//               SetLineColor(kRed) )
-//          )
-//    ->Draw("al");
-//  c1.SaveAs("/tmp/c.pdf");
-
 
   return 0;
 }

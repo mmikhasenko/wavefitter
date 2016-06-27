@@ -2,15 +2,19 @@
 //14.07.2015
 
 #include "TF1.h"
-#include "Math/WrappedTF1.h"
-#include "Math/GaussIntegrator.h"
-
 #include "MIsobar.h"
+#include "mintegrate.hh"
 
 MIsobar::MIsobar(double Mi, double G0i,
                  double m1i, double m2i,
                  int Li, double Ri):
-  M(Mi), G0(G0i), m1(m1i), m2(m2i), L(Li), R(Ri) {;}
+  M(Mi), G0(G0i), m1(m1i), m2(m2i), L(Li), R(Ri) {
+  // calculate isobar shape integral
+  intU = integrate([&](double u)->double{
+      return U(1./u)*1./(u*u)/(2*M_PI);
+    }, 0, 1./sth());
+  std::cout << "Integral over isobar shape is calculated. Value is " << intU << "\n";
+}
 
 double MIsobar::U(double s) const {
   if (s < POW2(m1+m2)) return 0.0;

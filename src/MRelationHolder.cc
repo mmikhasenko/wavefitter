@@ -21,11 +21,14 @@ void MRelationHolder::AddRelation(const DP &intensity,
                                   std::function<double(double)> func) {
   relation r {intensity, func};
   store.push_back(r);
+  status.push_back(true);
 }
 
 double MRelationHolder::CalculateChi2() {
   double chi2 = 0;
-  for (const relation & rel : store) {
+  for (uint i=0; i < store.size(); i++) {
+    if (!status[i]) continue;
+    const relation & rel = store[i];
     const DP & dps = rel.data;
     for (auto && dp : dps.data) {
       if (dp.x > dps.lrange && dp.x < dps.rrange) {
@@ -40,10 +43,10 @@ double MRelationHolder::CalculateChi2() {
   return chi2;
 }
 
-void MRelationHolder::Print() {
+void MRelationHolder::Print() const {
   std::cout << "Relation content:" << "\n";
-  for (auto && rel : store) {
-    std::cout << "\t" << rel.data.title << "\n";
+  for (uint i=0; i < store.size(); i++) {
+    std::cout << "\t" << store[i].data.title << ": " << status[i] <<"\n";
   }
   std::cout << "\n";
 }

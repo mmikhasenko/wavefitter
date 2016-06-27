@@ -185,4 +185,26 @@ gjinverse(const boost::numeric::ublas::matrix<T> &m,
     return Aright;
 }
 
+// -----------------------------------------------------------------------------------------
+// determinant taken from another place in intermet
+
+namespace b = boost::numeric::ublas;
+
+template<typename ValType>
+ValType det_fast(const b::matrix<ValType>& matrix) {
+  // create a working copy of the input
+  b::matrix<ValType> mLu(matrix);
+  b::permutation_matrix<std::size_t> pivots(matrix.size1());
+  auto isSingular = b::lu_factorize(mLu, pivots);
+  if (isSingular)
+    return static_cast<ValType>(0);
+  ValType det = static_cast<ValType>(1);
+  for (std::size_t i = 0; i < pivots.size(); ++i) {
+    if (pivots(i) != i)
+      det *= static_cast<ValType>(-1);
+    det *= mLu(i, i);
+  }
+  return det;
+}
+
 #endif // _MATRIXINVERSE_HPP_

@@ -16,7 +16,7 @@ MmatrixK::MmatrixK(uint Nch,
   // init matrix
   _value = b::matrix<cd>(_Nch, _Nch);
   std::cout << "--------------------------------\n";
-  std::cout << "MmatrixK instance is created!" << std::endl;
+  std::cout << "MmatrixK(" << _Nch << "x" << _Nch << ") instance is created!" << std::endl;
 }
 
 MmatrixK::MmatrixK(const std::vector<MChannel*> &channels, uint Npoles) :
@@ -27,7 +27,7 @@ MmatrixK::MmatrixK(const std::vector<MChannel*> &channels, uint Npoles) :
   if (Npoles) SetNpoles(Npoles);
   // init matrix
   _value = b::matrix<cd>(_Nch, _Nch);
-  std::cout << "MmatrixK instance is created!" << std::endl;
+  std::cout << "MmatrixK(" << _Nch << "x" << _Nch << ") instance is created!" << std::endl;
   std::cout << "  channel parameters are set!" << std::endl;
 }
 
@@ -40,12 +40,12 @@ void MmatrixK::SetNpoles(uint Npoles) {
   // Fill parameters map
   for (uint ipole = 0; ipole < Npoles; ipole++) {
     // generate name
-    std::ostringstream mname; mname << "m" << ipole + 1;
-    _mass[ipole] = MParKeeper::gI()->add(mname.str(), 1.702);
+    std::ostringstream mname; mname << "m" << ipole;
+    _mass[ipole] = MParKeeper::gI()->add(mname.str(), 1.702, 1.001, 3.001);
     for (uint jch = 0; jch < _Nch; jch++) {
       std::ostringstream gname; gname << char(103+ipole + ((ipole >= 7) ? 1 : 0))
-                                      << jch+1;
-      _coupling[ipole*_Nch+jch] = MParKeeper::gI()->add(gname.str(), 0.0);
+                                      << jch;
+      _coupling[ipole*_Nch+jch] = MParKeeper::gI()->add(gname.str(), 0.0, -10., 10.);
     }
   }
   std::cout << "parameters for " << _Np << " poles are allocated!" << std::endl;
@@ -70,15 +70,16 @@ void MmatrixK::tmpl_calculate(sType s) {
   b::symmetric_matrix<cd, b::upper> mrho(_Nch);
   // possibly add some background
   for (uint i = 0; i < _Nch; i++)
-    for (uint j = 0; j < _Nch; j++)
+    for (uint j = 0; j < _Nch; j++) {
       mrho(i, j) = (i == j) ? _iso[i]->rholtilde(s) : 0.0;
-
+    }
+  
   b::matrix<cd> irhoK = cd(0, 1)*prod(mrho, K);
   b::matrix<cd> din = b::identity_matrix<cd>(_Nch) - irhoK;
 
   bool sing = false;
   b::matrix<cd> din_inv = gjinverse(din, sing);
-  // std::cout << din_inv << std::endl;
+  //std::cout << din_inv << std::endl;
   if (sing) {std::cerr << "ERROR: SINGULAR" << std::endl;}  // exit(); }
 
   // finally
@@ -95,7 +96,7 @@ b::matrix<cd> MmatrixK::getSSInverseValue(cd s) {
 
   bool sing = false;
   b::matrix<cd> T1_inv = gjinverse(T1, sing);
-  if (sing) {std::cerr << "ERROR: SINGULAR" << std::endl;}  // exit(); }
+  if (sing) {std::cerr << "\tERROR: SINGULAR" << std::endl;}  // exit(); }
 
   // ph.sp.matrix
   b::symmetric_matrix<cd, b::upper> mrho(_Nch);

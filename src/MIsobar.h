@@ -26,6 +26,8 @@ class MIsobar {
   int L;
   double R;
 
+  double intU;
+  
  public:
   inline double GetM() const { return M; }
   inline double Mass() const { return M; }
@@ -41,6 +43,7 @@ class MIsobar {
  public:
   virtual double U(double s12) const;
   virtual cd     U(cd s)       const;
+  double IntU() const {return intU;};
 
  private:
   std::vector<std::pair<double, double> > ltable;

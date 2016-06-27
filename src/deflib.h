@@ -24,11 +24,11 @@ cd ChewMandelstam(cd s, double m1sq, double m2sq);
 // technical tools
 template <typename Type>
 Type getvalue(double M, const std::vector<std::pair<double, Type> > &table) {
-  const int N = table.size();
+  const uint N = table.size();
   const double lft = table[0].first;
   const double Mstep = table[1].first - lft;
   const int Nsteps = (M - lft)/Mstep;
-  if (Nsteps < 0 || Nsteps >= N-1) {std::cerr << "Error!! in getvalue! M = " << M << ", " << table[0].second << std::endl; return 0;}
+  if (Nsteps < 0 || Nsteps >= -1+N) {std::cerr << "Error!! in getvalue! M = " << M << ", " << table[0].second << std::endl; return 0;}
   const Type value = table[Nsteps].second +
     (table[Nsteps+1].second - table[Nsteps].second) /
     (table[Nsteps+1].first  - table[Nsteps].first) * (M - table[Nsteps].first);

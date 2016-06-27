@@ -7,6 +7,8 @@
 
 #include <vector>
 #include <iostream>
+#include <map>
+#include <utility>
 
 #include "MChannel.h"
 
@@ -21,6 +23,8 @@ class MChannelPhysics {
   typeT getValue(double s);
   typeT getValue(cd s);
 
+  void RecalculateNextTime() {need_for_recalculation = true;};
+
  protected:
   uint _Nch;
   std::vector<MChannel*> _iso;
@@ -33,6 +37,11 @@ class MChannelPhysics {
 
   typeT _value;
 
+  std::map<double, cd> _smap;
+
+// public:
+//  void setPool(std::vector<double> sarr);  
+  
  public:
   inline uint getNch() const {return _Nch;}
   void Print();
@@ -61,6 +70,12 @@ template<class typeT> void MChannelPhysics<typeT>::Print() {
 }
 
 template<class typeT> typeT MChannelPhysics<typeT>::getValue(double s) {
+//  if (_smap.size()!=0) {
+//    if (_smap.find(s) != _smap.end()) 
+//    if (need_for_recalculation) for (auto && it : _smap) { calculate(it.first); it.second = _value; }
+//    //try to find in the map
+//    
+//  }
   if (s != last_s || need_for_recalculation) calculate(s);
   return _value;
 }
@@ -70,5 +85,11 @@ template<class typeT> typeT MChannelPhysics<typeT>::getValue(cd s) {
   calculate(s);
   return _value;
 }
+
+//template<class typeT> void MChannelPhysics<typeT>::setPool(std::vector<double> sarr) {
+//  for (auto && it : sarr) {
+//    if (_smap.find(s) != _smap.end()) continue;
+//    calculate(it); _smap[it] = _value; }
+//}
 
 #endif  // SRC_MCHANNELPHYSICS_H_

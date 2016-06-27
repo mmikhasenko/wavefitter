@@ -32,7 +32,7 @@ class MProductionPhysics : public MChannelPhysics<b::vector<cd> >  {
 
  private:
   std::vector<int> _fB;
-  std::vector<int> _fC;
+  std::vector<std::pair<uint, uint> > _fC;
 
  private:
   std::function<b::matrix<cd>(double)> _getT;

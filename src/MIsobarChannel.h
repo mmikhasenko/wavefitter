@@ -26,12 +26,12 @@ class MIsobarChannel : public MChannel {
   const MIsobar &_iso;
 
  protected:
-  double m3;
+  double _m3;
 
  public:
   const MIsobar &getIsobar() const {return _iso;}
 
-  double sth() const {return POW2(_iso.sth()+m3);}
+  double sth() const {return POW2(sqrt(_iso.sth())+_m3);}
 
   double CalculateQuasiTwoBody(double s) const;
   double InterpolateQuasiTwoBody(double s) const;

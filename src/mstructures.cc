@@ -14,12 +14,11 @@ using std::vector;
 TGraphErrors *draw(const DP & data) {
   const uint nPoints = data.data.size();
   vector<double> x, y, dy;
-  for (auto && dp : data.data)
-    if (dp.x > data.lrange && dp.x < data.rrange) {
-      x.push_back(dp.x);
-      y.push_back(dp.y);
-      dy.push_back(dp.dy);
-    }
+  for (auto && dp : data.data) {
+    x.push_back(dp.x);
+    y.push_back(dp.y);
+    dy.push_back(dp.dy);
+  }
   TGraphErrors *lgr = new TGraphErrors(nPoints, x.data(), y.data(), 0, dy.data());
   lgr->SetTitle(data.title.c_str());
   return lgr;
@@ -42,7 +41,10 @@ TGraph *style(TGraph *lgr, double color, double style) {
 
 TMultiGraph *combine(std::list<TGraph*> grs) {
   TMultiGraph *lm = new TMultiGraph();
-  for (auto && gr : grs) lm->Add(gr);
+  for (auto && gr : grs) {
+    lm->Add(gr, gr->GetDrawOption()); 
+      std::cout << "----------" << gr->GetDrawOption() << "\n";
+  }
   return lm;
 }
 TMultiGraph *combine(TGraph* g1) {
