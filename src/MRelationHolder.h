@@ -14,11 +14,12 @@ class MRelationHolder {
  public:
   static MRelationHolder *getInstance();
   static MRelationHolder *gI();
+
  private:
   MRelationHolder();
 
  public:
-  uint Nrels() const { return store.size(); };
+  uint Nrels() const { return store.size(); }
 
   // relation beetween data and function
   void AddRelation(const DP & intensity, std::function<double(double)> func);
@@ -28,22 +29,23 @@ class MRelationHolder {
       return store[0];
     }
     return store[iR];
-  };
+  }
   bool relationStatus(uint iR) {
     if (iR >= store.size()) {
       std::cout << "Error<status(uint iR)>=_store.size()" << std::endl;
       return false;
     }
     return status[iR];
-  };
+  }
 
  public:
   double CalculateChi2();
-  void passiveAll() {for (uint i=0; i < status.size(); i++) status[i] = false;};
+  void passiveAll() {for (uint i=0; i < status.size(); i++) status[i] = false;}
   void activateRelation(uint i) {
     if (i >= store.size()) {std::cerr << "Error<void activateRelation>\n"; return;}
     status[i] = true;
   }
+
  private:
   static MRelationHolder *_ref;
   // intensity

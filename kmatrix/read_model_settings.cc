@@ -129,7 +129,7 @@ int main(int argc, char *argv[]) {
     return EXIT_FAILURE;
   }
 
-  const uint Nhist = whole_data.size(); 
+  const uint Nhist = whole_data.size();
   TCanvas c1("c1");
   c1.DivideSquare(Nhist);
   for (uint i = 0; i < Nhist; i++) {
@@ -193,7 +193,7 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
       }
     }
-    for(auto && it: iset) it->makeDisperseLookupTable(0.01, 10., 100);
+    for (auto && it : iset) it->makeDisperseLookupTable(0.01, 10., 100);
 
     // content of the model
     const libconfig::Setting &content = modelT["content"];
@@ -263,7 +263,7 @@ int main(int argc, char *argv[]) {
     // create pool
     MParKeeper::gI()->makePool(pars_names);
     MParKeeper::gI()->pset(pars_values.data());
-    for(uint j=0; j < MParKeeper::gI()->pnPars(); j++)
+    for (uint j=0; j < MParKeeper::gI()->pnPars(); j++)
       MParKeeper::gI()->psetRange(j,
                                   pars_ranges[j].first,
                                   pars_ranges[j].second);
@@ -292,7 +292,7 @@ int main(int argc, char *argv[]) {
       uint jData = iRel[0];
       if (jData >= whole_data.size()) std::cerr << "Error: jData<0 || jData >= Nhist." << std::endl;
       std::string type = iRel[1];
-      if(type == "I@") {
+      if (type == "I@") {
         uint iCh = iRel[2];
         MRelationHolder::gI()->AddRelation(whole_data[jData], [&, iCh](double e)->double{
             auto v = pr.getValue(e*e);
@@ -352,25 +352,25 @@ int main(int argc, char *argv[]) {
     tout.Branch("can", "TCanvas", &canva);
     double chi2 = 0; tout.Branch("chi2", &chi2);
     double pars_mirrow[MParKeeper::gI()->nPars()];
-    for(int i=0; i < MParKeeper::gI()->nPars(); i++)
+    for (int i=0; i < MParKeeper::gI()->nPars(); i++)
       tout.Branch(MParKeeper::gI()->getName(i).c_str(), &pars_mirrow[i]);
     // to copy to array from where it is copied to tree
     for (uint e = 0; e < nAttempts; e++) {
       std::cout << "---------- Attempt " << e << " -----------" << std::endl;
       std::cout << "------------------------------------------" << std::endl;
-      
+
       /**************************************MINIMIZE******************************************/
       // Build minimizer
       ROOT::Math::Minimizer* min =
         ROOT::Math::Factory::CreateMinimizer("Minuit2", "Migrad");
-      
+
       // set tolerance , etc...
       min->SetMaxFunctionCalls(100000);
       min->SetTolerance(0.001);
       min->SetStrategy(1);
       min->SetPrintLevel(3);
       min->Options().Print();
-      
+
       // Create funciton wrapper for minmizer a IMultiGenFunction type
       ROOT::Math::Functor functor([&](const double *pars)->double {
           MParKeeper::gI()->pset(pars);
@@ -396,14 +396,14 @@ int main(int argc, char *argv[]) {
         // adjust which relation to fit
         const uint Nrelations = relations.getLength();
         MRelationHolder::gI()->passiveAll();
-        for(uint r=0; r < Nrelations; r++) MRelationHolder::gI()->activateRelation(relations[r]);
+        for (uint r=0; r < Nrelations; r++) MRelationHolder::gI()->activateRelation(relations[r]);
         MRelationHolder::gI()->Print();
         // adjust which parameters to vary
         const uint nPars_to_vary = pars.getLength();
         // loop over all parameters for make fix them
-        for(uint r=0; r < pnPars; r++) min->FixVariable(r);
-        for(uint r=0; r < nPars_to_vary; r++) {
-          const std::string &pname = pars[r]; 
+        for (uint r=0; r < pnPars; r++) min->FixVariable(r);
+        for (uint r=0; r < nPars_to_vary; r++) {
+          const std::string &pname = pars[r];
           min->ReleaseVariable(MParKeeper::gI()->pgetIndex(pname));
         }
         // minimize
@@ -422,12 +422,12 @@ int main(int argc, char *argv[]) {
         if (MRelationHolder::gI()->relationStatus(i))
           SET1(draw(func,
                     data.lrange, data.rrange, 200),
-               SetLineColor(kRed) )->Draw("l");  
+               SetLineColor(kRed) )->Draw("l");
       }
       MParKeeper::gI()->printAll();
-      canva->SaveAs(TString::Format("/tmp/e%d.pdf",e));
+      canva->SaveAs(TString::Format("/tmp/e%d.pdf", e));
       delete min;
-      
+
       // Fill result to tree
       // to copy to array from where it is copied to tree
       memcpy(pars_mirrow,
@@ -436,11 +436,10 @@ int main(int argc, char *argv[]) {
       chi2 = MRelationHolder::gI()->CalculateChi2();
       tout.Fill();
     }
-    
+
     tout.Write();
     fout.Close();
     delete canva;
-    
   }
   catch(const libconfig::SettingNotFoundException &nfex) {
     std::cerr << "Error <> libconfig::SettingNotFoundException in \"fit\" secton" << std::endl;

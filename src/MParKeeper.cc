@@ -35,12 +35,12 @@ uint MParKeeper::getIndex(const std::string &name) const {
             [&](const parameter_description &d)->bool{
                            return (d.name == name) ? true : false;
                          });
-  if(it == _map.end()) {std::cerr << "Error<MParKeeper::getIndex>: no name \"" << name << "\" found\n" ;return 0;}
+  if (it == _map.end()) {std::cerr << "Error<MParKeeper::getIndex>: no name \"" << name << "\" found\n"; return 0;}
   return it->index;
 }
 
 void MParKeeper::setRange(uint i, double v1, double v2) {
-  check(i, _pars.size(), "setRange(i)"); 
+  check(i, _pars.size(), "setRange(i)");
   _map[i].lrange = v1;
   _map[i].rrange = v2;
 }
@@ -61,7 +61,7 @@ uint MParKeeper::pgetIndex(const std::string &name) const {
                          [&, name](uint i)->bool{
                            return (_map[i].name == name) ? true : false;
                          });
-  if(it == _pool.end()) {std::cerr << "Error<MParKeeper::pgetIndex>: no name \"" << name << "\" found in the pool\n" ;return 0;}
+  if (it == _pool.end()) {std::cerr << "Error<MParKeeper::pgetIndex>: no name \"" << name << "\" found in the pool\n"; return 0;}
   return it - _pool.begin();
 }
 
@@ -89,6 +89,6 @@ void MParKeeper::printAll() {
                                     << _pars[it.index] << " in (" << it.lrange
                                     << ", " << it.rrange << ")\n";
   std::cout << "----> Pool: ";
-  for (uint & it : _pool) std::cout << it << " "; 
+  for (uint & it : _pool) std::cout << it << " ";
   std::cout << "\n";
 }
