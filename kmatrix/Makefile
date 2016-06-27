@@ -14,14 +14,15 @@ OBJS = \
 deflib.o \
 mstructures.o mintegrate.o \
 MChannel.o MTwoBodyChannel.o MIsobarChannel.o \
-MIsobar.o MCoupledChannelIsobar.o NoverD.o MmatrixK.o \
+MIsobar.o MCoupledChannelIsobar.o MmatrixK.o \
 MRelationHolder.o MParKeeper.o \
 MChannelPhysics.o MProductionPhysics.o
+# NoverD.o
 
 SET :=  $(addprefix obj/, $(OBJS))
 
 ####### libconfig
-LIBS += /usr/lib64/libconfig++.so
+CONF_LIBS += -L/usr/lib/x86_64-linux-gnu -lconfig++
 
 ####### root- files
 
@@ -38,14 +39,14 @@ ALL: $(EXES)
  #---------------------------------------------------------------------------------#
 
 %: %.cc $(SET)
-	g++ $(link_flags) $(CXFLAGS) -o $@ \
-	$(ROOT) $(LIBS) \
-	$(addprefix -I,${lDIR}) $^ 
+	g++ $(link_flags) $(compile_flags) $(CXFLAGS) -o $@ \
+	$(addprefix -I,${lDIR}) $^ \
+	$(CONF_LIBS) $(ROOT)
 
 test: test.cc $(SET)
-	g++ $(CXFLAGS) -o $@  $(LIBS) \
+	g++ $(link_flags) $(compile_flags) $(CXFLAGS) -o $@ \
 	$(addprefix -I,${lDIR}) $^ \
-	$(ROOT)
+	$(CONF_LIBS) $(ROOT)
 
  #--------------------------- O b j e c t s ---------------------------------------#
  #---------------------------------------------------------------------------------#
