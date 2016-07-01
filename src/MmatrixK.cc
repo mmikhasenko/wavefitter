@@ -73,22 +73,17 @@ void MmatrixK::tmpl_calculate(sType s) {
     for (uint j = 0; j < _Nch; j++) {
       mrho(i, j) = (i == j) ? _iso[i]->rholtilde(s) : 0.0;
     }
-  
+
   b::matrix<cd> irhoK = cd(0, 1)*prod(mrho, K);
   b::matrix<cd> din = b::identity_matrix<cd>(_Nch) - irhoK;
 
   bool sing = false;
   b::matrix<cd> din_inv = gjinverse(din, sing);
-  //std::cout << din_inv << std::endl;
+  // std::cout << din_inv << std::endl;
   if (sing) {std::cerr << "ERROR: SINGULAR" << std::endl;}  // exit(); }
 
   // finally
   _value = prod(K, din_inv);
-  // change the flag
-  cd cds = s;
-  if (imag(cds) == 0.0) {
-    last_s = real(cds); need_for_recalculation = false;
-  }
 }
 
 b::matrix<cd> MmatrixK::getSSInverseValue(cd s) {

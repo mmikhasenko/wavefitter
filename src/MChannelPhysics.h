@@ -12,6 +12,8 @@
 
 #include "MChannel.h"
 
+#define MCHANNELPHYSICS_LARGE_SIZE 250
+
 template<class typeT>
 class MChannelPhysics {
  public:
@@ -23,7 +25,7 @@ class MChannelPhysics {
   typeT getValue(double s);
   typeT getValue(cd s);
 
-  void RecalculateNextTime() {need_for_recalculation = true;};
+  void RecalculateNextTime() {_smap.clear();}
 
  protected:
   uint _Nch;
@@ -32,16 +34,10 @@ class MChannelPhysics {
   virtual void calculate(double s) = 0;
   virtual void calculate(cd s) = 0;
 
-  double last_s;
-  bool need_for_recalculation;
+  std::map<double, typeT> _smap;
 
   typeT _value;
 
-  std::map<double, cd> _smap;
-
-// public:
-//  void setPool(std::vector<double> sarr);  
-  
  public:
   inline uint getNch() const {return _Nch;}
   void Print();
@@ -50,15 +46,11 @@ class MChannelPhysics {
 #define ERROR_VALUE -22.22
 
 template<class typeT> MChannelPhysics<typeT>::MChannelPhysics(uint Nchannels) :
-_Nch(Nchannels), _iso(Nchannels),
-  last_s(ERROR_VALUE),
-  need_for_recalculation(true) {
+_Nch(Nchannels), _iso(Nchannels) {
 }
 
 template<class typeT> MChannelPhysics<typeT>::MChannelPhysics(const std::vector<MChannel*> &channels) :
-_Nch(channels.size()), _iso(channels.size()),
-  need_for_recalculation(true),
-  last_s(ERROR_VALUE) {
+_Nch(channels.size()), _iso(channels.size()) {
   // get information about channels
   std::cout << "-> Template MChannelPhysics constructor!\n";
   for (uint i = 0; i < _Nch; i++) _iso[i] = channels[i];
@@ -70,26 +62,23 @@ template<class typeT> void MChannelPhysics<typeT>::Print() {
 }
 
 template<class typeT> typeT MChannelPhysics<typeT>::getValue(double s) {
-//  if (_smap.size()!=0) {
-//    if (_smap.find(s) != _smap.end()) 
-//    if (need_for_recalculation) for (auto && it : _smap) { calculate(it.first); it.second = _value; }
-//    //try to find in the map
-//    
-//  }
-  if (s != last_s || need_for_recalculation) calculate(s);
+  if (_smap.find(s) == _smap.end()) { calculate(s); _smap[s] = _value;
+  } else { _value = _smap[s]; }
+  // Awere user if he forgot to recalculate
+  // if (_smap.size() > MCHANNELPHYSICS_LARGE_SIZE)
+  //   std::cout << "Warning<MChannelPhysics<typeT>::getValue>: size of s-store pool is too large. \n"
+  //             << "Please check that you are refreshing amplitude calculator in time or increase MCHANNELPHYSICS_LARGE_SIZE.\n";
+  // This check is consumering, should be removed later
+  //  if (_smap[s] != _value) {
+  //    std::cout << "Warning<MChannelPhysics<typeT>::getValue>: check your code! "
+  //              << _smap[s] << "!=" << _value << "\n";
+  //  }
   return _value;
 }
 
 template<class typeT> typeT MChannelPhysics<typeT>::getValue(cd s) {
-  need_for_recalculation = true;
   calculate(s);
   return _value;
 }
-
-//template<class typeT> void MChannelPhysics<typeT>::setPool(std::vector<double> sarr) {
-//  for (auto && it : sarr) {
-//    if (_smap.find(s) != _smap.end()) continue;
-//    calculate(it); _smap[it] = _value; }
-//}
 
 #endif  // SRC_MCHANNELPHYSICS_H_

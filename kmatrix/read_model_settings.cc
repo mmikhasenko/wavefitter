@@ -33,9 +33,7 @@
 #include "mstructures.hh"
 
 int main(int argc, char *argv[]) {
-  const char *output_file = "updated.cfg";
   libconfig::Config cfg;
-
   // Read the file. If there is an error, report it and exit.
   try {
     if (argc > 1) cfg.readFile(argv[1]);
@@ -105,7 +103,7 @@ int main(int argc, char *argv[]) {
       gname.erase(std::remove(gname.begin(), gname.end(), '/'), gname.end());
       // convert to DP fortat
       if (g->GetN() == 0) {std::cerr << "Error<> Nothing is read from data file!" << "\n"; return EXIT_FAILURE;}
-      for (uint j = 0; j < g->GetN(); j++) {
+      for (uint j = 0; j < (uint)g->GetN(); j++) {
         if (g->GetX()[j] < tv1 || g->GetX()[j] > tv2) continue;
         whole_data[i].data.push_back(data_point{
             g->GetX()[j],
@@ -344,15 +342,18 @@ int main(int argc, char *argv[]) {
 
     const uint nAttempts = fit_settings["nAttempts"];
 
+    const std::string &dout_name = fit_settings["dout_name"];
+
     /*********************************** Fit itself *****************************************/
     /****************************************************************************************/
-    TFile fout("/tmp/test.fit.result.root", "RECREATE");
+    TFile fout(TString::Format("%s/fit.results.root", dout_name.c_str()), "RECREATE");
     TTree tout("tout", "Results of fit");
     // set branches
     tout.Branch("can", "TCanvas", &canva);
     double chi2 = 0; tout.Branch("chi2", &chi2);
+    uint iStep = 0; tout.Branch("fit_step", &iStep);
     double pars_mirrow[MParKeeper::gI()->nPars()];
-    for (int i=0; i < MParKeeper::gI()->nPars(); i++)
+    for (uint i=0; i < MParKeeper::gI()->nPars(); i++)
       tout.Branch(MParKeeper::gI()->getName(i).c_str(), &pars_mirrow[i]);
     // to copy to array from where it is copied to tree
     for (uint e = 0; e < nAttempts; e++) {
@@ -389,8 +390,8 @@ int main(int argc, char *argv[]) {
       /*ooooooooooooooooooooooooooooooooooooooo Fit itself ooooooooooooooooooooooooooooooooooo*/
       // step fit
       const uint count = strategy.getLength();
-      for (uint i = 0; i < count; i++) {
-        const libconfig::Setting &fit_step = strategy[i];
+      for (iStep = 0; iStep < count; iStep++) {
+        const libconfig::Setting &fit_step = strategy[iStep];
         const libconfig::Setting &relations = fit_step["relations_to_fit"];
         const libconfig::Setting &pars = fit_step["pars_to_vary"];
         // adjust which relation to fit
@@ -408,33 +409,36 @@ int main(int argc, char *argv[]) {
         }
         // minimize
         min->Minimize();
-      }
-      // Plot all
-      for (uint i=0; i < Nrels; i++) {
-        const DP & data = MRelationHolder::gI()->GetRelation(i).data;
-        std::function<double(double)> func = MRelationHolder::gI()->GetRelation(i).func;
-        // draw
-        canva->cd(i+1)->Clear();
-        draw(data)->Draw("ap");
-        SET1(draw(func,
-                  (data.data.begin())->x, (--data.data.end())->x, 200),
-             SetLineColor(kOrange) )->Draw("l");  // same
-        if (MRelationHolder::gI()->relationStatus(i))
-          SET1(draw(func,
-                    data.lrange, data.rrange, 200),
-               SetLineColor(kRed) )->Draw("l");
-      }
-      MParKeeper::gI()->printAll();
-      canva->SaveAs(TString::Format("/tmp/e%d.pdf", e));
-      delete min;
 
-      // Fill result to tree
-      // to copy to array from where it is copied to tree
-      memcpy(pars_mirrow,
-             MParKeeper::gI()->get().data(),
-             sizeof(double)*MParKeeper::gI()->nPars());
-      chi2 = MRelationHolder::gI()->CalculateChi2();
-      tout.Fill();
+        // Plot all
+        km.RecalculateNextTime();
+        pr.RecalculateNextTime();
+        for (uint i=0; i < Nrels; i++) {
+          const DP & data = MRelationHolder::gI()->GetRelation(i).data;
+          std::function<double(double)> func = MRelationHolder::gI()->GetRelation(i).func;
+          // draw
+          canva->cd(i+1)->Clear();
+          draw(data)->Draw("ap");
+          SET1(draw(func,
+                    (data.data.begin())->x, (--data.data.end())->x, 200),
+               SetLineColor(kOrange) )->Draw("l");  // same
+          if (MRelationHolder::gI()->relationStatus(i))
+            SET1(draw(func,
+                      data.lrange, data.rrange, 200),
+                 SetLineColor(kRed) )->Draw("l");
+        }
+        MParKeeper::gI()->printAll();
+        canva->SaveAs(TString::Format("%s/att%03d.step%d.pdf", dout_name.c_str(), e, iStep));
+
+        // Fill result to tree
+        // to copy to array from where it is copied to tree
+        memcpy(pars_mirrow,
+               MParKeeper::gI()->get().data(),
+               sizeof(double)*MParKeeper::gI()->nPars());
+        chi2 = MRelationHolder::gI()->CalculateChi2();
+        tout.Fill();
+      }
+      delete min;
     }
 
     tout.Write();
