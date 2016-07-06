@@ -6,9 +6,8 @@
 #include <functional>
 #include <complex>
 
-typedef std::complex<double> cd;
 // integrate real and imaginary part
-cd cintegrate(std::function<cd(double)> fint, double a, double b);
+std::complex<double> cintegrate(std::function<std::complex<double>(double)> fint, double a, double b);
 
 // basic integration function
 double integrate(std::function<double(double)> fint, double a, double b);

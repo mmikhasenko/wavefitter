@@ -8,7 +8,7 @@
 #include "mintegrate.hh"
 #include "deflib.h"
 
-#define UB_HLIM 4.0
+#define UB_HLIM 9.0
 
 MProductionPhysics::MProductionPhysics(const std::vector<MChannel*> &channels) :
   MChannelPhysics<b::vector<cd> > (channels),

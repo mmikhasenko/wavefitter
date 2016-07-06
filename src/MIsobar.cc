@@ -7,7 +7,7 @@
 
 MIsobar::MIsobar(double Mi, double G0i,
                  double m1i, double m2i,
-                 int Li, double Ri):
+                 uint Li, double Ri):
   M(Mi), G0(G0i), m1(m1i), m2(m2i), L(Li), R(Ri) {
   // calculate isobar shape integral
   intU = integrate([&](double u)->double{

@@ -24,6 +24,10 @@ cd ChewMandelstam(cd s, double m1sq, double m2sq);
 // technical tools
 template <typename Type>
 Type getvalue(double M, const std::vector<std::pair<double, Type> > &table) {
+  // some super cases
+  if (M == table[0].first) return table[0].second;
+  if (M == table[table.size()-1].first) return table[table.size()-1].second;
+  // standard search
   const uint N = table.size();
   const double lft = table[0].first;
   const double Mstep = table[1].first - lft;

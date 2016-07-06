@@ -5,6 +5,8 @@
 #include "Math/WrappedTF1.h"
 #include "Math/GaussIntegrator.h"
 
+typedef std::complex<double> cd;
+
 // integrate real and imaginary part
 cd cintegrate(std::function<cd(double)> fint, double a, double b) {
   double real_part = integrate([&](double t) -> double {return real(fint(t));}, a, b);

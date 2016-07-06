@@ -2,7 +2,8 @@
 #14.07.2015
 
 lSRC    := ../src
-lDIR    := $(lSRC)
+lPWA    := $(lSRC)/rpwa
+lDIR    := $(lSRC) $(lPWA)
 CXFLAGS := -std=c++11 -O2 #-pg -g -std=c++0x  
 CFLAGS  := -std=gnu99 -O2 #-pg -g
 
@@ -16,8 +17,8 @@ mstructures.o mintegrate.o \
 MChannel.o MTwoBodyChannel.o MIsobarChannel.o \
 MIsobar.o MCoupledChannelIsobar.o MmatrixK.o \
 MRelationHolder.o MParKeeper.o \
-MChannelPhysics.o MProductionPhysics.o
-# NoverD.o
+MChannelPhysics.o MProductionPhysics.o \
+MDeck.o
 
 SET :=  $(addprefix obj/, $(OBJS))
 
@@ -27,7 +28,7 @@ CONF_LIBS += -L/usr/lib/x86_64-linux-gnu -lconfig++
 ####### root- files
 
 ROOT_DIR  := -I$(shell root-config --incdir)
-ROOT_LIBS := $(shell root-config --libs)# -lMathMore -lRooFit -lRooFitCore -lMinuit
+ROOT_LIBS := $(shell root-config --libs) -lMathMore # -lRooFit -lRooFitCore -lMinuit
 
 ROOT = $(ROOT_DIR) $(ROOT_LIBS)
 
@@ -53,6 +54,16 @@ test: test.cc $(SET)
 
 #MClasses
 obj/%.o: $(lSRC)/%.cc
+	g++ $(CXFLAGS) -o $@ -c $< $(compile_flags) \
+	$(addprefix -I,${lDIR}) $(ROOT_DIR)
+
+#TBigner
+obj/%.o: $(lWGN)/%.cxx
+	g++ $(CXFLAGS) -o $@ -c $< $(compile_flags) \
+	$(addprefix -I,${lDIR}) $(ROOT_DIR)
+
+#rwpa FunctionsW
+obj/%.o: $(lWGN)/%.cxx
 	g++ $(CXFLAGS) -o $@ -c $< $(compile_flags) \
 	$(addprefix -I,${lDIR}) $(ROOT_DIR)
 

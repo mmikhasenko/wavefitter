@@ -17,13 +17,13 @@ class MIsobar {
  public:
   MIsobar(double M, double G0,
           double m1, double m2,
-          int L = 0, double R = 5/*GeV*/);
+          uint L = 0, double R = 5/*GeV*/);
 
  protected:
   double M;  // Breit-Wigner mass
   double G0;  // Breit-Wigner width
   double m1, m2;
-  int L;
+  uint L;
   double R;
 
   double intU;
@@ -36,7 +36,7 @@ class MIsobar {
   inline void SetM0(double Mi) { M = Mi; }
   inline void SetG0(double G0i) { G0 = G0i; }
 
-  inline double GetL() const { return L; }
+  inline uint GetL() const { return L; }
 
   inline double sth() const { return POW2(m1+m2); }
 
