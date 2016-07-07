@@ -3,7 +3,7 @@
 
 #include "TF1.h"
 #include "MIsobar.h"
-#include "mintegrate.hh"
+#include "mintegrate.h"
 
 MIsobar::MIsobar(double Mi, double G0i,
                  double m1i, double m2i,

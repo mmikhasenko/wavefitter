@@ -36,6 +36,8 @@ class MChannel {
   cd InterpolateRhoLtilda(double s) const;
 
  public:
+  uint GetL() const { return L; }
+  uint GetR() const { return R; }
   void Print();
 
  private:

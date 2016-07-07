@@ -1,7 +1,7 @@
 // Copyright [2016] Mikhail Mikhasenko
 
 #include "MChannel.h"
-#include "mintegrate.hh"
+#include "mintegrate.h"
 
 void MChannel::makeDisperseLookupTable(double from, double to, uint Npoints) {
   dtable.resize(Npoints);

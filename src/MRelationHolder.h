@@ -8,7 +8,7 @@
 #include <vector>
 #include <functional>
 
-#include "mstructures.hh"
+#include "mstructures.h"
 
 class MRelationHolder {
  public:

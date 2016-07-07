@@ -7,7 +7,7 @@
 #include "TMultiGraph.h"
 #include "TGraphErrors.h"
 
-#include "mstructures.hh"
+#include "mstructures.h"
 
 using std::vector;
 

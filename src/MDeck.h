@@ -7,12 +7,13 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include <vector>
+#include <utility>
 
 #include "TMath.h"
 #include "Math/SpecFuncMathMore.h"
 
 #include "deflib.h"
-#include "mstructures.hh"
+#include "mstructures.h"
 
 #include "dFunction.hpp"
 
@@ -68,8 +69,10 @@ class MDeck {
     return getProjectedDeck(_m1sq, t, s3, _m4sq, _mtsq, s, _J, _L, _Sp, _lamP, _S, _R); }
 
  public:
+  void setLookupTable(const std::vector<std::pair<double, double> > &ltable);
   void makeLookupTable(const MIsobar &iso, double m3, double from, double to, uint Npoints);
-  double getPrecalculated(double s);
+  double getPrecalculated(double s) const;
+  const std::vector<std::pair<double, double> > & getLookupTable() const { return _ltable; }
 
  public:
   inline double sth() const { return POW2(sqrt(_m3sq)+sqrt(_m4sq)); }
@@ -79,6 +82,9 @@ class MDeck {
   inline uint lamP() const { return _lamP; }
   inline uint S() const { return _S; }
   inline uint lamS() const { return _lamS; }
+
+ public:
+  void Print() const;
 };
 
 #endif  // SRC_MDECK_H_

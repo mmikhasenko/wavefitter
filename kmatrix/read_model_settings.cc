@@ -7,6 +7,7 @@
 //       -I/localhome/mikhasenko/Tools/libconfig-1.5/include read_model_settings.cc
 
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <iomanip>
 #include <cstdlib>
@@ -20,17 +21,19 @@
 #include "MmatrixK.h"
 #include "MProductionPhysics.h"
 #include "MRelationHolder.h"
+#include "MDeck.h"
 
 #include "TGraphErrors.h"
 #include "TCanvas.h"
 #include "TFile.h"
 #include "TTree.h"
+#include "TMultiGraph.h"
 #include "Math/MinimizerOptions.h"
 #include "Math/Minimizer.h"
 #include "Math/Factory.h"
 #include "Math/Functor.h"
 
-#include "mstructures.hh"
+#include "mstructures.h"
 
 int main(int argc, char *argv[]) {
   libconfig::Config cfg;
@@ -61,10 +64,19 @@ int main(int argc, char *argv[]) {
 
   const libconfig::Setting& root = cfg.getRoot();
 
+  ///////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////
+  ////////////////////// d a t a   s p e c i f i c a t i o n ////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////
+
   std::vector<DP> whole_data;
   // Get data fiels
   try {
     const libconfig::Setting &data = root["data"];
+
+    std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++++++++\n";
+    std::cout << "/////////////// Data specification: //////////////////\n";
+
     std::string path;
     data.lookupValue("path", path);
     std::cout << path << "\n";
@@ -152,6 +164,10 @@ int main(int argc, char *argv[]) {
   try {
     const libconfig::Setting &modelT = root["modelT"];
 
+    std::cout << "\n\n";
+    std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++++++++\n";
+    std::cout << "/////////////// Model adjustment: ////////////////////\n";
+
     const libconfig::Setting &channels = modelT["channels"];
     uint count = channels.getLength();
 
@@ -223,11 +239,143 @@ int main(int argc, char *argv[]) {
     std::cerr << "Error <> libconfig::SettingNotFoundException in \"model\" secton!" << std::endl;
     return EXIT_FAILURE;
   }
-  
+
+  const uint Jsector = 2;
   MmatrixK km(iset, model_content.size());
+
+
+  ///////////////////////////////////////////////////////////////////////////////////////
+  /////////////// Production model: /////////////////////////////////////////////////////
+  /////////////////////// short range, long range, unitarisation ////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////
   MProductionPhysics pr(iset);
-  pr.addScattering([&](double s)->b::matrix<cd>{return km.getValue(s);});
-  pr.addShortRange();
+
+  try {
+    const libconfig::Setting &modelA = root["modelA"];
+
+    std::cout << "\n\n";
+    std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++++++++\n";
+    std::cout << "/////////////// Production model: ////////////////////\n";
+
+    if ( modelA.exists("scattering") )
+      pr.addScattering([&](double s)->b::matrix<cd>{return km.getValue(s);});
+
+    // short_range
+    if (modelA.exists("short_range")) {
+      const libconfig::Setting &short_range = modelA["short_range"];
+      std::string type;
+      double rhc, slope;
+      if ( !short_range.lookupValue("type", type) ||
+           !short_range.lookupValue("rhc", rhc) ||
+           !short_range.lookupValue("slope", slope)) {
+        std::cout << "READ: " << type << ", s0 = "
+                  << rhc << ", #alpha = " << slope << ")"
+                  << std::endl;
+        const libconfig::Setting &orders = short_range["powers"];
+        const uint count = orders.getLength();
+        std::cout << "Powers of expantion: ";
+        for (uint i = 0; i < count; i++) {
+          int power(orders[i][0]);
+          std::string name = orders[i][1];
+          std::cout << name << " " << power;
+        }
+        std::cout << "\n";
+      }
+      pr.addShortRange(); /* to be improved */
+    }
+
+    std::vector<MDeck*> vdeck;
+    if (modelA.exists("long_range")) {
+      const libconfig::Setting &long_range = modelA["long_range"];
+      std::string type;
+      uint Sp; int M;
+      double R;
+      double tP;
+      if ( long_range.lookupValue("type", type) &&
+           long_range.lookupValue("damping_R", R) &&
+           long_range.lookupValue("pomeron_virtuality", tP) &&
+           long_range.lookupValue("pomeron_S", Sp) &&
+           long_range.lookupValue("pomeron_M", M)) {
+        if (type != "Deck") {
+          std::cerr << "Error: long range interaction is not 'Deck', but no other options are available!";
+          return 0;
+        }
+        std::cout << "Deck projections will be constructed with parameters: J = " << Jsector
+                  << ", Sp = " << Sp << ", M = " << M << ", R = " << R << "\n";
+        // check if there is lookup lable already
+        std::vector<std::string> long_range_lookup_path;
+        if (modelA.exists("long_range_lookup")) {
+          const libconfig::Setting &long_range_lookup = modelA["long_range_lookup"];
+          if (long_range_lookup.getLength() == static_cast<int>(iset.size())) {
+              long_range_lookup_path.resize(iset.size());
+              for (uint i=0; i < iset.size(); i++) {
+                const char* name = long_range_lookup[i];
+                long_range_lookup_path[i] = std::string(name);
+              }
+              std::cout << "--> Files for long range lookup tables are found!\n";
+          } else {
+            std::cout << "Warning: long_range.getLength() != static_cast<int>(iset.size())\n"; 
+          }
+        } else {
+          std::cout << "--> Files for long range lookup tables are not found!\n";
+        }
+        // create deck and add functions
+        uint iBr = MParKeeper::gI()->add("Br", 1., -5., 5.);
+        uint iBi = MParKeeper::gI()->add("Bi", 0., -1., 1.);
+        vdeck.resize(iset.size());
+        std::vector<std::function<cd(double)> > getB(iset.size());
+        TCanvas c3("c3"); c3.DivideSquare(iset.size());
+        for (uint i=0; i < iset.size(); i++) {
+          MIsobarChannel *ich = dynamic_cast<MIsobarChannel*>(iset[i]);
+          const MIsobar &iso = ich->getIsobar();
+          vdeck[i] = new MDeck(POW2(PI_MASS), tP, iso.GetM(), POW2(PI_MASS), POW2(PI_MASS),
+                              Jsector, iset[i]->GetL(), Sp, -M,
+                              iso.GetL(), 0, R);
+          vdeck[i]->Print();
+
+          // check if it is possible to load it from somewhere
+          if (long_range_lookup_path.size()) {
+            TGraph *igr = new TGraph(long_range_lookup_path[i].c_str());
+            if (igr->GetN()) {
+              std::vector<std::pair<double, double> > ltable;
+              for (int j = 0; j < igr->GetN(); j++) ltable.push_back(std::make_pair(igr->GetX()[j], igr->GetY()[j]));
+              vdeck[i]->setLookupTable(ltable);
+              std::cout << "-> Lookup table is filled\n";
+            } else {
+              std::cout << "Warning: igr.GetN() = 0\n";
+              vdeck[i]->makeLookupTable(iso, ich->getBachelorMass(), ich->sth(), POW2(2.5), 20);
+              const std::vector<std::pair<double, double> > &ltable = vdeck[i]->getLookupTable();
+              // save to file
+              std::ofstream myfile(long_range_lookup_path[i]);
+              if (myfile.is_open()) {
+                for (auto && it : ltable) myfile << it.first << " "  << it.second << "\n";
+                myfile.close();
+              }
+              std::cout << "lookup table is saved at " << long_range_lookup_path[i] << "\n";
+            }
+          } else {
+            vdeck[i]->makeLookupTable(iso, ich->getBachelorMass(), ich->sth(), POW2(2.5), 20);
+          }
+
+          //
+          MDeck *iD = vdeck[i];
+          getB[i] = [&, iD, iBr, iBi](double s)->cd {
+            return cd(MParKeeper::gI()->get(iBr),
+                      MParKeeper::gI()->get(iBi)) * iD->getPrecalculated(s);
+          };
+          c3.cd(i+1);
+          draw([&, i, iBr, iBi](double s)->double{return vdeck[i]->getPrecalculated(s);}, 1.5, POW2(4.2))->Draw("al");
+        }
+        c3.SaveAs("/tmp/deck.pdf");
+        pr.addLongRange(getB);
+      }
+    }
+    if (modelA.exists("unitarisation")) pr.unitarize();
+  }
+  catch(const libconfig::SettingNotFoundException &nfex) {
+    std::cerr << "Error <> libconfig::SettingNotFoundException in \"production model\" secton!" << std::endl;
+    return EXIT_FAILURE;
+  }
   MParKeeper::gI()->printAll();
 
   ///////////////////////////////////////////////////////////////////////////////////////
@@ -237,6 +385,10 @@ int main(int argc, char *argv[]) {
 
   try {
     const libconfig::Setting &list_of_parameters = root["parameters"];
+
+    std::cout << "\n\n";
+    std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++++++++\n";
+    std::cout << "/////////////// Parameters business: /////////////////\n";
 
     const libconfig::Setting &starting_values = list_of_parameters["start_value"];
     const uint count = starting_values.getLength();
@@ -281,6 +433,10 @@ int main(int argc, char *argv[]) {
   try {
     const libconfig::Setting &adjustment = root["adjustment"];
 
+    std::cout << "\n\n";
+    std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++++++++\n";
+    std::cout << "/////////////// Relations business: //////////////////\n";
+
     const libconfig::Setting &list_of_relations = adjustment["relation"];
     const uint count = list_of_relations.getLength();
 
@@ -295,7 +451,7 @@ int main(int argc, char *argv[]) {
         MRelationHolder::gI()->AddRelation(whole_data[jData], [&, iCh](double e)->double{
             auto v = pr.getValue(e*e);
             return norm(v(iCh))*iset[iCh]->rho(e*e);
-          });        
+          });
       } else if (type == "Phi@") {
         uint iCh1 = iRel[2][0];
         uint iCh2 = iRel[2][1];
@@ -327,8 +483,65 @@ int main(int argc, char *argv[]) {
 
   const uint Nrels = MRelationHolder::gI()->Nrels();
   MRelationHolder::gI()->Print();
-  TCanvas *canva = new TCanvas("canva","title");
+  TCanvas *canva = new TCanvas("canva", "title");
   canva->DivideSquare(Nrels);
+
+  ///////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////// p l o t  s e t t i n g s /////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////
+
+  try {
+    if (root.exists("plot_settings")) {
+      const libconfig::Setting &plot_settings = root["plot_settings"];
+
+      std::cout << "\n\n";
+      std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++++++++\n";
+      std::cout << "/////////////// Plot settings: ///////////////////////\n";
+
+      std::string type;
+      if (!plot_settings.lookupValue("type", type)) type = "model";
+      const libconfig::Setting &mapping = plot_settings["mapping"];
+      const uint NrelsToPlot = mapping.getLength();
+      canva->Clear(); canva->DivideSquare(NrelsToPlot);
+
+      // if file is specified
+      //  - open file
+      //  - find tree thee
+      //  - load perameters from particular entry of the tree
+
+      // plot in order by mapping
+      for (uint i=0; i < NrelsToPlot; i++) {
+        if (mapping[i].getLength() == 0) continue;
+        const uint iPad = mapping[i][0];  canva->cd(i+1);
+        TMultiGraph *m = new TMultiGraph();
+        // draw data
+        const DP & data = MRelationHolder::gI()->GetRelation(iPad).data;
+        if ( type.find("data") != std::string::npos ) m->Add(draw(data), "ap");
+        // draw model
+        if ( type.find("model") != std::string::npos ) {
+          std::function<double(double)> func = MRelationHolder::gI()->GetRelation(iPad).func;
+          m->Add(
+                 SET2(draw(func,
+                           (data.data.begin())->x, (--data.data.end())->x,
+                           100),
+                      SetLineColor(kOrange),
+                      SetTitle(data.title.c_str()) ), "l");
+        }
+        m->Draw("a");
+        std::cout << data.title.c_str() << " is added!\n";
+      }
+      std::string fplot_name = "/tmp/default_plot.read_model_settings.pdf";
+      if (!plot_settings.lookupValue("fplot_name", fplot_name))
+        std::cerr << "Warning: fplot_name is not specified. A default name wil be used.\n";
+      canva->SaveAs(fplot_name.c_str());
+    }
+  }
+  catch(const libconfig::SettingNotFoundException &nfex) {
+    std::cerr << "Error <> libconfig::SettingNotFoundException in \"plot_settings\" secton" << std::endl;
+    return EXIT_FAILURE;
+  }
+
 
   ///////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////
@@ -336,119 +549,127 @@ int main(int argc, char *argv[]) {
   ///////////////////////////////////////////////////////////////////////////////////////
 
   try {
-    const libconfig::Setting &fit_settings = root["fit_settings"];
+    if (root.exists("fit_settings")) {
+      const libconfig::Setting &fit_settings = root["fit_settings"];
 
-    const libconfig::Setting &strategy = fit_settings["strategy"];
+      std::cout << "\n\n";
+      std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++++++++\n";
+      std::cout << "/////////////// Fit settings: ////////////////////////\n";
 
-    const uint nAttempts = fit_settings["nAttempts"];
+      const libconfig::Setting &strategy = fit_settings["strategy"];
 
-    const std::string &dout_name = fit_settings["dout_name"];
+      const uint nAttempts = fit_settings["nAttempts"];
 
-    /*********************************** Fit itself *****************************************/
-    /****************************************************************************************/
-    TFile fout(TString::Format("%s/fit.results.root", dout_name.c_str()), "RECREATE");
-    TTree tout("tout", "Results of fit");
-    // set branches
-    tout.Branch("can", "TCanvas", &canva);
-    double chi2 = 0; tout.Branch("chi2", &chi2);
-    uint iStep = 0; tout.Branch("fit_step", &iStep);
-    double pars_mirrow[MParKeeper::gI()->nPars()];
-    for (uint i=0; i < MParKeeper::gI()->nPars(); i++)
-      tout.Branch(MParKeeper::gI()->getName(i).c_str(), &pars_mirrow[i]);
-    // to copy to array from where it is copied to tree
-    for (uint e = 0; e < nAttempts; e++) {
-      std::cout << "---------- Attempt " << e << " -----------" << std::endl;
-      std::cout << "------------------------------------------" << std::endl;
+      const std::string &dout_name = fit_settings["dout_name"];
 
-      /**************************************MINIMIZE******************************************/
-      // Build minimizer
-      ROOT::Math::Minimizer* min =
-        ROOT::Math::Factory::CreateMinimizer("Minuit2", "Migrad");
+      /*********************************** Fit itself *****************************************/
+      /****************************************************************************************/
+      TFile *fout = new TFile(TString::Format("%s/fit.results.root", dout_name.c_str()), "RECREATE");
+      if (!fout) { std::cerr << "no fout acceptable!\n"; return 1; }
+      TTree tout("tout", "Results of fit");
+      // set branches
+      tout.Branch("can", "TCanvas", &canva);
+      double chi2 = 0; tout.Branch("chi2", &chi2);
+      uint iStep = 0; tout.Branch("fit_step", &iStep);
+      double pars_mirrow[MParKeeper::gI()->nPars()];
+      for (uint i=0; i < MParKeeper::gI()->nPars(); i++)
+        tout.Branch(MParKeeper::gI()->getName(i).c_str(), &pars_mirrow[i]);
+      // to copy to array from where it is copied to tree
+      for (uint e = 0; e < nAttempts; e++) {
+        std::cout << "---------- Attempt " << e << " -----------" << std::endl;
+        std::cout << "------------------------------------------" << std::endl;
 
-      // set tolerance , etc...
-      min->SetMaxFunctionCalls(100000);
-      min->SetTolerance(0.001);
-      min->SetStrategy(1);
-      min->SetPrintLevel(3);
-      min->Options().Print();
+        /**************************************MINIMIZE******************************************/
+        // Build minimizer
+        ROOT::Math::Minimizer* min =
+          ROOT::Math::Factory::CreateMinimizer("Minuit2", "Migrad");
 
-      // Create funciton wrapper for minmizer a IMultiGenFunction type
-      ROOT::Math::Functor functor([&](const double *pars)->double {
-          MParKeeper::gI()->pset(pars);
+        // set tolerance , etc...
+        min->SetMaxFunctionCalls(100000);
+        min->SetTolerance(0.001);
+        min->SetStrategy(1);
+        min->SetPrintLevel(3);
+        min->Options().Print();
+
+        // Create funciton wrapper for minmizer a IMultiGenFunction type
+        ROOT::Math::Functor functor([&](const double *pars)->double {
+            MParKeeper::gI()->pset(pars);
+            km.RecalculateNextTime();
+            pr.RecalculateNextTime();
+            return MRelationHolder::gI()->CalculateChi2();
+          }, pnPars);
+        min->SetFunction(functor);
+        // specify parameters
+        MParKeeper::gI()->randomizePool();
+        MParKeeper::gI()->printAll();
+        for (uint i=0; i < pnPars; i++) min->SetVariable(i,
+                                                         MParKeeper::gI()->pgetName(i),
+                                                         MParKeeper::gI()->pget(i),
+                                                         0.1);
+        /*ooooooooooooooooooooooooooooooooooooooo Fit itself ooooooooooooooooooooooooooooooooooo*/
+        // step fit
+        const uint count = strategy.getLength();
+        for (iStep = 0; iStep < count; iStep++) {
+          const libconfig::Setting &fit_step = strategy[iStep];
+          const libconfig::Setting &relations = fit_step["relations_to_fit"];
+          const libconfig::Setting &pars = fit_step["pars_to_vary"];
+          // adjust which relation to fit
+          const uint Nrelations = relations.getLength();
+          MRelationHolder::gI()->passiveAll();
+          for (uint r=0; r < Nrelations; r++) MRelationHolder::gI()->activateRelation(relations[r]);
+          MRelationHolder::gI()->Print();
+          // adjust which parameters to vary
+          const uint nPars_to_vary = pars.getLength();
+          // loop over all parameters for make fix them
+          for (uint r=0; r < pnPars; r++) min->FixVariable(r);
+          for (uint r=0; r < nPars_to_vary; r++) {
+            const std::string &pname = pars[r];
+            min->ReleaseVariable(MParKeeper::gI()->pgetIndex(pname));
+          }
+          // minimize
+          min->Minimize();
+
+          // Plot all
           km.RecalculateNextTime();
           pr.RecalculateNextTime();
-          return MRelationHolder::gI()->CalculateChi2();
-        }, pnPars);
-      min->SetFunction(functor);
-      // specify parameters
-      MParKeeper::gI()->randomizePool();
-      MParKeeper::gI()->printAll();
-      for (uint i=0; i < pnPars; i++) min->SetVariable(i,
-                                                      MParKeeper::gI()->pgetName(i),
-                                                      MParKeeper::gI()->pget(i),
-                                                      0.1);
-      /*ooooooooooooooooooooooooooooooooooooooo Fit itself ooooooooooooooooooooooooooooooooooo*/
-      // step fit
-      const uint count = strategy.getLength();
-      for (iStep = 0; iStep < count; iStep++) {
-        const libconfig::Setting &fit_step = strategy[iStep];
-        const libconfig::Setting &relations = fit_step["relations_to_fit"];
-        const libconfig::Setting &pars = fit_step["pars_to_vary"];
-        // adjust which relation to fit
-        const uint Nrelations = relations.getLength();
-        MRelationHolder::gI()->passiveAll();
-        for (uint r=0; r < Nrelations; r++) MRelationHolder::gI()->activateRelation(relations[r]);
-        MRelationHolder::gI()->Print();
-        // adjust which parameters to vary
-        const uint nPars_to_vary = pars.getLength();
-        // loop over all parameters for make fix them
-        for (uint r=0; r < pnPars; r++) min->FixVariable(r);
-        for (uint r=0; r < nPars_to_vary; r++) {
-          const std::string &pname = pars[r];
-          min->ReleaseVariable(MParKeeper::gI()->pgetIndex(pname));
-        }
-        // minimize
-        min->Minimize();
-
-        // Plot all
-        km.RecalculateNextTime();
-        pr.RecalculateNextTime();
-        for (uint i=0; i < Nrels; i++) {
-          const DP & data = MRelationHolder::gI()->GetRelation(i).data;
-          std::function<double(double)> func = MRelationHolder::gI()->GetRelation(i).func;
-          // draw
-          canva->cd(i+1)->Clear();
-          draw(data)->Draw("ap");
-          SET1(draw(func,
-                    (data.data.begin())->x, (--data.data.end())->x, 200),
-               SetLineColor(kOrange) )->Draw("l");  // same
-          if (MRelationHolder::gI()->relationStatus(i))
+          for (uint i=0; i < Nrels; i++) {
+            const DP & data = MRelationHolder::gI()->GetRelation(i).data;
+            std::function<double(double)> func = MRelationHolder::gI()->GetRelation(i).func;
+            // draw
+            canva->cd(i+1)->Clear();
+            draw(data)->Draw("ap");
             SET1(draw(func,
-                      data.lrange, data.rrange, 200),
-                 SetLineColor(kRed) )->Draw("l");
+                      (data.data.begin())->x, (--data.data.end())->x, 200),
+                 SetLineColor(kOrange) )->Draw("l");
+            if (MRelationHolder::gI()->relationStatus(i))
+              SET1(draw(func,
+                        data.lrange, data.rrange, 200),
+                   SetLineColor(kRed))->Draw("l");
+          }
+          MParKeeper::gI()->printAll();
+          canva->SaveAs(TString::Format("%s/att%03d.step%d.pdf", dout_name.c_str(), e, iStep));
+
+          // Fill result to tree
+          // to copy to array from where it is copied to tree
+          memcpy(pars_mirrow,
+                 MParKeeper::gI()->get().data(),
+                 sizeof(double)*MParKeeper::gI()->nPars());
+          chi2 = MRelationHolder::gI()->CalculateChi2();
+          tout.Fill();
         }
-        MParKeeper::gI()->printAll();
-        canva->SaveAs(TString::Format("%s/att%03d.step%d.pdf", dout_name.c_str(), e, iStep));
-
-        // Fill result to tree
-        // to copy to array from where it is copied to tree
-        memcpy(pars_mirrow,
-               MParKeeper::gI()->get().data(),
-               sizeof(double)*MParKeeper::gI()->nPars());
-        chi2 = MRelationHolder::gI()->CalculateChi2();
-        tout.Fill();
+        delete min;
       }
-      delete min;
-    }
 
-    tout.Write();
-    fout.Close();
-    delete canva;
+      tout.Write();
+      fout->Close();
+    }
   }
   catch(const libconfig::SettingNotFoundException &nfex) {
     std::cerr << "Error <> libconfig::SettingNotFoundException in \"fit\" secton" << std::endl;
     return EXIT_FAILURE;
   }
+
+  delete canva;
 
   // well done
 

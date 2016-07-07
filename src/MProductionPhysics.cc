@@ -5,7 +5,7 @@
 
 #include "MProductionPhysics.h"
 #include "MParKeeper.h"
-#include "mintegrate.hh"
+#include "mintegrate.h"
 #include "deflib.h"
 
 #define UB_HLIM 9.0
@@ -28,8 +28,9 @@ void MProductionPhysics::addLongRange(const std::vector<std::function<cd(double)
   // fill long range term
   for (uint i = 0; i < _Nch; i++) {
     std::ostringstream ss; ss << "b" << i+1;
-    _fB[i] = MParKeeper::gI()->add(ss.str(), 0.0, -10., 10.);
+    _fB[i] = MParKeeper::gI()->add(ss.str(), 1.0, -10., 10.);
   }
+  std::cout << "-----------> Long range production is added!\n";
 }
 
 /* add directe resonance production, just set of parameters - production constants */
@@ -43,6 +44,7 @@ void MProductionPhysics::addShortRange() {
     std::ostringstream iss; iss << "ic" << i;
     _fC[i].second = MParKeeper::gI()->add(iss.str(), 0.0, -10., 10.);
   }
+  std::cout << "-----------> Short range production is added!\n";
 }
 
 /* calculate unitarisation term and put it to a lookup table */
@@ -65,6 +67,7 @@ void MProductionPhysics::unitarize() {
         }, 0, 1./sth);
     }
   }
+  std::cout << "-----------> Unitarisation is done. Lookup tables are built!\n";
 }
 
 /* calculate scattering matrix, final state interaction dynamics */
@@ -77,8 +80,7 @@ void MProductionPhysics::calculate(double s) {
   // value I gonna calculate
   _value =  b::vector<cd>(_Nch, 0);
 
-  b::vector<cd> bvect;
-
+  b::vector<cd> bvect(_Nch);
   // pure Deck
   if (_getB.size()) {
     b::vector<cd> B(_Nch);
@@ -87,7 +89,7 @@ void MProductionPhysics::calculate(double s) {
     // get parameters
     for (uint i = 0; i < _Nch; i++) bvect[i] = MParKeeper::gI()->get(_fB[i]);
     // add to value
-    _value += element_prod(B, bvect);
+    _value += b::element_prod(B, bvect);
   }
   if (!_fC.size() && !_ubLookup.size()) return;  // if no unitarisation, no direct production -> return
 

@@ -30,6 +30,7 @@ class MIsobarChannel : public MChannel {
 
  public:
   const MIsobar &getIsobar() const {return _iso;}
+  double getBachelorMass() const {return _m3;}
 
   double sth() const {return POW2(sqrt(_iso.sth())+_m3);}
 

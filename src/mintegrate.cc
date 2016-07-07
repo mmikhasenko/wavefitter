@@ -1,6 +1,6 @@
 // Copyright [2016] Mikhail Mikhasenko
 
-#include "mintegrate.hh"
+#include "mintegrate.h"
 #include "TF1.h"
 #include "Math/WrappedTF1.h"
 #include "Math/GaussIntegrator.h"

@@ -31,8 +31,14 @@ Type getvalue(double M, const std::vector<std::pair<double, Type> > &table) {
   const uint N = table.size();
   const double lft = table[0].first;
   const double Mstep = table[1].first - lft;
-  const int Nsteps = (M - lft)/Mstep;
-  if (Nsteps < 0 || Nsteps >= -1+N) {std::cerr << "Error!! in getvalue! M = " << M << ", " << table[0].second << std::endl; return 0;}
+  int Nsteps = (M - lft)/Mstep;
+  if (Nsteps == N-1 && M < table[N-1].first) Nsteps--; /* presision fix */
+  if (Nsteps < 0 || Nsteps >= -1+N) {
+    std::cerr << "Error!! in getvalue! M = " << M << ", "
+              << table[N-1].first << ", diff = " << M - table[N-1].first
+              << std::endl;
+    return 0;
+  }
   const Type value = table[Nsteps].second +
     (table[Nsteps+1].second - table[Nsteps].second) /
     (table[Nsteps+1].first  - table[Nsteps].first) * (M - table[Nsteps].first);
@@ -43,8 +49,15 @@ template <typename Type>
 Type getvalue(double M, std::pair<double, Type> *table, uint N) {
   const double lft = table[0].first;
   const double Mstep = table[1].first - lft;
-  const int Nsteps = (M - lft)/Mstep;
-  if (Nsteps < 0 || Nsteps >= N-1) {std::cerr << "Error!! in getvalue! M = " << M << ", " << table[0].second << std::endl; return 0;}
+  int Nsteps = (M - lft)/Mstep;
+  if (Nsteps == N-1 && M < table[N-1].first) Nsteps--; /* presision fix */
+  if (Nsteps < 0 || Nsteps >= N-1) {
+    std::cerr << "Error!! in getvalue! M = " << M << ", "
+              << table[N-1].first
+              << ", Nsteps = " << Nsteps
+              << ", N = " << N << "\n";
+    return 0;
+  }
   const Type value = table[Nsteps].second +
     (table[Nsteps+1].second - table[Nsteps].second) /
     (table[Nsteps+1].first  - table[Nsteps].first) * (M - table[Nsteps].first);

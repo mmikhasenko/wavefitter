@@ -53,7 +53,7 @@ test: test.cc $(SET)
  #---------------------------------------------------------------------------------#
 
 #MClasses
-obj/%.o: $(lSRC)/%.cc
+obj/%.o: $(lSRC)/%.cc $(lSRC)/%.h
 	g++ $(CXFLAGS) -o $@ -c $< $(compile_flags) \
 	$(addprefix -I,${lDIR}) $(ROOT_DIR)
 

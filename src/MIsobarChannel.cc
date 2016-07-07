@@ -6,7 +6,7 @@
 
 #include "MIsobarChannel.h"
 #include "deflib.h"
-#include "mintegrate.hh"
+#include "mintegrate.h"
 
 #define SCALEX_FOR_CUT 2.
 #define SCALEY_FOR_CUT 10.0
