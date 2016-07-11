@@ -33,7 +33,17 @@ ROOT_LIBS := $(shell root-config --libs) -lMathMore # -lRooFit -lRooFitCore -lMi
 ROOT = $(ROOT_DIR) $(ROOT_LIBS)
 
 ####### bin- files
-EXEC := test compass_2-+_3wave
+EXEC := test read_model_settings \
+	test_MIsobar \
+	test_MmatrixK \
+	test_MProduction \
+	test_Secondsheet \
+	test_Errors \
+	test_Fit \
+	test_Damp test_Deck test_MDeck \
+	test_Unitarisation
+# compass_2-+_3wave
+
 ALL: $(EXES)
 
  #--------------------- E x e c u t a b l e  p r o g r a m s ----------------------#
