@@ -34,8 +34,9 @@ Type getvalue(double M, const std::vector<std::pair<double, Type> > &table) {
   int Nsteps = (M - lft)/Mstep;
   if (Nsteps == N-1 && M < table[N-1].first) Nsteps--; /* presision fix */
   if (Nsteps < 0 || Nsteps >= -1+N) {
-    std::cerr << "Error!! in getvalue! M = " << M << ", "
-              << table[N-1].first << ", diff = " << M - table[N-1].first
+    std::cerr << "Error!! in getvalue! M = " << M << " not in ["
+              << table[0].first << ", "
+              << table[N-1].first << "], diff to max = " << M - table[N-1].first
               << std::endl;
     return 0;
   }

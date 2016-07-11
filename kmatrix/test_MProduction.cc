@@ -4,14 +4,12 @@
 #include "TCanvas.h"
 #include "MIsobar.h"
 #include "MmatrixK.h"
+#include "MIsobarChannel.h"
 #include "MProductionPhysics.h"
 #include "MParKeeper.h"
-#include "mstructures.hh"
+#include "mstructures.h"
 
 int main(int argc, char *argv[]) {
-  const int Np = 116;
-  const double Hlim = 2.5*2.5;
-
   // stable
   MIsobar rho(0.77, 0.15, 0.14, 0.14, 1, 5.);
   MIsobar  f2(1.23, 0.2,  0.14, 0.14, 2, 5.);
@@ -23,19 +21,19 @@ int main(int argc, char *argv[]) {
   rho_q.makeDisperseLookupTable(0, 10., 100);
   f2_q .makeDisperseLookupTable(0, 10., 100);
 
-  std::vector<MIsobarChannel*> iset = {&rho_q, &f2_q};
+  std::vector<MChannel*> iset = {&rho_q, &f2_q};
   MmatrixK km(iset, 2);
   MProductionPhysics pr(iset);
   pr.addScattering([&](double s)->b::matrix<cd>{return km.getValue(s);});
   pr.addShortRange();
   // masses
-  MParKeeper::gI()->set("m1", 1.502);
-  MParKeeper::gI()->set("m2", 1.701);
+  MParKeeper::gI()->set("m0", 1.502);
+  MParKeeper::gI()->set("m1", 1.701);
   // couplings
-  MParKeeper::gI()->set("g1", 4.);
-  MParKeeper::gI()->set("g2", 1.);
-  MParKeeper::gI()->set("h1", 1.);
-  MParKeeper::gI()->set("h2", 4.);
+  MParKeeper::gI()->set("g0", 4.);
+  MParKeeper::gI()->set("g1", 1.);
+  MParKeeper::gI()->set("h0", 1.);
+  MParKeeper::gI()->set("h1", 4.);
   MParKeeper::gI()->set("c0", 1.);
   MParKeeper::gI()->set("c1", 1.);
   MParKeeper::gI()->printAll();
@@ -50,7 +48,7 @@ int main(int argc, char *argv[]) {
                SetLineColor(kBlack), SetLineStyle(1) ) )
     ->Draw("al");
 
-  c1.SaveAs("/tmp/a.pdf");
+  c1.SaveAs("/tmp/a.test_MProduction.pdf");
 
   return 0;
 }

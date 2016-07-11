@@ -18,8 +18,6 @@
 #include "MChannelPhysics.h"
 #include "MChannel.h"
 
-#define UB_LOOKUP_NPOINT 150
-
 namespace b = boost::numeric::ublas;
 
 class MProductionPhysics : public MChannelPhysics<b::vector<cd> >  {
@@ -31,7 +29,7 @@ class MProductionPhysics : public MChannelPhysics<b::vector<cd> >  {
   virtual void calculate(cd s) {;}
 
  private:
-  std::vector<int> _fB;
+  std::pair<uint, uint> _fB;
   std::vector<std::pair<uint, uint> > _fC;
 
  private:
@@ -39,12 +37,12 @@ class MProductionPhysics : public MChannelPhysics<b::vector<cd> >  {
   std::vector<std::function<cd(double)> > _getB;
 
  private:
-  std::vector<std::array<std::pair<double, cd>, UB_LOOKUP_NPOINT> > _ubLookup;
+  std::vector<std::vector<std::pair<double, cd> > > _ubLookup;
 
  public:
-  void addLongRange(const std::vector<std::function<cd(double)> > &getB);
-  void addShortRange();
-  void unitarize();
+  void addLongRange(const std::vector<std::function<cd(double)> > &getB, std::string par_name = "B");
+  void addShortRange(std::string par_name = "c");
+  void unitarize(double to = POW2(3.0), uint Npoints = 200);
   void addScattering(std::function<b::matrix<cd>(double)> getT);
 };
 

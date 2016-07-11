@@ -24,7 +24,7 @@ class MParKeeper {
   void setRandom(uint i);
   void setRange(uint i, double v1, double v2);
   // name <-> index relations
-  std::string getName(uint i) const {check(i, _pars.size()); return _map[i].name;}
+  const std::string & getName(uint i) const {check(i, _pars.size()); return _map[i].name;}
   uint getIndex(const std::string &name) const;
   // methods called by name
   const std::vector<double> & get() const {return _pars;}
@@ -47,7 +47,7 @@ class MParKeeper {
   inline void psetRandom(uint i) {check(i, _pool.size()); return setRandom(_pool[i]);}
   inline void psetRange(uint i, double v1, double v2) {check(i, _pool.size()); return setRange(_pool[i], v1, v2);}
   // name <-> index relations
-  std::string pgetName(uint i) const {check(i, _pool.size()); return getName(_pool[i]);}
+  const std::string &pgetName(uint i) const {check(i, _pool.size()); return getName(_pool[i]);}
   uint pgetIndex(const std::string &name) const;
 
  private:

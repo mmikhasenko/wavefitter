@@ -122,9 +122,6 @@ int main(int argc, char *argv[]) {
               g->GetY()[j],
               g->GetEX()[j]
               });
-//        std::cout << g->GetX()[j] << " "
-//                  << g->GetY()[j] << " "
-//                  << g->GetEX()[j] << "\n";
       }
       whole_data[i].name = gname.c_str();
       whole_data[i].title = title.c_str();
@@ -248,129 +245,144 @@ int main(int argc, char *argv[]) {
   /////////////// Production model: /////////////////////////////////////////////////////
   /////////////////////// short range, long range, unitarisation ////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////
-  MProductionPhysics pr(iset);
+  std::vector<MProductionPhysics*> vpr;  // (iset);
 
   try {
-    const libconfig::Setting &modelA = root["modelA"];
+    const libconfig::Setting &modelsA = root["modelA"];
+    const uint Nmodels = modelsA.getLength();
 
     std::cout << "\n\n";
     std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++++++++\n";
     std::cout << "/////////////// Production model: ////////////////////\n";
+    std::cout << "--> " << Nmodels << " production models will be constructed.\n";
 
-    if ( modelA.exists("scattering") )
-      pr.addScattering([&](double s)->b::matrix<cd>{return km.getValue(s);});
+    for (uint imodelA = 0; imodelA < Nmodels; imodelA++) { 
+      const libconfig::Setting &modelA = modelsA[imodelA];
 
-    // short_range
-    if (modelA.exists("short_range")) {
-      const libconfig::Setting &short_range = modelA["short_range"];
-      std::string type;
-      double rhc, slope;
-      if ( !short_range.lookupValue("type", type) ||
-           !short_range.lookupValue("rhc", rhc) ||
-           !short_range.lookupValue("slope", slope)) {
-        std::cout << "READ: " << type << ", s0 = "
-                  << rhc << ", #alpha = " << slope << ")"
-                  << std::endl;
-        const libconfig::Setting &orders = short_range["powers"];
-        const uint count = orders.getLength();
-        std::cout << "Powers of expantion: ";
-        for (uint i = 0; i < count; i++) {
-          int power(orders[i][0]);
-          std::string name = orders[i][1];
-          std::cout << name << " " << power;
+      vpr.push_back(new MProductionPhysics(iset));
+      // set a reference and use as it was done
+      MProductionPhysics &pr = *(vpr[imodelA]);
+
+      if ( modelA.exists("scattering") )
+        pr.addScattering([&](double s)->b::matrix<cd>{return km.getValue(s);});
+
+      // short_range
+      if (modelA.exists("short_range")) {
+        const libconfig::Setting &short_range = modelA["short_range"];
+        std::string type;
+        double rhc, slope;
+        std::vector<std::pair<int,std::string> > powers;
+        if ( short_range.lookupValue("type", type) &&
+             short_range.lookupValue("rhc", rhc) &&
+             short_range.lookupValue("slope", slope) &&
+             short_range.exists("powers")) {
+          std::cout << "READ: " << type << ", s0 = "
+                    << rhc << ", #alpha = " << slope << ")"
+                    << std::endl;
+          const libconfig::Setting &orders = short_range["powers"];
+          const uint count = orders.getLength();
+          std::cout << "Powers of expantion: ";
+          for (uint i = 0; i < count; i++) {
+            int power(orders[i][0]);
+            std::string name = orders[i][1];
+            std::cout << name << " " << power;
+            powers.push_back(std::make_pair(power, name));
+          }
+          std::cout << "\n";
         }
-        std::cout << "\n";
+        if (powers.size() != 1) {std::cout << "Warning: pietarinen expantion is not inplemented. A constant will be used"; }
+        // temperary fix
+        if (powers.size() > 0) pr.addShortRange(powers[0].second); /* to be improved */
+        else pr.addShortRange(); /* to be improved */
       }
-      pr.addShortRange(); /* to be improved */
-    }
 
-    std::vector<MDeck*> vdeck;
-    if (modelA.exists("long_range")) {
-      const libconfig::Setting &long_range = modelA["long_range"];
-      std::string type;
-      uint Sp; int M;
-      double R;
-      double tP;
-      if ( long_range.lookupValue("type", type) &&
-           long_range.lookupValue("damping_R", R) &&
-           long_range.lookupValue("pomeron_virtuality", tP) &&
-           long_range.lookupValue("pomeron_S", Sp) &&
-           long_range.lookupValue("pomeron_M", M)) {
-        if (type != "Deck") {
-          std::cerr << "Error: long range interaction is not 'Deck', but no other options are available!";
-          return 0;
-        }
-        std::cout << "Deck projections will be constructed with parameters: J = " << Jsector
-                  << ", Sp = " << Sp << ", M = " << M << ", R = " << R << "\n";
-        // check if there is lookup lable already
-        std::vector<std::string> long_range_lookup_path;
-        if (modelA.exists("long_range_lookup")) {
-          const libconfig::Setting &long_range_lookup = modelA["long_range_lookup"];
-          if (long_range_lookup.getLength() == static_cast<int>(iset.size())) {
+      std::vector<MDeck*> vdeck;
+      if (modelA.exists("long_range")) {
+        const libconfig::Setting &long_range = modelA["long_range"];
+        std::string type;
+        uint Sp; int M;
+        double R;
+        double tP;
+        if ( long_range.lookupValue("type", type) &&
+             long_range.lookupValue("damping_R", R) &&
+             long_range.lookupValue("pomeron_virtuality", tP) &&
+             long_range.lookupValue("pomeron_S", Sp) &&
+             long_range.lookupValue("pomeron_M", M)) {
+          if (type != "Deck") {
+            std::cerr << "Error: long range interaction is not 'Deck', but no other options are available!";
+            return 0;
+          }
+          std::cout << "Deck projections will be constructed with parameters: J = " << Jsector
+                    << ", Sp = " << Sp << ", M = " << M << ", R = " << R << "\n";
+          // check if there is lookup lable already
+          std::vector<std::string> long_range_lookup_path;
+          if (long_range.exists("long_range_lookup")) {
+            const libconfig::Setting &long_range_lookup = long_range["long_range_lookup"];
+            if (long_range_lookup.getLength() == static_cast<int>(iset.size())) {
               long_range_lookup_path.resize(iset.size());
               for (uint i=0; i < iset.size(); i++) {
-                const char* name = long_range_lookup[i];
+                const std::string &name = long_range_lookup[i];
                 long_range_lookup_path[i] = std::string(name);
               }
               std::cout << "--> Files for long range lookup tables are found!\n";
-          } else {
-            std::cout << "Warning: long_range.getLength() != static_cast<int>(iset.size())\n"; 
-          }
-        } else {
-          std::cout << "--> Files for long range lookup tables are not found!\n";
-        }
-        // create deck and add functions
-        uint iBr = MParKeeper::gI()->add("Br", 1., -5., 5.);
-        uint iBi = MParKeeper::gI()->add("Bi", 0., -1., 1.);
-        vdeck.resize(iset.size());
-        std::vector<std::function<cd(double)> > getB(iset.size());
-        TCanvas c3("c3"); c3.DivideSquare(iset.size());
-        for (uint i=0; i < iset.size(); i++) {
-          MIsobarChannel *ich = dynamic_cast<MIsobarChannel*>(iset[i]);
-          const MIsobar &iso = ich->getIsobar();
-          vdeck[i] = new MDeck(POW2(PI_MASS), tP, iso.GetM(), POW2(PI_MASS), POW2(PI_MASS),
-                              Jsector, iset[i]->GetL(), Sp, -M,
-                              iso.GetL(), 0, R);
-          vdeck[i]->Print();
-
-          // check if it is possible to load it from somewhere
-          if (long_range_lookup_path.size()) {
-            TGraph *igr = new TGraph(long_range_lookup_path[i].c_str());
-            if (igr->GetN()) {
-              std::vector<std::pair<double, double> > ltable;
-              for (int j = 0; j < igr->GetN(); j++) ltable.push_back(std::make_pair(igr->GetX()[j], igr->GetY()[j]));
-              vdeck[i]->setLookupTable(ltable);
-              std::cout << "-> Lookup table is filled\n";
             } else {
-              std::cout << "Warning: igr.GetN() = 0\n";
-              vdeck[i]->makeLookupTable(iso, ich->getBachelorMass(), ich->sth(), POW2(2.5), 20);
-              const std::vector<std::pair<double, double> > &ltable = vdeck[i]->getLookupTable();
-              // save to file
-              std::ofstream myfile(long_range_lookup_path[i]);
-              if (myfile.is_open()) {
-                for (auto && it : ltable) myfile << it.first << " "  << it.second << "\n";
-                myfile.close();
-              }
-              std::cout << "lookup table is saved at " << long_range_lookup_path[i] << "\n";
+              std::cout << "Warning: long_range.getLength() != static_cast<int>(iset.size())\n"; 
             }
           } else {
-            vdeck[i]->makeLookupTable(iso, ich->getBachelorMass(), ich->sth(), POW2(2.5), 20);
+            std::cout << "--> Files for long range lookup tables are not found!\n";
           }
+          // create deck and add functions
+          vdeck.resize(iset.size());
+          std::vector<std::function<cd(double)> > getB(iset.size());
+          TCanvas c3("c3"); c3.DivideSquare(iset.size());
+          for (uint i=0; i < iset.size(); i++) {
+            MIsobarChannel *ich = dynamic_cast<MIsobarChannel*>(iset[i]);
+            const MIsobar &iso = ich->getIsobar();
+            vdeck[i] = new MDeck(POW2(PI_MASS), tP, iso.GetM(), POW2(PI_MASS), POW2(PI_MASS),
+                                 Jsector, iset[i]->GetL(), Sp, -M,
+                                 iso.GetL(), 0, R);
+            vdeck[i]->Print();
 
-          //
-          MDeck *iD = vdeck[i];
-          getB[i] = [&, iD, iBr, iBi](double s)->cd {
-            return cd(MParKeeper::gI()->get(iBr),
-                      MParKeeper::gI()->get(iBi)) * iD->getPrecalculated(s);
-          };
-          c3.cd(i+1);
-          draw([&, i, iBr, iBi](double s)->double{return vdeck[i]->getPrecalculated(s);}, 1.5, POW2(4.2))->Draw("al");
+            // check if it is possible to load it from somewhere
+            if (long_range_lookup_path.size()) {
+              TGraph *igr = new TGraph(long_range_lookup_path[i].c_str());
+              if (igr->GetN()) {
+                std::vector<std::pair<double, double> > ltable;
+                for (int j = 0; j < igr->GetN(); j++) ltable.push_back(std::make_pair(igr->GetX()[j], igr->GetY()[j]));
+                vdeck[i]->setLookupTable(ltable);
+                std::cout << "-> Lookup table is filled\n";
+              } else {
+                std::cout << "Warning: igr.GetN() = 0\n";
+                vdeck[i]->makeLookupTable(iso, ich->getBachelorMass(), ich->sth(), POW2(2.5), 30);
+                const std::vector<std::pair<double, double> > &ltable = vdeck[i]->getLookupTable();
+                // save to file
+                std::ofstream myfile(long_range_lookup_path[i]);
+                if (myfile.is_open()) {
+                  for (auto && it : ltable) myfile << it.first << " "  << it.second << "\n";
+                  myfile.close();
+                }
+                std::cout << "lookup table is saved at " << long_range_lookup_path[i] << "\n";
+              }
+            } else {
+              vdeck[i]->makeLookupTable(iso, ich->getBachelorMass(), ich->sth(), POW2(2.5), 30);
+            }
+
+            //
+            MDeck *iD = vdeck[i];
+            getB[i] = [&, iD](double s)->cd { return iD->getPrecalculated(s); };
+            c3.cd(i+1);
+            draw([&, i](double s)->double{return vdeck[i]->getPrecalculated(s);}, 1.0, POW2(4.2))->Draw("al");
+          }
+          c3.SaveAs("/tmp/deck.pdf");
+          // finally add Long Range
+          if (long_range.exists("par_name")) {
+            std::string par_name = long_range["par_name"];
+            pr.addLongRange(getB, par_name);
+          } else pr.addLongRange(getB);
         }
-        c3.SaveAs("/tmp/deck.pdf");
-        pr.addLongRange(getB);
       }
+      if (modelA.exists("unitarisation")) pr.unitarize();
     }
-    if (modelA.exists("unitarisation")) pr.unitarize();
   }
   catch(const libconfig::SettingNotFoundException &nfex) {
     std::cerr << "Error <> libconfig::SettingNotFoundException in \"production model\" secton!" << std::endl;
@@ -447,31 +459,55 @@ int main(int argc, char *argv[]) {
       if (jData >= whole_data.size()) std::cerr << "Error: jData<0 || jData >= Nhist." << std::endl;
       std::string type = iRel[1];
       if (type == "I@") {
-        uint iCh = iRel[2];
-        MRelationHolder::gI()->AddRelation(whole_data[jData], [&, iCh](double e)->double{
-            auto v = pr.getValue(e*e);
+        uint iModel = iRel[2][0];
+        uint iCh = iRel[2][1];
+        MProductionPhysics *pr = vpr[iModel];
+        MRelationHolder::gI()->AddRelation(whole_data[jData], [&, iCh, pr](double e)->double{
+            auto v = pr->getValue(e*e);
             return norm(v(iCh))*iset[iCh]->rho(e*e);
           });
+      } else if (type == "Re@") {
+        uint iModel = iRel[2][0];
+        uint iCh = iRel[2][1];
+        MProductionPhysics *pr = vpr[iModel];
+        MRelationHolder::gI()->AddRelation(whole_data[jData], [&, iCh, pr](double e)->double{
+            auto v = pr->getValue(e*e);
+            return real(v(iCh))*iset[iCh]->rho(e*e);
+          });
+      } else if (type == "Im@") {
+        uint iModel = iRel[2][0];
+        uint iCh = iRel[2][1];
+        MProductionPhysics *pr = vpr[iModel];
+        MRelationHolder::gI()->AddRelation(whole_data[jData], [&, iCh, pr](double e)->double{
+            auto v = pr->getValue(e*e);
+            return imag(v(iCh))*iset[iCh]->rho(e*e);
+          });
       } else if (type == "Phi@") {
-        uint iCh1 = iRel[2][0];
-        uint iCh2 = iRel[2][1];
-        MRelationHolder::gI()->AddRelation(whole_data[jData], [&, iCh1, iCh2](double e)->double{
-            auto v = pr.getValue(e*e);
-            return arg(v(iCh1)*conj(v(iCh2)));
+        uint iModel0 = iRel[2][0][0]; uint iCh0 = iRel[2][0][1];
+        uint iModel1 = iRel[2][1][0]; uint iCh1 = iRel[2][1][1];
+        if (iModel0 != iModel1) { std::cerr << "Error: iModel0!=iModel1!\n"; return 1;}
+        MProductionPhysics *pr = vpr[iModel1];
+        MRelationHolder::gI()->AddRelation(whole_data[jData], [&, iCh0, iCh1, pr](double e)->double{
+            auto v = pr->getValue(e*e);
+            return arg(v(iCh0)*conj(v(iCh1)));
           });
       } else if (type == "SinPhi@") {
-        uint iCh1 = iRel[2][0];
-        uint iCh2 = iRel[2][1];
-        MRelationHolder::gI()->AddRelation(whole_data[jData], [&, iCh1, iCh2](double e)->double{
-            auto v = pr.getValue(e*e);
-            return sin(arg(v(iCh1)*conj(v(iCh2))));
+        uint iModel0 = iRel[2][0][0]; uint iCh0 = iRel[2][0][1];
+        uint iModel1 = iRel[2][1][0]; uint iCh1 = iRel[2][1][1];
+        if (iModel0 != iModel1) { std::cerr << "Error: iModel0!=iModel1!\n"; return 1;}
+        MProductionPhysics *pr = vpr[iModel1];
+        MRelationHolder::gI()->AddRelation(whole_data[jData], [&, iCh0, iCh1, pr](double e)->double{
+            auto v = pr->getValue(e*e);
+            return sin(arg(v(iCh0)*conj(v(iCh1))));
           });
       } else if (type == "CosPhi@") {
-        uint iCh1 = iRel[2][0];
-        uint iCh2 = iRel[2][1];
-        MRelationHolder::gI()->AddRelation(whole_data[jData], [&, iCh1, iCh2](double e)->double{
-            auto v = pr.getValue(e*e);
-            return cos(arg(v(iCh1)*conj(v(iCh2))));
+        uint iModel0 = iRel[2][0][0]; uint iCh0 = iRel[2][0][1];
+        uint iModel1 = iRel[2][1][0]; uint iCh1 = iRel[2][1][1];
+        if (iModel0 != iModel1) { std::cerr << "Error: iModel0!=iModel1!\n"; return 1;}
+        MProductionPhysics *pr = vpr[iModel1];
+        MRelationHolder::gI()->AddRelation(whole_data[jData], [&, iCh0, iCh1, pr](double e)->double{
+            auto v = pr->getValue(e*e);
+            return cos(arg(v(iCh0)*conj(v(iCh1))));
           });
       }
     }
@@ -484,7 +520,6 @@ int main(int argc, char *argv[]) {
   const uint Nrels = MRelationHolder::gI()->Nrels();
   MRelationHolder::gI()->Print();
   TCanvas *canva = new TCanvas("canva", "title");
-  canva->DivideSquare(Nrels);
 
   ///////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////
@@ -509,28 +544,123 @@ int main(int argc, char *argv[]) {
       //  - open file
       //  - find tree thee
       //  - load perameters from particular entry of the tree
+      if (plot_settings.exists("path_to_fit_results") && plot_settings.exists("entry_fit_result")) {
+        std::string fres_name; plot_settings.lookupValue("path_to_fit_results", fres_name);
+        uint entry =  plot_settings["entry_fit_result"];  // throw exception it something is wrong
+        TFile *fres = TFile::Open(fres_name.c_str());
+        if (fres) {
+          std::cout << "File with results successfully opened!\n";
+          TTree *tres; gDirectory->GetObject("tout", tres);
+          if (tres) {
+            const uint Npars = MParKeeper::gI()->nPars();
+            double pars[Npars];
+            for (uint i = 0; i < Npars; i++) {
+              const std::string & name = MParKeeper::gI()->getName(i);
+              // check if it is at list of branches
+              tres->SetBranchAddress(name.c_str(), &pars[i]);
+            }
+            // set values from tree and set to keeper
+            tres->GetEntry(entry);
+            for (uint i = 0; i < Npars; i++) MParKeeper::gI()->set(i, pars[i]);
+          } else {
+            std::cerr << "Tree with results not found by name 'tout'!\n";
+            return 1;
+          }
+        } else {
+          std::cerr << "File with results specified but not found!\n";
+          return 1;
+        }
+      }
 
-      // plot in order by mapping
+      std::vector<TMultiGraph*> mgr(NrelsToPlot);
+      // add data in order by mapping
       for (uint i=0; i < NrelsToPlot; i++) {
         if (mapping[i].getLength() == 0) continue;
-        const uint iPad = mapping[i][0];  canva->cd(i+1);
-        TMultiGraph *m = new TMultiGraph();
+        const uint iPad = mapping[i][0];
+        mgr[i] = new TMultiGraph();
         // draw data
         const DP & data = MRelationHolder::gI()->GetRelation(iPad).data;
-        if ( type.find("data") != std::string::npos ) m->Add(draw(data), "ap");
-        // draw model
-        if ( type.find("model") != std::string::npos ) {
-          std::function<double(double)> func = MRelationHolder::gI()->GetRelation(iPad).func;
-          m->Add(
-                 SET2(draw(func,
-                           (data.data.begin())->x, (--data.data.end())->x,
-                           100),
-                      SetLineColor(kOrange),
-                      SetTitle(data.title.c_str()) ), "l");
-        }
-        m->Draw("a");
-        std::cout << data.title.c_str() << " is added!\n";
+        if ( type.find("data") != std::string::npos ) mgr[i]->Add(draw(data), "p");
       }
+
+      // add model model
+      if ( type.find("model") != std::string::npos ) {
+        if (plot_settings.exists("what_to_plot")) {
+          const libconfig::Setting &what_to_plot = plot_settings["what_to_plot"];
+          const uint Ncurves = what_to_plot.getLength();
+          std::cout << "--> " << Ncurves << " model settings are found to be plotted.\n";
+          for (uint j = 0; j < Ncurves; j++) {
+            std::string title; uint color;
+            if (what_to_plot[j].lookupValue("title", title) &&
+                what_to_plot[j].lookupValue("color", color) &&
+                what_to_plot[j].exists("set_to_zero")) {
+              const libconfig::Setting &set_to_zero = what_to_plot[j]["set_to_zero"];
+              const uint NparsToZero = set_to_zero.getLength();
+              // set to zero
+              std::vector<std::pair<uint, double> > parsBackUp;
+              for (uint p = 0; p < NparsToZero; p++) {
+                const char *pname = set_to_zero[p];
+                uint ip = MParKeeper::gI()->getIndex(std::string(pname));
+                double vp = MParKeeper::gI()->get(ip);
+                parsBackUp.push_back(std::make_pair(ip, vp));
+                MParKeeper::gI()->set(ip, 0.);
+              }
+              km.RecalculateNextTime();
+              for (auto & pr : vpr) pr->RecalculateNextTime();
+              // message
+              std::cout << "--> Settings " << j << " <" << title << "> : \n";
+              MParKeeper::gI()->printAll();
+
+              // fill vector of historrams where the model will be plotted on
+              std::vector<uint> vme;
+              if (what_to_plot[j].exists("mapping_elements")) {
+                const libconfig::Setting &mapping_elements = what_to_plot[j]["mapping_elements"];
+                for (int me = 0; me < mapping_elements.getLength(); me++) vme.push_back(uint(mapping_elements[me]));
+              } else {
+                for (uint i=0; i < NrelsToPlot; i++) vme.push_back(i);
+              }
+              // add model curves to plot
+              for (uint i : vme) {
+                if (mapping[i].getLength() == 0) continue;
+                const uint iPad = mapping[i][0];
+                // get data and model function
+                const DP & data = MRelationHolder::gI()->GetRelation(iPad).data;
+                std::function<double(double)> func = MRelationHolder::gI()->GetRelation(iPad).func;
+                // plot
+                mgr[i]->Add(
+                            SET3(draw(func,
+                                      (data.data.begin())->x , (--data.data.end())->x,
+                                      100),
+                                 SetLineStyle(2),
+                                 SetLineColor(color),
+                                 SetTitle("") ), "l");
+                mgr[i]->Add(
+                            SET2(draw(func,
+                                      data.lrange, data.rrange,
+                                      100),
+                                 SetLineColor(color),
+                                 SetTitle(title.c_str()) ), "l");
+              }
+              // set back to nominal value
+              for (uint p = 0; p < NparsToZero; p++)
+                MParKeeper::gI()->set(parsBackUp[p].first, parsBackUp[p].second);
+            }
+          }
+        }
+      }
+
+      // finally plot
+      for (uint i=0; i < NrelsToPlot; i++) {
+        if (mapping[i].getLength() == 0) continue;
+        // setTitle
+        const uint iPad = mapping[i][0];
+        const DP & data = MRelationHolder::gI()->GetRelation(iPad).data;
+        mgr[i]->SetTitle(data.title.c_str());
+        // draw
+        canva->cd(i+1); mgr[i]->Draw("a");
+      }
+
+      // save to pdf
       std::string fplot_name = "/tmp/default_plot.read_model_settings.pdf";
       if (!plot_settings.lookupValue("fplot_name", fplot_name))
         std::cerr << "Warning: fplot_name is not specified. A default name wil be used.\n";
@@ -548,6 +678,7 @@ int main(int argc, char *argv[]) {
   ////////////////////////////// f i t  s e t t i n g s /////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////
 
+  canva->Clear(); canva->DivideSquare(Nrels);
   try {
     if (root.exists("fit_settings")) {
       const libconfig::Setting &fit_settings = root["fit_settings"];
@@ -595,7 +726,7 @@ int main(int argc, char *argv[]) {
         ROOT::Math::Functor functor([&](const double *pars)->double {
             MParKeeper::gI()->pset(pars);
             km.RecalculateNextTime();
-            pr.RecalculateNextTime();
+            for (auto & pr : vpr) pr->RecalculateNextTime();
             return MRelationHolder::gI()->CalculateChi2();
           }, pnPars);
         min->SetFunction(functor);
@@ -631,7 +762,7 @@ int main(int argc, char *argv[]) {
 
           // Plot all
           km.RecalculateNextTime();
-          pr.RecalculateNextTime();
+          for (auto & pr : vpr) pr->RecalculateNextTime();
           for (uint i=0; i < Nrels; i++) {
             const DP & data = MRelationHolder::gI()->GetRelation(i).data;
             std::function<double(double)> func = MRelationHolder::gI()->GetRelation(i).func;

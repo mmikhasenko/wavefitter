@@ -74,7 +74,7 @@ void MmatrixK::tmpl_calculate(sType s) {
       mrho(i, j) = (i == j) ? _iso[i]->rholtilde(s) : 0.0;
     }
 
-  b::matrix<cd> irhoK = cd(0, 1)*prod(mrho, K);
+  b::matrix<cd> irhoK = cd(0., 0.5)*prod(mrho, K);
   b::matrix<cd> din = b::identity_matrix<cd>(_Nch) - irhoK;
 
   bool sing = false;
