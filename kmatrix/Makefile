@@ -67,11 +67,6 @@ obj/%.o: $(lSRC)/%.cc $(lSRC)/%.h
 	g++ $(CXFLAGS) -o $@ -c $< $(compile_flags) \
 	$(addprefix -I,${lDIR}) $(ROOT_DIR)
 
-#TBigner
-obj/%.o: $(lWGN)/%.cxx
-	g++ $(CXFLAGS) -o $@ -c $< $(compile_flags) \
-	$(addprefix -I,${lDIR}) $(ROOT_DIR)
-
 #rwpa FunctionsW
 obj/%.o: $(lWGN)/%.cxx
 	g++ $(CXFLAGS) -o $@ -c $< $(compile_flags) \

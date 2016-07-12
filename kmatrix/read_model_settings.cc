@@ -509,6 +509,24 @@ int main(int argc, char *argv[]) {
             auto v = pr->getValue(e*e);
             return cos(arg(v(iCh0)*conj(v(iCh1))));
           });
+      } else if (type == "ReInterf@") {
+        uint iModel0 = iRel[2][0][0]; uint iCh0 = iRel[2][0][1];
+        uint iModel1 = iRel[2][1][0]; uint iCh1 = iRel[2][1][1];
+        if (iModel0 != iModel1) { std::cerr << "Error: iModel0!=iModel1!\n"; return 1;}
+        MProductionPhysics *pr = vpr[iModel1];
+        MRelationHolder::gI()->AddRelation(whole_data[jData], [&, iCh0, iCh1, pr](double e)->double{
+            auto v = pr->getValue(e*e);
+            return real(v(iCh0)*conj(v(iCh1)))*sqrt(iset[iCh0]->rho(e*e)*iset[iCh1]->rho(e*e));
+          });
+      } else if (type == "ImInterf@") {
+        uint iModel0 = iRel[2][0][0]; uint iCh0 = iRel[2][0][1];
+        uint iModel1 = iRel[2][1][0]; uint iCh1 = iRel[2][1][1];
+        if (iModel0 != iModel1) { std::cerr << "Error: iModel0!=iModel1!\n"; return 1;}
+        MProductionPhysics *pr = vpr[iModel1];
+        MRelationHolder::gI()->AddRelation(whole_data[jData], [&, iCh0, iCh1, pr](double e)->double{
+            auto v = pr->getValue(e*e);
+            return imag(v(iCh0)*conj(v(iCh1)))*sqrt(iset[iCh0]->rho(e*e)*iset[iCh1]->rho(e*e));
+          });
       }
     }
   }
