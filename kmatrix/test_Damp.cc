@@ -12,8 +12,8 @@
 #include "MmatrixK.h"
 #include "MProductionPhysics.h"
 #include "MParKeeper.h"
-#include "mstructures.hh"
-#include "mintegrate.hh"
+#include "mstructures.h"
+#include "mintegrate.h"
 #include "deflib.h"
 
 #include "dFunction.hpp"

@@ -1,0 +1,326 @@
+// An example of model description
+
+// Basic fit information:
+name = "K-matrix 2^{-+} sector";
+  
+// Data specification:
+
+data = 
+{
+  path = "~/Dropbox/2+-COMPASS/all_waves_3pi/";
+  points = (
+   @include "configs/data.all.I.Re.Im.cfg"
+  );
+};
+
+modelT =
+{
+  name = "K-matrix";
+  channels = ( { type = "quasi-two-body";
+                 particles = ("f2","pi");
+                 L = 0;
+                 size = 5.; # GeV^{-1}
+               },
+               { type = "quasi-two-body";
+                 particles = ("f2","pi");
+                 L = 2;
+                 size = 5.; # GeV^{-1}
+               },
+               { type = "quasi-two-body";
+                 particles = ("rho","pi");
+                 L = 1;
+                 size = 5.; # GeV^{-1}
+               },
+               { type = "quasi-two-body";
+                 particles = ("rho","pi");
+                 L = 3;
+                 size = 5.; # GeV^{-1}
+               }
+             );
+
+  content = ( { type = "pole";
+                couplings = "g";
+                mass = "m0";
+              },
+              { type = "pole";
+                couplings = "h";
+                mass = "m1";
+              },
+              { type = "pole";
+                couplings = "i";
+                mass = "m2";
+              }
+            );
+};
+
+modelA = ( /* t' bin: tprime_0.100000-0.112853 */
+           { scattering = "K-matrix";              // no options, but it can be commented
+             short_range = { type = "pietarinen";  // only one option 
+                             powers = ((0, "t0c"));  // 0 is power of map variable 
+                             rhc = 0.1;            // where the RHC starts 
+                             slope = 1.1;          // parameter of mapping 
+                           };
+             long_range = { type = "Deck";         // only one option 
+                            pomeron_S = 1;         // Sp 
+                            pomeron_M = 0;         // lamP = -M 
+                            damping_R = 5.;        // a pole is intruduced at M = 1./R 
+                            pomeron_virtuality = -0.1; // has to be removed, and replaced by proper solution
+                            par_name = "t0B";
+                            long_range_lookup = [ "/tmp/t0.deck.2.f2piS.30.out",
+                                                  "/tmp/t0.deck.2.f2piD.30.out",
+                                                  "/tmp/t0.deck.2.rhopiP.30.out",
+                                                  "/tmp/t0.deck.2.rhopiF.30.out" ];
+                            };
+             unitarisation = "DoIt";
+           },
+           /* t' bin: tprime_0.112853-0.127471 */
+           { scattering = "K-matrix";              // no options, but it can be commented
+             short_range = { type = "pietarinen";  // only one option 
+                             powers = ((0, "t1c"));  // 0 is power of map variable 
+                             rhc = 0.1;            // where the RHC starts 
+                             slope = 1.1;          // parameter of mapping 
+                           };
+             long_range = { type = "Deck";         // only one option 
+                            pomeron_S = 1;         // Sp 
+                            pomeron_M = 0;         // lamP = -M 
+                            damping_R = 5.;        // a pole is intruduced at M = 1./R 
+                            pomeron_virtuality = -0.112; // has to be removed, and replaced by proper solution
+                            par_name = "t1B";
+                            long_range_lookup = [ "/tmp/t1.deck.2.f2piS.30.out",
+                                                  "/tmp/t1.deck.2.f2piD.30.out",
+                                                  "/tmp/t1.deck.2.rhopiP.30.out",
+                                                  "/tmp/t1.deck.2.rhopiF.30.out" ];
+                          };
+             unitarisation = "DoIt";
+           },
+           /* t' bin: tprime_0.127471-0.144385 */
+           { scattering = "K-matrix";              // no options, but it can be commented
+             short_range = { type = "pietarinen";  // only one option 
+                             powers = ((0, "t2c"));  // 0 is power of map variable 
+                             rhc = 0.1;            // where the RHC starts 
+                             slope = 1.1;          // parameter of mapping 
+                           };
+             long_range = { type = "Deck";         // only one option 
+                            pomeron_S = 1;         // Sp 
+                            pomeron_M = 0;         // lamP = -M 
+                            damping_R = 5.;        // a pole is intruduced at M = 1./R 
+                            pomeron_virtuality = -0.1274; // has to be removed, and replaced by proper solution
+                            par_name = "t2B";
+                            long_range_lookup = [ "/tmp/t2.deck.2.f2piS.30.out",
+                                                  "/tmp/t2.deck.2.f2piD.30.out",
+                                                  "/tmp/t2.deck.2.rhopiP.30.out",
+                                                  "/tmp/t2.deck.2.rhopiF.30.out" ];
+                           };
+             unitarisation = "DoIt";
+           },
+           /* t' bin: tprime_0.112853-0.127471 */
+           { scattering = "K-matrix";              // no options, but it can be commented
+             short_range = { type = "pietarinen";  // only one option 
+                             powers = ((0, "t3c"));  // 0 is power of map variable 
+                             rhc = 0.1;            // where the RHC starts 
+                             slope = 1.1;          // parameter of mapping 
+                           };
+             long_range = { type = "Deck";         // only one option 
+                            pomeron_S = 1;         // Sp 
+                            pomeron_M = 0;         // lamP = -M 
+                            damping_R = 5.;        // a pole is intruduced at M = 1./R 
+                            pomeron_virtuality = -0.144; // has to be removed, and replaced by proper solution
+                            par_name = "t3B";
+                            long_range_lookup = [ "/tmp/t3.deck.2.f2piS.30.out",
+                                                  "/tmp/t3.deck.2.f2piD.30.out",
+                                                  "/tmp/t3.deck.2.rhopiP.30.out",
+                                                  "/tmp/t3.deck.2.rhopiF.30.out" ];
+                          };
+             unitarisation = "DoIt";
+           },
+           /* t' bin: tprime_0.112853-0.127471 */
+           { scattering = "K-matrix";              // no options, but it can be commented
+             short_range = { type = "pietarinen";  // only one option 
+                             powers = ((0, "t4c"));  // 0 is power of map variable 
+                             rhc = 0.1;            // where the RHC starts 
+                             slope = 1.1;          // parameter of mapping 
+                           };
+             long_range = { type = "Deck";         // only one option 
+                            pomeron_S = 1;         // Sp 
+                            pomeron_M = 0;         // lamP = -M 
+                            damping_R = 5.;        // a pole is intruduced at M = 1./R 
+                            pomeron_virtuality = -0.164; // has to be removed, and replaced by proper solution
+                            par_name = "t4B";
+                            long_range_lookup = [ "/tmp/t4.deck.2.f2piS.30.out",
+                                                  "/tmp/t4.deck.2.f2piD.30.out",
+                                                  "/tmp/t4.deck.2.rhopiP.30.out",
+                                                  "/tmp/t4.deck.2.rhopiF.30.out" ];
+                          };
+             unitarisation = "DoIt";
+           },
+           /* t' bin: tprime_0.112853-0.127471 */
+           { scattering = "K-matrix";              // no options, but it can be commented
+             short_range = { type = "pietarinen";  // only one option 
+                             powers = ((0, "t5c"));  // 0 is power of map variable 
+                             rhc = 0.1;            // where the RHC starts 
+                             slope = 1.1;          // parameter of mapping 
+                           };
+             long_range = { type = "Deck";         // only one option 
+                            pomeron_S = 1;         // Sp 
+                            pomeron_M = 0;         // lamP = -M 
+                            damping_R = 5.;        // a pole is intruduced at M = 1./R 
+                            pomeron_virtuality = -0.1888; // has to be removed, and replaced by proper solution
+                            par_name = "t5B";
+                            long_range_lookup = [ "/tmp/t5.deck.2.f2piS.30.out",
+                                                  "/tmp/t5.deck.2.f2piD.30.out",
+                                                  "/tmp/t5.deck.2.rhopiP.30.out",
+                                                  "/tmp/t5.deck.2.rhopiF.30.out" ];
+                          };
+             unitarisation = "DoIt";
+           },
+           /* t' bin: tprime_0.112853-0.127471 */
+           { scattering = "K-matrix";              // no options, but it can be commented
+             short_range = { type = "pietarinen";  // only one option 
+                             powers = ((0, "t6c"));  // 0 is power of map variable 
+                             rhc = 0.1;            // where the RHC starts 
+                             slope = 1.1;          // parameter of mapping 
+                           };
+             long_range = { type = "Deck";         // only one option 
+                            pomeron_S = 1;         // Sp 
+                            pomeron_M = 0;         // lamP = -M 
+                            damping_R = 5.;        // a pole is intruduced at M = 1./R 
+                            pomeron_virtuality = -0.22; // has to be removed, and replaced by proper solution
+                            par_name = "t6B";
+                            long_range_lookup = [ "/tmp/t6.deck.2.f2piS.30.out",
+                                                  "/tmp/t6.deck.2.f2piD.30.out",
+                                                  "/tmp/t6.deck.2.rhopiP.30.out",
+                                                  "/tmp/t6.deck.2.rhopiF.30.out" ];
+                          };
+             unitarisation = "DoIt";
+           },
+           /* t' bin: tprime_0.112853-0.127471 */
+           { scattering = "K-matrix";              // no options, but it can be commented
+             short_range = { type = "pietarinen";  // only one option 
+                             powers = ((0, "t7c"));  // 0 is power of map variable 
+                             rhc = 0.1;            // where the RHC starts 
+                             slope = 1.1;          // parameter of mapping 
+                           };
+             long_range = { type = "Deck";         // only one option 
+                            pomeron_S = 1;         // Sp 
+                            pomeron_M = 0;         // lamP = -M 
+                            damping_R = 5.;        // a pole is intruduced at M = 1./R 
+                            pomeron_virtuality = -0.262; // has to be removed, and replaced by proper solution
+                            par_name = "t7B";
+                            long_range_lookup = [ "/tmp/t7.deck.2.f2piS.30.out",
+                                                  "/tmp/t7.deck.2.f2piD.30.out",
+                                                  "/tmp/t7.deck.2.rhopiP.30.out",
+                                                  "/tmp/t7.deck.2.rhopiF.30.out" ];
+                          };
+             unitarisation = "DoIt";
+           },
+           /* t' bin: tprime_0.112853-0.127471 */
+           { scattering = "K-matrix";              // no options, but it can be commented
+             short_range = { type = "pietarinen";  // only one option 
+                             powers = ((0, "t8c"));  // 0 is power of map variable 
+                             rhc = 0.1;            // where the RHC starts 
+                             slope = 1.1;          // parameter of mapping 
+                           };
+             long_range = { type = "Deck";         // only one option 
+                            pomeron_S = 1;         // Sp 
+                            pomeron_M = 0;         // lamP = -M 
+                            damping_R = 5.;        // a pole is intruduced at M = 1./R 
+                            pomeron_virtuality = -0.326; // has to be removed, and replaced by proper solution
+                            par_name = "t8B";
+                            long_range_lookup = [ "/tmp/t8.deck.2.f2piS.30.out",
+                                                  "/tmp/t8.deck.2.f2piD.30.out",
+                                                  "/tmp/t8.deck.2.rhopiP.30.out",
+                                                  "/tmp/t8.deck.2.rhopiF.30.out" ];
+                          };
+             unitarisation = "DoIt";
+           },
+           /* t' bin: tprime_0.112853-0.127471 */
+           { scattering = "K-matrix";              // no options, but it can be commented
+             short_range = { type = "pietarinen";  // only one option 
+                             powers = ((0, "t9c"));  // 0 is power of map variable 
+                             rhc = 0.1;            // where the RHC starts 
+                             slope = 1.1;          // parameter of mapping 
+                           };
+             long_range = { type = "Deck";         // only one option 
+                            pomeron_S = 1;         // Sp 
+                            pomeron_M = 0;         // lamP = -M 
+                            damping_R = 5.;        // a pole is intruduced at M = 1./R 
+                            pomeron_virtuality = -0.448; // has to be removed, and replaced by proper solution
+                            par_name = "t9B";
+                            long_range_lookup = [ "/tmp/t9.deck.2.f2piS.30.out",
+                                                  "/tmp/t9.deck.2.f2piD.30.out",
+                                                  "/tmp/t9.deck.2.rhopiP.30.out",
+                                                  "/tmp/t9.deck.2.rhopiF.30.out" ];
+                          };
+             unitarisation = "DoIt";
+           },
+           /* t' bin: tprime_0.112853-0.127471 */
+           { scattering = "K-matrix";              // no options, but it can be commented
+             short_range = { type = "pietarinen";  // only one option 
+                             powers = ((0, "t10c"));  // 0 is power of map variable 
+                             rhc = 0.1;            // where the RHC starts 
+                             slope = 1.1;          // parameter of mapping 
+                           };
+             long_range = { type = "Deck";         // only one option 
+                            pomeron_S = 1;         // Sp 
+                            pomeron_M = 0;         // lamP = -M 
+                            damping_R = 5.;        // a pole is intruduced at M = 1./R 
+                            pomeron_virtuality = -0.724; // has to be removed, and replaced by proper solution
+                            par_name = "t10B";
+                            long_range_lookup = [ "/tmp/t10.deck.2.f2piS.30.out",
+                                                  "/tmp/t10.deck.2.f2piD.30.out",
+                                                  "/tmp/t10.deck.2.rhopiP.30.out",
+                                                  "/tmp/t10.deck.2.rhopiF.30.out" ];
+                          };
+             unitarisation = "DoIt";
+           }           
+);
+
+adjustment = {
+  relation = (
+                @include "configs/generate_relation"
+             );
+};
+
+parameters = {
+  start_value = ( /* First pole */
+                  ("m0", 1.721, 1.601, 1.801),
+                  ("g0", 3.1, -10., 10.),
+                  ("g1", 0.0, -10., 10.),
+                  ("g2", 3.0, -10., 10.),
+                  ("g3", 2.5, -10., 10.),
+                  /* Second pole */
+                  ("m1", 1.831, 1.801, 2.051),
+                  ("h0", 1. , -10., 10.),
+                  ("h1", 3. , -10., 10.),
+                  ("h2", 0.0, -10., 10.),
+                  ("h3", 2.0, -10., 10.),
+                  /* Third pole */
+                  ("m2", 2.151, 2.051, 2.301),
+                  ("i0", 3.0, -10., 10.),
+                  ("i1", 3.0, -10., 10.),
+                  ("i2", 3.0, -10., 10.),
+                  ("i3", 3.0, -10., 10.),
+                  // production parameters are following
+                  @include "configs/parameters.t0.cfg"
+                  ,
+                  @include "configs/parameters.t1.cfg"
+                  ,
+                  @include "configs/parameters.t2.cfg"
+                  ,
+                  @include "configs/parameters.t3.cfg"
+                  ,
+                  @include "configs/parameters.t4.cfg"
+                  ,
+                  @include "configs/parameters.t5.cfg"
+                  ,
+                  @include "configs/parameters.t6.cfg"
+                  ,
+                  @include "configs/parameters.t7.cfg"
+                  ,
+                  @include "configs/parameters.t8.cfg"
+                  ,
+                  @include "configs/parameters.t9.cfg"
+                  ,
+                  @include "configs/parameters.t10.cfg"
+                );
+};

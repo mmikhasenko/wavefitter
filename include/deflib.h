@@ -65,5 +65,4 @@ Type getvalue(double M, std::pair<double, Type> *table, uint N) {
   return value;
 }
 
-
 #endif  // SRC_DEFLIB_H_

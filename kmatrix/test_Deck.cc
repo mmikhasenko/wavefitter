@@ -9,12 +9,11 @@
 #include "MmatrixK.h"
 #include "MProductionPhysics.h"
 #include "MParKeeper.h"
-#include "mstructures.hh"
-#include "mintegrate.hh"
+#include "mstructures.h"
+#include "mintegrate.h"
 #include "deflib.h"
 
 #include "dFunction.hpp"
-
 
 uint i_m1sq;
 uint i_m2sq;
@@ -202,7 +201,7 @@ int main(int argc, char *argv[]) {
       return rho.U(s12)*POW2(pD)*1./(2*M_PI);
     };
     c1.cd(1);
-    TGraph *g1 =
+    TGraph *gr1 =
       SET2(
            draw([&](double sr)->double{
                s = sr;
@@ -222,7 +221,7 @@ int main(int argc, char *argv[]) {
       return f2.U(s12)*POW2(pD)*1./(2*M_PI);
     };
     c1.cd(3);
-    TGraph *g3 =
+    TGraph *gr3 =
       SET2(
            draw([&](double sr)->double{
                s = sr;
@@ -231,7 +230,7 @@ int main(int argc, char *argv[]) {
              POW2(3*PI_MASS)+0.1, POW2(2.5), 40),
            SetLineColor(kBlack),
            SetTitle(TString::Format("Intensity of Deck projections b_{%d%d}^{%d%d}", _L, _S, _J, _lamP) ) );
-    g3->Draw("al");
+    gr3->Draw("al");
     std::cout << "f2 pi S-wave" << std::endl;
     for (int i = 0; i < gr3->GetN(); i++) std::cout << gr3->GetX()[i] << gr3->GetY()[i] << std::endl;
     c1.SaveAs("/tmp/g.test_Deck.pdf");

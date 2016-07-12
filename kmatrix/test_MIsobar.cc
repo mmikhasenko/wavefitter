@@ -5,7 +5,7 @@
 #include "MIsobar.h"
 #include "MIsobarChannel.h"
 #include "MTwoBodyChannel.h"
-#include "mstructures.hh"
+#include "mstructures.h"
 
 int main(int argc, char *argv[]) {
   // stable

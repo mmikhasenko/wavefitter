@@ -4,12 +4,11 @@
 #include "TCanvas.h"
 #include "MIsobar.h"
 #include "MmatrixK.h"
+#include "MIsobarChannel.h"
 #include "MParKeeper.h"
-#include "mstructures.hh"
+#include "mstructures.h"
 
 int main(int argc, char *argv[]) {
-  const int Np = 116;
-  const double Hlim = 2.5*2.5;
 
   // stable
   MIsobar rho(0.77, 0.15, 0.14, 0.14, 1, 5.);

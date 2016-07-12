@@ -10,14 +10,14 @@ typedef std::complex<double> cd;
 #include <boost/numeric/ublas/io.hpp>
 #include <boost/numeric/ublas/lu.hpp>
 
+#include "MatrixInverse.h"
+
 namespace bnu = boost::numeric::ublas;
 
 bnu::matrix<cd> calculate_matrix(cd s, double *par);
 template <typename Type> Type rhoF2Pi(Type s);
 template <typename Type> Type rhoRhoPi(Type s);
 
-template<class T> bool InvertMatrix(const bnu::matrix<T>& input, bnu::matrix<T>& inverse);
-template<class T> bool InvertMatrix(const bnu::symmetric_matrix<T,bnu::upper>& input, bnu::matrix<T>& inverse);
 
 #define PI_MASS   0.139570
 #define F2_MASS   1.27
@@ -68,7 +68,7 @@ int main() {
     interf[i] = new TGraph(Npoints, mX, Y);
     interf[i]->SetName(TString::Format("interf_%d", i));
     interf[i]->SetTitle(TString::Format("interf_%d", i));
-  }  
+  }
   canva.cd(1); intens[0]->Draw();
   canva.cd(5); intens[1]->Draw();
   canva.cd(9); intens[2]->Draw();
@@ -146,32 +146,4 @@ template <typename Type> Type rhoRhoPi(Type s) {
   double  mPlus2 = (PI_MASS+RHO_MASS)*(PI_MASS+RHO_MASS);
   double mMinus2 = (PI_MASS-RHO_MASS)*(PI_MASS-RHO_MASS);
   return 1./(8*M_PI)*sqrt((1.-mPlus2/s)*(1.-mMinus2/s));
-}
-
-template<class T> bool InvertMatrix(const bnu::matrix<T>& input, bnu::matrix<T>& inverse) {
-  typedef bnu::permutation_matrix<std::size_t> pmatrix;
-  // create a working copy of the input
-  bnu::matrix<T> A(input);
-  // create a permutation matrix for the LU-factorization
-  pmatrix pm(A.size1());
-  // perform LU-factorization
-  int res = lu_factorize(A, pm);
-  if (res != 0) return false;
-  // create identity matrix of "inverse"
-  inverse.assign(bnu::identity_matrix<T> (A.size1()));
-  // backsubstitute to get the inverse
-  lu_substitute(A, pm, inverse);
-  return true;
-}
-
-template<class T> bool InvertMatrix(const bnu::symmetric_matrix<T,bnu::upper>& input, 
-                                    bnu::matrix<T>& inverse) {
-  typedef bnu::permutation_matrix<std::size_t> pmatrix;
-  bnu::matrix<T> A(input);
-  pmatrix pm(A.size1());
-  int res = lu_factorize(A, pm);
-  if (res != 0) return false;
-  inverse.assign(bnu::identity_matrix<T> (A.size1()));
-  lu_substitute(A, pm, inverse);
-  return true;
 }

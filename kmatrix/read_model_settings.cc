@@ -2,8 +2,8 @@
 // My modification of standard example
 
 // [] Use to compile
-// [] g++ -o read_model_settings \
-//       /localhome/mikhasenko/Tools/libconfig-1.5/lib/libconfig++.so \
+// [] g++ -o read_model_settings
+//       /localhome/mikhasenko/Tools/libconfig-1.5/lib/libconfig++.so
 //       -I/localhome/mikhasenko/Tools/libconfig-1.5/include read_model_settings.cc
 
 #include <iostream>

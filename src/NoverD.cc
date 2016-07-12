@@ -1,5 +1,4 @@
-//Misha Mikhasenko
-//15.07.2015
+// Copyright [15.07.2015] Mikhail Mikhasenko
 
 #include "TF1.h"
 #include "Math/WrappedTF1.h"
@@ -9,37 +8,38 @@
 #include "deflib.h"
 
 #define Sb 3.*3.
-//#define w(a,b) (Sb-sqrt(a-b))/(Sb+sqrt(a-b))
-#define w(a,b) (1.-sqrt(a-b))/(1.+sqrt(a-b))
+// #define w(a,b) (Sb-sqrt(a-b))/(Sb+sqrt(a-b))
+#define w(a, b) (1.-sqrt(a-b))/(1.+sqrt(a-b))
 #define EPSILON 1e-6
 
 NoverD::NoverD(int k, int p, double s0, cd (*f)(cd), double sth, int NluPh, int NluVf, double hLim):
-  _k(k),_p(p),_s0(s0),_f(f),_sth(sth),_NluPh(NluPh),_NluVf(NluVf), lookup_ph(NluPh+1), _hLim(hLim) {
+  _k(k), _p(p), _s0(s0), _f(f), _sth(sth), _hLim(hLim), _NluPh(NluPh), _NluVf(NluVf), lookup_ph(NluPh+1) {
   std::cout << "---------------------------------------------------" << std::endl;
-  std::cout << "---Building model: s0 = "<<_s0<<", k = "<<_k<<", p = "<<_p<<", sth = "<< _sth<< "---" << std::endl;
-  std::cout << "-----------------"<<_NluPh<<"-x-"<<_NluVf<<"------------------" << std::endl;
+  std::cout << "---Building model: s0 = " << _s0 << ", k = "
+            << _k << ", p = " << _p << ", sth = " << _sth << "---" << std::endl;
+  std::cout << "-----------------" << _NluPh << "-x-" << _NluVf << "------------------" << std::endl;
   std::cout << "---------------------------------------------------" << std::endl;
-  //fill npar,ppar with zeros
-  for(int i=0;i<_k;i++) npar.push_back(0); 
-  for(int i=0;i<_p;i++) ppar.push_back(0); 
-  //build lookup tables for phasespace
-  for(int i=0;i<_NluPh;i++) {
+  // fill npar,ppar with zeros
+  for (int i = 0; i < _k; i++) npar.push_back(0);
+  for (int i = 0; i < _p; i++) ppar.push_back(0);
+  // build lookup tables for phasespace
+  for (int i=0; i < _NluPh; i++) {
     double u = 1./_sth/_NluPh*(i+1); double s = 1./u;
-    lookup_ph[i] = std::make_pair<double,double>(double(u),real( _f(cd(s,EPSILON)) ));
+    lookup_ph[i] = std::make_pair(u, real(_f(cd(s, EPSILON))) );
   }
-  double hDouble = 1e6;  cd hValue = _f(cd(hDouble,EPSILON));
-  //std::cout << hValue << ",  " << 1./8/M_PI-real(hValue) << std::endl;
-  lookup_ph[_NluPh] = std::make_pair<double,double>(double(1./hDouble),real( hValue ));
+  double hDouble = 1e6;  cd hValue = _f(cd(hDouble, EPSILON));
+  // std::cout << hValue << ",  " << 1./8/M_PI-real(hValue) << std::endl;
+  lookup_ph[_NluPh] = std::make_pair(1./hDouble, real(hValue));
   std::cout << "---------------------------------------------------" << std::endl;
   std::cout << "------------- Ph.sp. has been tabled --------------" << std::endl;
   std::cout << "---------------------------------------------------" << std::endl;
-  //build_lookup_tables for integrals
-  for(int k=0;k<_k;k++) {
-    std::vector<std::pair<double,cd> > tvi;
-    for(int i=0;i<_NluVf;i++) {
+  // build_lookup_tables for integrals
+  for (int k = 0; k < _k; k++) {
+    std::vector<std::pair<double, cd> > tvi;
+    for (int i = 0; i < _NluVf; i++) {
       double s = _sth + (_hLim - _sth)/(_NluVf-1)*i;
-      tvi.push_back(std::make_pair<double,cd>(double(s),vf(s,k)));
-      //std::cout << "s = " << s << ", v = " << tvi[tvi.size()-1].second <<std::endl; 
+      tvi.push_back(std::make_pair(s, vf(s, k)));
+      // std::cout << "s = " << s << ", v = " << tvi[tvi.size()-1].second << std::endl;
     }
     lookup_vi.push_back(tvi);
   }
@@ -49,50 +49,50 @@ NoverD::NoverD(int k, int p, double s0, cd (*f)(cd), double sth, int NluPh, int 
 }
 
 cd NoverD::expand(cd s, double s1, const std::vector<double> &par) {
-  cd res=0;
-  for(int i=0;i<par.size();i++) res+=pow(w(s,s1),i)*par[i];
+  cd res = 0;
+  for (uint i=0; i < par.size(); i++) res += pow(w(s, s1), i)*par[i];
   return res;
 }
 cd NoverD::cexpand(cd s, double s1, const std::vector<cd> &par) {
-  cd res=0;
-  for(int i=0;i<par.size();i++) res+=pow(w(s,s1),i)*par[i];
+  cd res = 0;
+  for (uint i = 0; i < par.size(); i++) res += pow(w(s, s1), i)*par[i];
   return res;
 }
 
 cd NoverD::D(double s) const {
-  double padd =0; for(int i=0;i<ppar.size();i++) padd += ppar[i]*pow(s,i+1);
-  cd dsum =0;
-  for(int i=0;i<npar.size();i++) dsum += npar[i]*getvi(s,i);
+  double padd = 0; for (uint i = 0; i < ppar.size(); i++) padd += ppar[i]*pow(s, i+1);
+  cd dsum = 0;
+  for (uint i = 0; i < npar.size(); i++) dsum += npar[i]*getvi(s, i);
   cd DfullI = 1. - s / (2*M_PI) * dsum   + padd;
   return  DfullI;
 }
  
 cd NoverD::DI(cd s) const {
-  cd padd =0; for(int i=0;i<ppar.size();i++) padd += ppar[i]*pow(s,i+1);
-  cd dsum =0;
-  for(int i=0;i<npar.size();i++) dsum += npar[i]*vf(s,i);
+  cd padd =0; for (uint i=0; i < ppar.size(); i++) padd += ppar[i]*pow(s, i+1);
+  cd dsum = 0;
+  for (uint i = 0; i < npar.size(); i++) dsum += npar[i]*vf(s, i);
   cd DfullI = 1. - s / (2*M_PI) * dsum   + padd;
   return  DfullI;
 }
 
 cd NoverD::Disc(cd s) const {
-  cd rho = _f(s);    
-  cd DiscJust = cd(0,-1.) * rho * N(s);
+  cd rho = _f(s);
+  cd DiscJust = cd(0., -1.) * rho * N(s);
   return DiscJust;
 }
 
 cd NoverD::DII(cd s) const {
-  cd rho = _f(s);    
-  cd DII = DI(s) + cd(0,1.) * rho * N(s);
+  cd rho = _f(s);
+  cd DII = DI(s) + cd(0, 1.) * rho * N(s);
   return DII;
 }
 
-//********************************lookup tables***********************************//
+// ********************************lookup tables*********************************** //
 
 double NoverD::getrho(double s) const {
   double u = 1./s;
   double step = 1./_sth/_NluPh;
-  int Nstep = u/step; if(Nstep==0) {
+  int Nstep = u/step; if(Nstep == 0) {
     if(u<lookup_ph[_NluPh].first) return lookup_ph[_NluPh].second; 
     else return lookup_ph[0].second+
 	   (lookup_ph[_NluPh].second-lookup_ph[0].second) / 

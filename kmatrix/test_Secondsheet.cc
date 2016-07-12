@@ -9,7 +9,7 @@
 #include "MmatrixK.h"
 #include "MProductionPhysics.h"
 #include "MParKeeper.h"
-#include "mstructures.hh"
+#include "mstructures.h"
 
 #include "MatrixInverse.h"
 

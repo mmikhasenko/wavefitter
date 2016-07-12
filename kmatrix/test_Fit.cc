@@ -13,9 +13,8 @@
 #include "MIsobar.h"
 #include "MmatrixK.h"
 #include "MProductionPhysics.h"
-#include "mstructures.hh"
+#include "mstructures.h"
 #include "MRelationHolder.h"
-
 
 
 int main(int argc, char *argv[]) {

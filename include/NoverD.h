@@ -23,11 +23,11 @@ class NoverD {
   double _s0;
   cd (*_f)(cd s);
   double _sth, _hLim;
-  //lookupn tables
+  // lookupn tables
   int _NluPh, _NluVf;
-  std::vector<std::pair<double,double> > lookup_ph;
-  std::vector<std::vector<std::pair<double,cd> > > lookup_vi;
-  //std::pair<double,cd> **lookup_ph;
+  std::vector<std::pair<double, double> > lookup_ph;
+  std::vector<std::vector<std::pair<double, cd> > > lookup_vi;
+  // std::pair<double,cd> **lookup_ph;
 
  public:
   std::vector<double> npar; 

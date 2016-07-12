@@ -16,7 +16,7 @@
 #include "Math/Factory.h"
 #include "Math/Functor.h"
 
-#include "mstructures.hh"
+#include "mstructures.h"
 
 TH1D *draw(const std::vector<double> &v) {
   double max = *std::max_element(v.begin(), v.end());  // , [](double v1, double v2)->bool{return (v1>v2);}

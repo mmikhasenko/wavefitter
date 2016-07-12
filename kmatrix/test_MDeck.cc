@@ -12,8 +12,8 @@
 #include "MmatrixK.h"
 #include "MProductionPhysics.h"
 #include "MParKeeper.h"
-#include "mstructures.hh"
-#include "mintegrate.hh"
+#include "mstructures.h"
+#include "mintegrate.h"
 #include "deflib.h"
 
 #include "dFunction.hpp"
@@ -85,8 +85,8 @@ int main(int argc, char *argv[]) {
   constexpr double from = POW2(3*PI_MASS)+0.1;
   constexpr double to = POW2(7.5);
 
-//  bch[2]->makeLookupTable(*iso[2], PI_MASS, from, to, Npoints);
-//
+  bch[2]->makeLookupTable(*iso[2], PI_MASS, from, to, Npoints);
+
 //  c1.Clear();
 //  draw([&](double s)->double{
 //      return bch[2]->getPrecalculated(s);

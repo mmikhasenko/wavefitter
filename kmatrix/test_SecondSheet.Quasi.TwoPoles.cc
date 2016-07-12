@@ -8,15 +8,12 @@
 #include "MmatrixK.h"
 #include "MProductionPhysics.h"
 #include "MParKeeper.h"
-#include "mstructures.hh"
+#include "mstructures.h"
 
 #include "TH2D.h"
 
 
 int main(int argc, char *argv[]) {
-  const int Np = 116;
-  const double Hlim = 2.5*2.5;
-
   // stable
   MIsobar rho(0.77, 0.15, 0.14, 0.14, 1, 5.);
   MIsobarChannel rho_pi(rho, 0.14);
@@ -47,8 +44,8 @@ int main(int argc, char *argv[]) {
   std::vector<double> im_values(complex_s_values.size());
   std::vector<double> abs_values(complex_s_values.size());
 
-  for (uint i=1; i <= hssh.GetNbinsX(); i++)
-    for (uint j=1; j <= hssh.GetNbinsY(); j++) {
+  for (int i=1; i <= hssh.GetNbinsX(); i++)
+    for (int j=1; j <= hssh.GetNbinsY(); j++) {
       cd s(hssh.GetXaxis()->GetBinCenter(i),
            hssh.GetYaxis()->GetBinCenter(j));
       complex_s_values[(i-1)*hssh.GetNbinsY()+(j-1)] = s;
@@ -57,8 +54,8 @@ int main(int argc, char *argv[]) {
   // function to fill histogram
   std::function<void(const std::vector<double>&)> fill_hist =
     [&](const std::vector<double> &arr)->void{
-    for (uint i=1; i <= hssh.GetNbinsX(); i++)
-      for (uint j=1; j <= hssh.GetNbinsY(); j++)
+    for (int i=1; i <= hssh.GetNbinsX(); i++)
+      for (int j=1; j <= hssh.GetNbinsY(); j++)
         hssh.SetBinContent(i, j, arr[(i-1)*hssh.GetNbinsY()+(j-1)]);
   };
 
