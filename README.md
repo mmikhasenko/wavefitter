@@ -15,17 +15,29 @@ Repository combines the followin components:
 * Summary of set up
 1. Install required packages.
 One can check version with the following commands (centos 7).
+
+```
+#!bash
+
 [] cmake --version
 [] yum list installed | grep boost
 [] gcc --version
 [] root-config --version
 
+```
+
 2. Install wavefitter
+
+```
+#!bash
+
 [] git clone https://Misha_Mikhasenko@bitbucket.org/Misha_Mikhasenko/wavesfitter.git wavesfitter
 [] cd wavesfitter
 [] mkdir build
 [] cmake ..
 [] make
+
+```
 
 * Configuration
 * Dependencies
