@@ -4,50 +4,47 @@ This README would normally document whatever steps are necessary to get your app
 
 ### What is this repository for? ###
 
-* Quick summary:
-Repository combines the followin components:
   - A library which provides a tool to fit data (RelationHolder and ParameterKeeper).
   - Implementation of physics-methods (K-matrix, Production process, Unitarisation, Deck projection)
   - Program to fit the compass PW-data. It works based on confiburation file.
 
+### Dependencies ###
+1. cmake >= 3.5 (likely it works even with older version but has not been checke* d)
+1. gcc >= 4.7 to support c++11 (mainly lambda funct* ions)
+1. boost >= 1.53 (ublas is used for matrix calcu* lations)
+1. libconfig
+1. ROOT
+
+
 ### How do I get set up? ###
 
-* Summary of set up
-1. Install required packages.
+* Install required packages.
 One can check version with the following commands (centos 7).
 
 ```
 #!bash
 
-[] cmake --version
-[] yum list installed | grep boost
-[] gcc --version
-[] root-config --version
+cmake --version
+yum list installed | grep boost
+gcc --version
+root-config --version
 
 ```
 
-2. Install wavefitter
+* Install wavefitter
 
 ```
 #!bash
 
-[] git clone https://Misha_Mikhasenko@bitbucket.org/Misha_Mikhasenko/wavesfitter.git wavesfitter
-[] cd wavesfitter
-[] mkdir build
-[] cmake ..
-[] make
+git clone https://Misha_Mikhasenko@bitbucket.org/Misha_Mikhasenko/wavesfitter.git wavesfitter
+cd wavesfitter
+mkdir build
+cmake ..
+make
 
 ```
 
 * Configuration
-* Dependencies
-  - cmake >= 3.5 (likely it works even with older version but has not been checked)
-  - gcc >= 4.7 to support c++11 (mainly lambda functions)
-  - boost >= 1.53 (ublas is used for matrix calculations)
-  - libconfig
-  - ROOT
-* Database configuration
-  Configuration 
 
 * How to run tests
   One can write tests to check out several simple examples. One finds tests in kmatrix/test_*.cc
