@@ -1,10 +1,4 @@
 
-# test 
-add_executable(test0 test.cc)
-target_link_libraries(test0 polesearch )
-target_link_libraries(test0 ${ROOT_LIBRARIES})
-target_link_libraries(test0 ${Boost_LIBRARIES})
-
 # for all files test_*cc do the same
 file (GLOB APP_SOURCES test_*.cc)
 foreach (sourcefilepath ${APP_SOURCES})

@@ -9,7 +9,7 @@ int f(double *x) {
 #include <functional>
 #include <algorithm>
 
-#include "mintegrate.hh"
+#include "mintegrate.h"
 
 int ff(const std::function<double(double*)> &amp, double *x) {
   return (amp)(x);
@@ -20,8 +20,8 @@ int main(int argc, char **argv) {
   double factor = 5;
   auto func0 = [](double *x) -> int { return f(x); };
   auto func1 = [&factor](double *x) -> int { return factor*f(x); };
-
   auto fl2 = func1;
+  std::cout << fl2(&factor) << "\n";
   int (*lf)(double *x) = func0;
   {
     lf = [](double *x) -> int { return x[1]+x[0]-x[2]; };
