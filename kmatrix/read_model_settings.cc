@@ -13,7 +13,7 @@
 #include <cstdlib>
 #include <vector>
 
-#include <libconfig.h++>
+#include "libconfig.h++"
 
 #include "MIsobar.h"
 #include "MIsobarChannel.h"

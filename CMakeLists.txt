@@ -1,6 +1,6 @@
 PROJECT(POLE-SEARCH)
 
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.0)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmakeModules")
 
@@ -33,7 +33,9 @@ set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -D_GNU_SOURCE -fexceptions -pthre
 include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/src/rpwa)
 include_directories(${ROOT_INCLUDE_DIR})
-
+# libconfig
+include_directories(${Libconfig_LIBS})
+link_directories(${Libconfig_LIBS}/.libs)
 
 add_subdirectory(src)
 add_subdirectory(kmatrix)

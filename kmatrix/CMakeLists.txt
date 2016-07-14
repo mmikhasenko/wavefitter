@@ -22,7 +22,6 @@ add_executable(read_model_settings read_model_settings.cc)
 target_link_libraries(read_model_settings polesearch )
 target_link_libraries(read_model_settings ${ROOT_LIBRARIES})
 target_link_libraries(read_model_settings ${Boost_LIBRARIES})
-target_link_libraries(read_model_settings ${Libconfig_LIBS})
-
+target_link_libraries(read_model_settings config++)
 
 # target_link_libraries(read_model_settings ${Boost_LIBRARIES})

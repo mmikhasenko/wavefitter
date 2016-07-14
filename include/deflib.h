@@ -32,8 +32,8 @@ Type getvalue(double M, const std::vector<std::pair<double, Type> > &table) {
   const double lft = table[0].first;
   const double Mstep = table[1].first - lft;
   int Nsteps = (M - lft)/Mstep;
-  if (Nsteps == N-1 && M < table[N-1].first) Nsteps--; /* presision fix */
-  if (Nsteps < 0 || Nsteps >= -1+N) {
+  if (Nsteps == static_cast<int>(N-1) && M < table[N-1].first) Nsteps--; /* presision fix */
+  if (Nsteps < 0 || Nsteps >= static_cast<int>(-1+N)) {
     std::cerr << "Error!! in getvalue! M = " << M << " not in ["
               << table[0].first << ", "
               << table[N-1].first << "], diff to max = " << M - table[N-1].first
@@ -51,8 +51,8 @@ Type getvalue(double M, std::pair<double, Type> *table, uint N) {
   const double lft = table[0].first;
   const double Mstep = table[1].first - lft;
   int Nsteps = (M - lft)/Mstep;
-  if (Nsteps == N-1 && M < table[N-1].first) Nsteps--; /* presision fix */
-  if (Nsteps < 0 || Nsteps >= N-1) {
+  if (Nsteps == static_cast<int>(N-1) && M < table[N-1].first) Nsteps--; /* presision fix */
+  if (Nsteps < 0 || Nsteps >= static_cast<int>(-1+N)) {
     std::cerr << "Error!! in getvalue! M = " << M << ", "
               << table[N-1].first
               << ", Nsteps = " << Nsteps
