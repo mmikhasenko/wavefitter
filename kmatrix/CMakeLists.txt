@@ -24,4 +24,4 @@ target_link_libraries(read_model_settings ${ROOT_LIBRARIES})
 target_link_libraries(read_model_settings ${Boost_LIBRARIES})
 target_link_libraries(read_model_settings config++)
 
-# target_link_libraries(read_model_settings ${Boost_LIBRARIES})
+include_directories(${Libconfig_INCLUDE_DIR})
