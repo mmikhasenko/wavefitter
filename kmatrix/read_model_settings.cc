@@ -155,6 +155,7 @@ int main(int argc, char *argv[]) {
   // standard isobars
   MIsobar rho_iso(RHO_MASS, RHO_WIDTH, PI_MASS, PI_MASS, 1, 5.);
   MIsobar  f2_iso(F2_MASS, F2_WIDTH,  PI_MASS, PI_MASS, 2, 5.);
+  MIsobar  pipiS_iso(0.5, 0.5,  PI_MASS, PI_MASS, 0, 5.);
   // model content is vector to fill K-matrix
   std::vector<std::pair<std::string, std::string> > model_content;
 
@@ -199,8 +200,12 @@ int main(int argc, char *argv[]) {
         MIsobarChannel *mCh = new MIsobarChannel(f2_iso, PI_MASS, L);
         mCh->makeLookupTable(mCh->sth(), 10., 100);
         iset.push_back(mCh);
+      } else if (particles[0] == "pipiS") {
+        MIsobarChannel *mCh = new MIsobarChannel(pipiS_iso, PI_MASS, L);
+        mCh->makeLookupTable(mCh->sth(), 10., 100);
+        iset.push_back(mCh);
       } else {
-        std::cerr << "Error: isobar is not rho/f2. Only them are available.";
+        std::cerr << "Error: isobar is not rho/f2/pipiS. Only them are available.";
         return EXIT_FAILURE;
       }
     }
@@ -256,7 +261,7 @@ int main(int argc, char *argv[]) {
     std::cout << "/////////////// Production model: ////////////////////\n";
     std::cout << "--> " << Nmodels << " production models will be constructed.\n";
 
-    for (uint imodelA = 0; imodelA < Nmodels; imodelA++) { 
+    for (uint imodelA = 0; imodelA < Nmodels; imodelA++) {
       const libconfig::Setting &modelA = modelsA[imodelA];
 
       vpr.push_back(new MProductionPhysics(iset));
@@ -269,31 +274,47 @@ int main(int argc, char *argv[]) {
       // short_range
       if (modelA.exists("short_range")) {
         const libconfig::Setting &short_range = modelA["short_range"];
-        std::string type;
-        double rhc, slope;
-        std::vector<std::pair<int,std::string> > powers;
-        if ( short_range.lookupValue("type", type) &&
-             short_range.lookupValue("rhc", rhc) &&
-             short_range.lookupValue("slope", slope) &&
-             short_range.exists("powers")) {
-          std::cout << "READ: " << type << ", s0 = "
-                    << rhc << ", #alpha = " << slope << ")"
-                    << std::endl;
+        std::string type = short_range["type"];
+
+        if (type == "pietarinen") {
+          std::string rhc_name = short_range["rhc"]; uint irhc = MParKeeper::gI()->add(rhc_name);
+          std::string slope_name = short_range["slope"]; uint islope = MParKeeper::gI()->add(slope_name);
+          // loop over powers
+          std::vector<std::string> powers;
           const libconfig::Setting &orders = short_range["powers"];
           const uint count = orders.getLength();
-          std::cout << "Powers of expantion: ";
+          std::cout << "READ: powers are ";
           for (uint i = 0; i < count; i++) {
-            int power(orders[i][0]);
-            std::string name = orders[i][1];
-            std::cout << name << " " << power;
-            powers.push_back(std::make_pair(power, name));
+            std::string name = orders[i];
+            std::cout << name;
+            powers.push_back(name);
           }
           std::cout << "\n";
+          pr.addShortRange(powers,
+                           [&, irhc, islope](double s)->cd{
+                             double rhc = MParKeeper::gI()->get(irhc);
+                             double slope = MParKeeper::gI()->get(islope);
+                             cd r = (s-rhc)/slope;
+                             return (1.-sqrt(r)) / (1.-sqrt(r)); });
+
+        } else if (type == "polinomial") {
+          // loop over powers
+          std::vector<std::string> powers;
+          const libconfig::Setting &orders = short_range["powers"];
+          const uint count = orders.getLength();
+          for (uint i = 0; i < count; i++) {
+            std::string name = orders[i];
+            powers.push_back(name);
+            std::cout << "READ: powers are " << name;
+          }
+          std::cout << "\n";
+          pr.addShortRange(powers, [](double s)->cd{return s;});
+
+        } else {
+          std::cerr<< "Warning<addShortRange()>: started without arguments. "
+                   << "Do you know what happens then?" << std::endl;
+          pr.addShortRange();  /* to be improved */
         }
-        if (powers.size() != 1) {std::cout << "Warning: pietarinen expantion is not inplemented. A constant will be used"; }
-        // temperary fix
-        if (powers.size() > 0) pr.addShortRange(powers[0].second); /* to be improved */
-        else pr.addShortRange(); /* to be improved */
       }
 
       std::vector<MDeck*> vdeck;

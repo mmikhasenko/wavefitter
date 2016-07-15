@@ -35,15 +35,33 @@ void MProductionPhysics::addLongRange(const std::vector<std::function<cd(double)
 /* add directe resonance production, just set of parameters - production constants */
 /* when it has been called then _fC is not empty */
 void MProductionPhysics::addShortRange(std::string par_name) {
-  // fill short range term
-  _fC.resize(_Nch);
+  _smap = [](double s)->cd{return s;};
+  // add parameters to MParKeeper
+  _fC.resize(1);
+  _fC[0].resize(_Nch);
   for (uint i = 0; i < _Nch; i++) {
     std::ostringstream ss; ss << par_name << "r" << i;
-    _fC[i].first  = MParKeeper::gI()->add(ss.str(), 0.0, -10., 10.);
+    _fC[0][i].first  = MParKeeper::gI()->add(ss.str(), 0.0, -10., 10.);
     std::ostringstream iss; iss << par_name << "i" << i;
-    _fC[i].second = MParKeeper::gI()->add(iss.str(), 0.0, -10., 10.);
+    _fC[0][i].second = MParKeeper::gI()->add(iss.str(), 0.0, -10., 10.);
   }
   std::cout << "-----------> Short range production is added!\n";
+}
+
+void MProductionPhysics::addShortRange(const std::vector<std::string> powers,
+                                       std::function<cd(double)> smap) {
+  _smap = smap;
+  // copy powers array and add "r" and "i" part
+  for (const auto & it : powers) {
+    std::vector<std::pair<uint, uint> > vtmp(_Nch);
+    for (uint i = 0; i < _Nch; i++) {
+      std::ostringstream ss; ss << it << "r" << i;
+      vtmp[i].first  = MParKeeper::gI()->add(ss.str(), 0.0, -10., 10.);
+      std::ostringstream iss; iss << it << "i" << i;
+      vtmp[i].second = MParKeeper::gI()->add(iss.str(), 0.0, -10., 10.);
+    }
+    _fC.push_back(vtmp);
+  }
 }
 
 /* calculate unitarisation term and put it to a lookup table */
@@ -104,10 +122,12 @@ void MProductionPhysics::calculate(double s) {
     for (uint j = 0; j < _Nch; j++) CThat(i, j) = T(i, j)*DumpC(j);
   // direct production
   if (_fC.size()) {
-    b::vector<cd> cvect(_Nch);
-    for (uint i = 0; i < _Nch; i++) cvect[i] = cd(MParKeeper::gI()->get(_fC[i].first ),
-                                                  MParKeeper::gI()->get(_fC[i].second));
-    // add to value
+    b::vector<cd> cvect(_Nch, 0);
+    for (uint w = 0; w < _fC.size(); w++) {
+      for (uint i = 0; i < _Nch; i++)
+        cvect[i] += cd(MParKeeper::gI()->get(_fC[w][i].first),
+                       MParKeeper::gI()->get(_fC[w][i].second)) * pow(_smap(s), w);
+    }
     _value += prod(CThat, cvect);
   }
 
