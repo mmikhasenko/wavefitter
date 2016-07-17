@@ -5,7 +5,7 @@
 #include <algorithm>
 
 #include "MParKeeper.h"
-	
+
 #define ERROR_VALUE -11.11
 
 MParKeeper *MParKeeper::_ref = 0;

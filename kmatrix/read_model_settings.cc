@@ -730,11 +730,15 @@ int main(int argc, char *argv[]) {
 
       const uint nAttempts = fit_settings["nAttempts"];
 
+      int seed;
+      if (fit_settings.lookupValue("seed", seed)) { std::srand(seed);
+      } else { std::srand(std::time(0)); }
+
       const std::string &dout_name = fit_settings["dout_name"];
 
       /*********************************** Fit itself *****************************************/
       /****************************************************************************************/
-      TFile *fout = new TFile(TString::Format("%s/fit.results.root", dout_name.c_str()), "RECREATE");
+      TFile *fout = new TFile(TString::Format("%s/fit.results.%d.root", dout_name.c_str(), std::rand()), "RECREATE");
       if (!fout) { std::cerr << "no fout acceptable!\n"; return 1; }
       TTree tout("tout", "Results of fit");
       // set branches
