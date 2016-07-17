@@ -738,11 +738,12 @@ int main(int argc, char *argv[]) {
 
       /*********************************** Fit itself *****************************************/
       /****************************************************************************************/
-      TFile *fout = new TFile(TString::Format("%s/fit.results.%d.root", dout_name.c_str(), std::rand()), "RECREATE");
+      const int rand_file_id = std::rand();
+      TFile *fout = new TFile(TString::Format("%s/fit.results.%d.root", dout_name.c_str(), rand_file_id), "RECREATE");
       if (!fout) { std::cerr << "no fout acceptable!\n"; return 1; }
       TTree tout("tout", "Results of fit");
       // set branches
-      tout.Branch("can", "TCanvas", &canva);
+      // tout.Branch("can", "TCanvas", &canva);
       double chi2 = 0; tout.Branch("chi2", &chi2);
       uint iStep = 0; tout.Branch("fit_step", &iStep);
       double pars_mirrow[MParKeeper::gI()->nPars()];
@@ -821,7 +822,7 @@ int main(int argc, char *argv[]) {
                    SetLineColor(kRed))->Draw("l");
           }
           MParKeeper::gI()->printAll();
-          canva->SaveAs(TString::Format("%s/att%03d.step%d.pdf", dout_name.c_str(), e, iStep));
+          canva->SaveAs(TString::Format("%s/f%d.att%03d.step%d.pdf", dout_name.c_str(), rand_file_id, e, iStep));
 
           // Fill result to tree
           // to copy to array from where it is copied to tree
