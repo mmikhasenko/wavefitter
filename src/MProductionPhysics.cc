@@ -126,7 +126,8 @@ void MProductionPhysics::calculate(double s) {
     for (uint w = 0; w < _fC.size(); w++) {
       for (uint i = 0; i < _Nch; i++)
         cvect[i] += cd(MParKeeper::gI()->get(_fC[w][i].first),
-                       MParKeeper::gI()->get(_fC[w][i].second)) * pow(_smap(s), w);
+                       MParKeeper::gI()->get(_fC[w][i].second)) *
+          ((w==0) ? 1 : ((w==1) ?  _smap(s) : pow(_smap(s), w)));
     }
     _value += prod(CThat, cvect);
   }
