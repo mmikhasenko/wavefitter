@@ -738,8 +738,9 @@ int main(int argc, char *argv[]) {
 
       /*********************************** Fit itself *****************************************/
       /****************************************************************************************/
-      const int rand_file_id = std::rand();
-      TFile *fout = new TFile(TString::Format("%s/fit.results.%d.root", dout_name.c_str(), rand_file_id), "RECREATE");
+      const int rand_file_id = std::rand()%1000;
+      const uint pid = ::getpid();
+      TFile *fout = new TFile(TString::Format("%s/fit.results.root.pid%d.rand%03d", dout_name.c_str(), pid, rand_file_id), "RECREATE");
       if (!fout) { std::cerr << "no fout acceptable!\n"; return 1; }
       TTree tout("tout", "Results of fit");
       // set branches
@@ -822,7 +823,7 @@ int main(int argc, char *argv[]) {
                    SetLineColor(kRed))->Draw("l");
           }
           MParKeeper::gI()->printAll();
-          canva->SaveAs(TString::Format("%s/f%d.att%03d.step%d.pdf", dout_name.c_str(), rand_file_id, e, iStep));
+          canva->SaveAs(TString::Format("%s/att%03d.step%d.pid%d.rand%03d.pdf", dout_name.c_str(), pid, rand_file_id, e, iStep));
 
           // Fill result to tree
           // to copy to array from where it is copied to tree
