@@ -731,15 +731,18 @@ int main(int argc, char *argv[]) {
       const uint nAttempts = fit_settings["nAttempts"];
 
       int seed;
-      if (fit_settings.lookupValue("seed", seed)) { std::srand(seed);
-      } else { std::srand(std::time(0)); }
+      const uint pid = ::getpid();
+      if (!fit_settings.lookupValue("seed", seed)) {
+	std::srand(pid); const uint frand = std::rand();
+	seed = frand+std::time(0);
+      }
+      std::srand(seed);
 
       const std::string &dout_name = fit_settings["dout_name"];
 
       /*********************************** Fit itself *****************************************/
       /****************************************************************************************/
       const int rand_file_id = std::rand()%1000;
-      const uint pid = ::getpid();
       TFile *fout = new TFile(TString::Format("%s/fit.results.root.pid%d.rand%03d", dout_name.c_str(), pid, rand_file_id), "RECREATE");
       if (!fout) { std::cerr << "no fout acceptable!\n"; return 1; }
       TTree tout("tout", "Results of fit");
