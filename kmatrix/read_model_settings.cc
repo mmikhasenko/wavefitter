@@ -826,7 +826,7 @@ int main(int argc, char *argv[]) {
                    SetLineColor(kRed))->Draw("l");
           }
           MParKeeper::gI()->printAll();
-          canva->SaveAs(TString::Format("%s/att%03d.step%d.pid%d.rand%03d.pdf", dout_name.c_str(), pid, rand_file_id, e, iStep));
+          canva->SaveAs(TString::Format("%s/att%03d.step%d.pid%d.rand%03d.pdf", dout_name.c_str(), e, iStep, pid, rand_file_id));
 
           // Fill result to tree
           // to copy to array from where it is copied to tree
