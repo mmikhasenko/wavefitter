@@ -732,9 +732,11 @@ int main(int argc, char *argv[]) {
 
       int seed;
       const uint pid = ::getpid();
-      std::srand(pid);
-      if (fit_settings.lookupValue("seed", seed)) { std::srand(seed);
-      } else { std::srand(std::time(0)+std::rand()); }
+      if (!fit_settings.lookupValue("seed", seed)) {
+	std::srand(pid); const uint frand = std::rand();
+	seed = frand+std::time(0);
+      }
+      std::srand(seed);
 
       const std::string &dout_name = fit_settings["dout_name"];
 
