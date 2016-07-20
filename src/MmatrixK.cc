@@ -22,7 +22,7 @@ MmatrixK::MmatrixK(uint Nch,
 MmatrixK::MmatrixK(const std::vector<MChannel*> &channels, uint Npoles) :
   // mother class
   MChannelPhysics<b::matrix<cd> >(channels),
-  _Np(0) {
+  _Np(0), _bmass(0), _bcs(0) {
   // allocate poles parameters
   if (Npoles) SetNpoles(Npoles);
   // init matrix
@@ -51,20 +51,45 @@ void MmatrixK::SetNpoles(uint Npoles) {
   std::cout << "parameters for " << _Np << " poles are allocated!" << std::endl;
 }
 
+void MmatrixK::addPole(const std::string &mass_name, const std::string &par_name) {
+  // add index to MParKeeper for mass and couplings
+  _mass.push_back(MParKeeper::gI()->add(mass_name, 1.702, 1.001, 3.001));
+  for (uint jch = 0; jch < _Nch; jch++) {
+    std::ostringstream gname; gname << par_name << jch;
+    _coupling.push_back(MParKeeper::gI()->add(gname.str(), 0.0, -10., 10.));
+  }
+}
+
+void MmatrixK::addBackground(const std::string &bmass_name, const std::string &par_name) {
+  _bmass.push_back(MParKeeper::gI()->add(bmass_name, 1, 0, 3));
+  for (uint jch = 0; jch < _Nch; jch++) {
+    std::ostringstream gname; gname << par_name << jch;
+    _bcs.push_back(MParKeeper::gI()->add(gname.str(), 0.0, -10., 10.));
+  }
+}
+
 
 template<typename sType>
 void MmatrixK::tmpl_calculate(sType s) {
   // clear K
   b::symmetric_matrix<cd, b::upper> K = b::zero_matrix<cd>(_Nch);  // (_Nch) K*=0.;
+  // add poles terms
   for (uint i = 0; i < _Np; i++) {
-    b::symmetric_matrix<cd, b::upper> km(_Nch);
     double gpart[_Nch];
     for (uint j = 0; j < _Nch; j++) gpart[j] = MParKeeper::gI()->get(_coupling[i*_Nch+j]);
     double mass = MParKeeper::gI()->get(_mass[i]);
     for (uint j = 0; j < _Nch; j++)
       for (uint t = j; t < _Nch; t++)
-        km(j, t) = gpart[j]*gpart[t]/(mass*mass-s);
-    K += km;
+        K(j, t) += gpart[j]*gpart[t]/(mass*mass-s);
+  }
+  // add background terms
+  for (uint i = 0; i < _bmass.size(); i++) {
+    double gpart[_Nch];
+    for (uint j = 0; j < _Nch; j++) gpart[j] = MParKeeper::gI()->get(_bcs[i*_Nch+j]);
+    double bmass = MParKeeper::gI()->get(_bmass[i]);
+    for (uint j = 0; j < _Nch; j++)
+      for (uint t = j; t < _Nch; t++)
+        K(j, t) += gpart[j]*gpart[t]/(POW2(bmass)+s);
   }
   // ph.sp.matrix
   b::symmetric_matrix<cd, b::upper> mrho(_Nch);

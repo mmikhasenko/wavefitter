@@ -157,7 +157,11 @@ int main(int argc, char *argv[]) {
   MIsobar  f2_iso(F2_MASS, F2_WIDTH,  PI_MASS, PI_MASS, 2, 5.);
   MIsobar  pipiS_iso(0.5, 0.5,  PI_MASS, PI_MASS, 0, 5.);
   // model content is vector to fill K-matrix
-  std::vector<std::pair<std::string, std::string> > model_content;
+
+  // K-matrix
+  const uint Jsector = 2;
+  MmatrixK km(iset, 0);
+
 
   try {
     const libconfig::Setting &modelT = root["modelT"];
@@ -229,11 +233,15 @@ int main(int argc, char *argv[]) {
       std::cout << "READ: " << type << " ("
                 << mass << ", " << couplings << "*)"
                 << std::endl;
+      
       if (type != "pole") {
-        std::cerr << "Error: model blok is not a pole. Only poles are available.";
+        km.addPole(mass, couplings);
+      } else if (type != "pole-like-background") {
+        km.addBackground(mass, couplings);
+      } else {
+        std::cerr << "Error: model blok is not a pole or pole-like-background. Only poles and bgds are available.";
         return EXIT_FAILURE;
       }
-      model_content.push_back(std::make_pair(mass, couplings));
     }  // icount
     // create the model
   }
@@ -241,9 +249,6 @@ int main(int argc, char *argv[]) {
     std::cerr << "Error <> libconfig::SettingNotFoundException in \"model\" secton!" << std::endl;
     return EXIT_FAILURE;
   }
-
-  const uint Jsector = 2;
-  MmatrixK km(iset, model_content.size());
 
 
   ///////////////////////////////////////////////////////////////////////////////////////
