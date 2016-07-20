@@ -31,7 +31,6 @@ class MmatrixK : public MChannelPhysics<b::matrix<cd> > {
   b::matrix<cd> getSSInverseValue(cd s);  // second sheet value
 
  private:
-  uint _Np;
   // matrix-vector structures
   b::matrix<cd> _T;
   // poles parameters keepers
@@ -49,7 +48,7 @@ class MmatrixK : public MChannelPhysics<b::matrix<cd> > {
     void tmpl_calculate(sType s);
 
  public:
-  uint getNp () const {return _Np ;}
+  uint getNp () const {return _mass.size();}
 
  public:
   void Print();

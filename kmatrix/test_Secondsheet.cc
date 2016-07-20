@@ -33,13 +33,13 @@ int main(int argc, char *argv[]) {
   std::vector<MChannel*> channels = {&rho_pi, &f2_pi};
   MmatrixK km(channels, 2);
   // masses
-  MParKeeper::gI()->set("m1", 1.402);
-  MParKeeper::gI()->set("m2", 1.702);
+  MParKeeper::gI()->set("m0", 1.402);
+  MParKeeper::gI()->set("m1", 1.702);
   // couplings
-  MParKeeper::gI()->set("g1", 4.5);
-  MParKeeper::gI()->set("g2", 0.5);
-  MParKeeper::gI()->set("h1", 1.5);
-  MParKeeper::gI()->set("h2", 3.5);
+  MParKeeper::gI()->set("g0", 4.5);
+  MParKeeper::gI()->set("g1", 0.5);
+  MParKeeper::gI()->set("h0", 1.5);
+  MParKeeper::gI()->set("h1", 3.5);
   MParKeeper::gI()->printAll();
 
   // canva

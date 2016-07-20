@@ -158,10 +158,9 @@ int main(int argc, char *argv[]) {
   MIsobar  pipiS_iso(0.5, 0.5,  PI_MASS, PI_MASS, 0, 5.);
   // model content is vector to fill K-matrix
 
-  // K-matrix
+  // K-matrix, just a reference
   const uint Jsector = 2;
-  MmatrixK km(iset, 0);
-
+  MmatrixK *km = 0;
 
   try {
     const libconfig::Setting &modelT = root["modelT"];
@@ -215,6 +214,9 @@ int main(int argc, char *argv[]) {
     }
     for (auto && it : iset) it->makeDisperseLookupTable(0.01, 10., 100);
 
+    // create k-matrix;
+    km = new MmatrixK(iset, 0);
+
     // content of the model
     const libconfig::Setting &content = modelT["content"];
     count = content.getLength();
@@ -233,11 +235,11 @@ int main(int argc, char *argv[]) {
       std::cout << "READ: " << type << " ("
                 << mass << ", " << couplings << "*)"
                 << std::endl;
-      
-      if (type != "pole") {
-        km.addPole(mass, couplings);
-      } else if (type != "pole-like-background") {
-        km.addBackground(mass, couplings);
+
+      if (type == "pole") {
+        km->addPole(mass, couplings);
+      } else if (type == "pole-like-background") {
+        km->addBackground(mass, couplings);
       } else {
         std::cerr << "Error: model blok is not a pole or pole-like-background. Only poles and bgds are available.";
         return EXIT_FAILURE;
@@ -274,7 +276,7 @@ int main(int argc, char *argv[]) {
       MProductionPhysics &pr = *(vpr[imodelA]);
 
       if ( modelA.exists("scattering") )
-        pr.addScattering([&](double s)->b::matrix<cd>{return km.getValue(s);});
+        pr.addScattering([&](double s)->b::matrix<cd>{return km->getValue(s);});
 
       // short_range
       if (modelA.exists("short_range")) {
@@ -649,7 +651,7 @@ int main(int argc, char *argv[]) {
                 parsBackUp.push_back(std::make_pair(ip, vp));
                 MParKeeper::gI()->set(ip, 0.);
               }
-              km.RecalculateNextTime();
+              km->RecalculateNextTime();
               for (auto & pr : vpr) pr->RecalculateNextTime();
               // message
               std::cout << "--> Settings " << j << " <" << title << "> : \n";
@@ -778,7 +780,7 @@ int main(int argc, char *argv[]) {
         // Create funciton wrapper for minmizer a IMultiGenFunction type
         ROOT::Math::Functor functor([&](const double *pars)->double {
             MParKeeper::gI()->pset(pars);
-            km.RecalculateNextTime();
+            km->RecalculateNextTime();
             for (auto & pr : vpr) pr->RecalculateNextTime();
             return MRelationHolder::gI()->CalculateChi2();
           }, pnPars);
@@ -814,7 +816,7 @@ int main(int argc, char *argv[]) {
           min->Minimize();
 
           // Plot all
-          km.RecalculateNextTime();
+          km->RecalculateNextTime();
           for (auto & pr : vpr) pr->RecalculateNextTime();
           for (uint i=0; i < Nrels; i++) {
             const DP & data = MRelationHolder::gI()->GetRelation(i).data;

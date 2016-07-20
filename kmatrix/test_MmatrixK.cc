@@ -15,16 +15,18 @@ int main(int argc, char *argv[]) {
   MIsobar  f2(1.23, 0.2,  0.14, 0.14, 2, 5.);
   MIsobarChannel rho_q(rho, 0.14);
   MIsobarChannel  f2_q(f2,  0.14);
+  rho_q.makeLookupTable(rho_q.sth(), 6., 200);
+  f2_q. makeLookupTable(rho_q.sth(), 6., 200);
 
   MmatrixK km({&rho_q, &f2_q}, 2);
   // masses
-  MParKeeper::gI()->set("m1", 1.502);
-  MParKeeper::gI()->set("m2", 1.701);
+  MParKeeper::gI()->set("m0", 1.502);
+  MParKeeper::gI()->set("m1", 1.701);
   // couplings
-  MParKeeper::gI()->set("g1", 4.);
-  MParKeeper::gI()->set("g2", 1.);
-  MParKeeper::gI()->set("h1", 1.);
-  MParKeeper::gI()->set("h2", 4.);
+  MParKeeper::gI()->set("g0", 4.);
+  MParKeeper::gI()->set("g1", 1.);
+  MParKeeper::gI()->set("h0", 1.);
+  MParKeeper::gI()->set("h1", 4.);
   MParKeeper::gI()->printAll();
 
   TCanvas c1("c1");

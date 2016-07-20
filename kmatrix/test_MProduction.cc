@@ -34,8 +34,10 @@ int main(int argc, char *argv[]) {
   MParKeeper::gI()->set("g1", 1.);
   MParKeeper::gI()->set("h0", 1.);
   MParKeeper::gI()->set("h1", 4.);
-  MParKeeper::gI()->set("c0", 1.);
-  MParKeeper::gI()->set("c1", 1.);
+  MParKeeper::gI()->set("cr0", 1.);
+  MParKeeper::gI()->set("ci0", 0.);
+  MParKeeper::gI()->set("cr1", 1.);
+  MParKeeper::gI()->set("ci1", 0.);
   MParKeeper::gI()->printAll();
 
   TCanvas c1("c1");
