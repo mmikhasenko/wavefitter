@@ -19,11 +19,11 @@ int main(int argc, char *argv[]) {
   std::vector<MChannel*> channels = {&rho_pi};
   MmatrixK km(channels, 1);
   // masses
-  MParKeeper::gI()->set("m1", 1.402);
-  // MParKeeper::gI()->set("m2", 1.601);
+  MParKeeper::gI()->set("m0", 1.402);
+  // MParKeeper::gI()->set("m1", 1.601);
   // couplings
-  MParKeeper::gI()->set("g1", 2.5);
-  // MParKeeper::gI()->set("h1", 4.);
+  MParKeeper::gI()->set("g0", 2.5);
+  // MParKeeper::gI()->set("h0", 4.);
   MParKeeper::gI()->printAll();
 
   // canva

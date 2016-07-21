@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <iostream>
+#include <string>
 
 #include <boost/numeric/ublas/symmetric.hpp>
 #include <boost/numeric/ublas/io.hpp>
@@ -24,26 +25,30 @@ class MmatrixK : public MChannelPhysics<b::matrix<cd> > {
   MmatrixK(uint Nchannels, uint Npoles);
 
   void SetNpoles(uint Npoles);
+  void addPole(const std::string &mass_name, const std::string &par_name);
+  void addBackground(const std::string &msq_name, const std::string &par_name);
 
   b::matrix<cd> getSSInverseValue(cd s);  // second sheet value
 
  private:
-  uint _Np;
   // matrix-vector structures
   b::matrix<cd> _T;
-  // parameters keepers
+  // poles parameters keepers
   std::vector<uint> _mass;
   std::vector<uint> _coupling;
+  // background parameters keepers
+  std::vector<uint> _bmass;
+  std::vector<uint> _bcs;
 
  private:
-  void calculate(double s) {tmpl_calculate<double>(s);}
-  void calculate(cd s)     {tmpl_calculate<cd>(s);}
+  inline void calculate(double s) {tmpl_calculate<double>(s);}
+  inline void calculate(cd s)     {tmpl_calculate<cd>(s);}
 
   template<typename sType>
     void tmpl_calculate(sType s);
 
  public:
-  uint getNp () const {return _Np ;}
+  uint getNp () const {return _mass.size();}
 
  public:
   void Print();
