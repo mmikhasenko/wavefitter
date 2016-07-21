@@ -580,12 +580,6 @@ int main(int argc, char *argv[]) {
       std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++++++++\n";
       std::cout << "/////////////// Plot settings: ///////////////////////\n";
 
-      std::string type;
-      if (!plot_settings.lookupValue("type", type)) type = "model";
-      const libconfig::Setting &mapping = plot_settings["mapping"];
-      const uint NrelsToPlot = mapping.getLength();
-      canva->Clear(); canva->DivideSquare(NrelsToPlot);
-
       // if file is specified
       //  - open file
       //  - find tree thee
@@ -618,101 +612,130 @@ int main(int argc, char *argv[]) {
         }
       }
 
-      std::vector<TMultiGraph*> mgr(NrelsToPlot);
-      // add data in order by mapping
-      for (uint i=0; i < NrelsToPlot; i++) {
-        if (mapping[i].getLength() == 0) continue;
-        const uint iPad = mapping[i][0];
-        mgr[i] = new TMultiGraph();
-        // draw data
-        const DP & data = MRelationHolder::gI()->GetRelation(iPad).data;
-        if ( type.find("data") != std::string::npos ) mgr[i]->Add(draw(data), "p");
+      // draw data
+      std::string type;
+      if (!plot_settings.lookupValue("type", type)) type = "model";
+
+
+      uint Npages = 0;
+      if (plot_settings.exists("mapping")) {
+        Npages = 1;
+        std::cout << "A parameter \"mapping\" is found and one-page pdf will be produced!\n";
+      } else if (plot_settings.exists("mapping_list")) {
+        Npages = plot_settings["mapping_list"].getLength();
+        std::cout << "A parameter \"mapping_list\" is found and " << Npages << "-pages pdf will be produced!";
+      } else {
+        std::cerr << "Error<main>: mapping or mapping_list has to be specified!";
+        return 1;
       }
 
-      // add model model
-      if ( type.find("model") != std::string::npos ) {
-        if (plot_settings.exists("what_to_plot")) {
-          const libconfig::Setting &what_to_plot = plot_settings["what_to_plot"];
-          const uint Ncurves = what_to_plot.getLength();
-          std::cout << "--> " << Ncurves << " model settings are found to be plotted.\n";
-          for (uint j = 0; j < Ncurves; j++) {
-            std::string title; uint color;
-            if (what_to_plot[j].lookupValue("title", title) &&
-                what_to_plot[j].lookupValue("color", color) &&
-                what_to_plot[j].exists("set_to_zero")) {
-              const libconfig::Setting &set_to_zero = what_to_plot[j]["set_to_zero"];
-              const uint NparsToZero = set_to_zero.getLength();
-              // set to zero
-              std::vector<std::pair<uint, double> > parsBackUp;
-              for (uint p = 0; p < NparsToZero; p++) {
-                const char *pname = set_to_zero[p];
-                uint ip = MParKeeper::gI()->getIndex(std::string(pname));
-                double vp = MParKeeper::gI()->get(ip);
-                parsBackUp.push_back(std::make_pair(ip, vp));
-                MParKeeper::gI()->set(ip, 0.);
-              }
-              km->RecalculateNextTime();
-              for (auto & pr : vpr) pr->RecalculateNextTime();
-              // message
-              std::cout << "--> Settings " << j << " <" << title << "> : \n";
-              MParKeeper::gI()->printAll();
+      for (uint pg = 0; pg < Npages; pg++) {
+        const libconfig::Setting &mapping = (Npages == 1) ? plot_settings["mapping"] : plot_settings["mapping_list"][pg];
+        const uint NrelsToPlot = mapping.getLength();
+        canva->Clear(); canva->DivideSquare(NrelsToPlot);
 
-              // fill vector of historrams where the model will be plotted on
-              std::vector<uint> vme;
-              if (what_to_plot[j].exists("mapping_elements")) {
-                const libconfig::Setting &mapping_elements = what_to_plot[j]["mapping_elements"];
-                for (int me = 0; me < mapping_elements.getLength(); me++) vme.push_back(uint(mapping_elements[me]));
-              } else {
-                for (uint i=0; i < NrelsToPlot; i++) vme.push_back(i);
+        std::vector<TMultiGraph*> mgr(NrelsToPlot);
+        // add data in order by mapping
+        for (uint i=0; i < NrelsToPlot; i++) {
+          if (mapping[i].getLength() == 0) continue;
+          const uint iPad = mapping[i][0];
+          mgr[i] = new TMultiGraph();
+          // draw data
+          const DP & data = MRelationHolder::gI()->GetRelation(iPad).data;
+          if ( type.find("data") != std::string::npos ) mgr[i]->Add(draw(data), "p");
+        }
+
+        // add model model
+        if ( type.find("model") != std::string::npos ) {
+          if (plot_settings.exists("what_to_plot")) {
+            const libconfig::Setting &what_to_plot = plot_settings["what_to_plot"];
+            const uint Ncurves = what_to_plot.getLength();
+            std::cout << "--> " << Ncurves << " model settings are found to be plotted.\n";
+            for (uint j = 0; j < Ncurves; j++) {
+              std::string title; uint color;
+              if (what_to_plot[j].lookupValue("title", title) &&
+                  what_to_plot[j].lookupValue("color", color) &&
+                  what_to_plot[j].exists("set_to_zero")) {
+                const libconfig::Setting &set_to_zero = what_to_plot[j]["set_to_zero"];
+                const uint NparsToZero = set_to_zero.getLength();
+                // set to zero
+                std::vector<std::pair<uint, double> > parsBackUp;
+                for (uint p = 0; p < NparsToZero; p++) {
+                  const char *pname = set_to_zero[p];
+                  uint ip = MParKeeper::gI()->getIndex(std::string(pname));
+                  double vp = MParKeeper::gI()->get(ip);
+                  parsBackUp.push_back(std::make_pair(ip, vp));
+                  MParKeeper::gI()->set(ip, 0.);
+                }
+                km->RecalculateNextTime();
+                for (auto & pr : vpr) pr->RecalculateNextTime();
+                // message
+                std::cout << "--> Settings " << j << " <" << title << "> : \n";
+                MParKeeper::gI()->printAll();
+
+                // fill vector of historrams where the model will be plotted on
+                std::vector<uint> vme;
+                if (what_to_plot[j].exists("mapping_elements")) {
+                  const libconfig::Setting &mapping_elements = what_to_plot[j]["mapping_elements"];
+                  for (int me = 0; me < mapping_elements.getLength(); me++) vme.push_back(uint(mapping_elements[me]));
+                } else {
+                  for (uint i=0; i < NrelsToPlot; i++) vme.push_back(i);
+                }
+                // add model curves to plot
+                for (uint i : vme) {
+                  if (mapping[i].getLength() == 0) continue;
+                  const uint iPad = mapping[i][0];
+                  // get data and model function
+                  const DP & data = MRelationHolder::gI()->GetRelation(iPad).data;
+                  std::function<double(double)> func = MRelationHolder::gI()->GetRelation(iPad).func;
+                  // plot
+                  mgr[i]->Add(
+                              SET3(draw(func,
+                                        (data.data.begin())->x , (--data.data.end())->x,
+                                        100),
+                                   SetLineStyle(2),
+                                   SetLineColor(color),
+                                   SetTitle("") ), "l");
+                  mgr[i]->Add(
+                              SET2(draw(func,
+                                        data.lrange, data.rrange,
+                                        100),
+                                   SetLineColor(color),
+                                   SetTitle(title.c_str()) ), "l");
+                }
+                // set back to nominal value
+                for (uint p = 0; p < NparsToZero; p++)
+                  MParKeeper::gI()->set(parsBackUp[p].first, parsBackUp[p].second);
               }
-              // add model curves to plot
-              for (uint i : vme) {
-                if (mapping[i].getLength() == 0) continue;
-                const uint iPad = mapping[i][0];
-                // get data and model function
-                const DP & data = MRelationHolder::gI()->GetRelation(iPad).data;
-                std::function<double(double)> func = MRelationHolder::gI()->GetRelation(iPad).func;
-                // plot
-                mgr[i]->Add(
-                            SET3(draw(func,
-                                      (data.data.begin())->x , (--data.data.end())->x,
-                                      100),
-                                 SetLineStyle(2),
-                                 SetLineColor(color),
-                                 SetTitle("") ), "l");
-                mgr[i]->Add(
-                            SET2(draw(func,
-                                      data.lrange, data.rrange,
-                                      100),
-                                 SetLineColor(color),
-                                 SetTitle(title.c_str()) ), "l");
-              }
-              // set back to nominal value
-              for (uint p = 0; p < NparsToZero; p++)
-                MParKeeper::gI()->set(parsBackUp[p].first, parsBackUp[p].second);
             }
           }
         }
-      }
 
-      // finally plot
-      for (uint i=0; i < NrelsToPlot; i++) {
-        if (mapping[i].getLength() == 0) continue;
-        // setTitle
-        const uint iPad = mapping[i][0];
-        const DP & data = MRelationHolder::gI()->GetRelation(iPad).data;
-        mgr[i]->SetTitle(data.title.c_str());
-        // draw
-        canva->cd(i+1); mgr[i]->Draw("a");
-      }
+        // finally plot
+        for (uint i=0; i < NrelsToPlot; i++) {
+          if (mapping[i].getLength() == 0) continue;
+          // setTitle
+          const uint iPad = mapping[i][0];
+          const DP & data = MRelationHolder::gI()->GetRelation(iPad).data;
+          mgr[i]->SetTitle(data.title.c_str());
+          // draw
+          canva->cd(i+1); mgr[i]->Draw("a");
+        }
 
-      // save to pdf
-      std::string fplot_name = "/tmp/default_plot.read_model_settings.pdf";
-      if (!plot_settings.lookupValue("fplot_name", fplot_name))
-        std::cerr << "Warning: fplot_name is not specified. A default name wil be used.\n";
-      canva->SaveAs(fplot_name.c_str());
-    }
-  }
+        // save to pdf
+        std::string fplot_name = "/tmp/default_plot.read_model_settings.pdf";
+        if (!plot_settings.lookupValue("fplot_name", fplot_name))
+          std::cerr << "Warning: fplot_name is not specified. A default name wil be used.\n";
+        // save multipage pdf;
+        if (Npages != 1 && pg == Npages-1) { canva->Print(TString::Format("%s)", fplot_name.c_str()), "pdf");
+        } else if (Npages != 1 && pg == 0) { canva->Print(TString::Format("%s(", fplot_name.c_str()), "pdf");
+        } else {
+          std::cout << "-----> Saving page " << pg << "\n";
+          canva->Print(TString::Format("%s", fplot_name.c_str()), "pdf");
+        }  // if
+      }  // Npages
+    }  // exists plot_settings
+  }  // try
   catch(const libconfig::SettingNotFoundException &nfex) {
     std::cerr << "Error <> libconfig::SettingNotFoundException in \"plot_settings\" secton" << std::endl;
     return EXIT_FAILURE;
@@ -833,8 +856,13 @@ int main(int argc, char *argv[]) {
                    SetLineColor(kRed))->Draw("l");
           }
           MParKeeper::gI()->printAll();
-          canva->SaveAs(TString::Format("%s/att%03d.step%d.pid%d.rand%03d.pdf", dout_name.c_str(), e, iStep, pid, rand_file_id));
-
+          if (fit_settings.exists("save_preview")) {
+            std::string save_preview = fit_settings["save_preview"];
+            if (save_preview != "no" && save_preview != "false")
+              canva->SaveAs(TString::Format("%s/att%03d.step%d.pid%d.rand%03d.pdf", dout_name.c_str(), e, iStep, pid, rand_file_id));
+          } else {
+            std::cerr << "Warning: save_preview option is not specified. \"no\" is set by default.";
+          }
           // Fill result to tree
           // to copy to array from where it is copied to tree
           memcpy(pars_mirrow,
