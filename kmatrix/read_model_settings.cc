@@ -369,7 +369,7 @@ int main(int argc, char *argv[]) {
             vdeck[i] = new MDeck(POW2(PI_MASS), tP, iso.GetM(), POW2(PI_MASS), POW2(PI_MASS),
                                  Jsector, iset[i]->GetL(), Sp, -M,
                                  iso.GetL(), 0, R);
-            vdeck[i]->Print();
+            // vdeck[i]->Print();
 
             // check if it is possible to load it from somewhere
             if (long_range_lookup_path.size()) {

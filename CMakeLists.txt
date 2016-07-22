@@ -36,3 +36,4 @@ include_directories(${ROOT_INCLUDE_DIR})
 
 add_subdirectory(src)
 add_subdirectory(kmatrix)
+add_subdirectory(simulations)
