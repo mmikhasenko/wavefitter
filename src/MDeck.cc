@@ -14,7 +14,12 @@ double MDeck::getDeck(double m1sq, double m2sq, double m3sq, double m4sq, double
                       uint S , int lamS,
                       double R) {
   if (s == POW2(sqrt(m3sq)+sqrt(m4sq))) s+=1e-5;
-  if (s  < POW2(sqrt(m3sq)+sqrt(m4sq))) { std::cerr << "Warning<MDeck::getDeck> s<sth\n"; return 0; }
+  if (s  < POW2(sqrt(m3sq)+sqrt(m4sq))) { std::cerr << "Warning<MDeck::getDeck> s = "
+                                                    << s << " < sth = "
+                                                    << POW2(sqrt(m3sq)+sqrt(m4sq))
+                                                    << ", diff is " << s-POW2(sqrt(m3sq)+sqrt(m4sq))
+                                                    << "\n"; return 0; }
+  std::cout << "~!!!\n";
   // calculate dependent variables
   double t = m1sq + m3sq - ((s + m3sq - m4sq)*(s + m1sq - m2sq))/(2.*s) +
     sqrt(LAMBDA(s, m1sq, m2sq)*LAMBDA(s, m3sq, m4sq))/(2.*s)*z;
