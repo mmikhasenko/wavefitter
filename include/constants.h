@@ -12,8 +12,8 @@
 #define A2_WIDTH  0.1
 #define RHO_MASS  0.7755
 #define RHO_WIDTH 0.149
-#define F2_MASS   1.27
-#define F2_WIDTH  0.185
+#define F2_MASS   1.2755
+#define F2_WIDTH  0.1867
 
 #define F0_MASS   0.99
 #define F0_WIDTH  0.03

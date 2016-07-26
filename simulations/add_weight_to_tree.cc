@@ -70,9 +70,13 @@ int add_weight_to_tree(const char *fin_name, bool save_flag, const char* fout_na
       double s3pi = pi3_lv.M2();
       double eb_3pi_rf = (s3pi+m1sq-m2sq)/(2*sqrt(s3pi));
       double ei_3pi_rf = (s3pi+m3sq-m4sq)/(2*sqrt(s3pi));
-      double pb_3pi_rf = LAMBDA(s3pi, m1sq, m2sq)/(2*sqrt(s3pi));
-      double pi_3pi_rf = LAMBDA(s3pi, m3sq, m4sq)/(2*sqrt(s3pi));
-      double z = (eb_3pi_rf*ei_3pi_rf - beam_lv->Dot(*iso_lv)) / (pb_3pi_rf*pi_3pi_rf);
+      double pb_3pi_rf = sqrt(LAMBDA(s3pi, m1sq, m2sq)/(4*s3pi));
+      double pi_3pi_rf = sqrt(LAMBDA(s3pi, m3sq, m4sq)/(4*s3pi));
+      double z = (eb_3pi_rf*ei_3pi_rf - (*beam_lv)*(*iso_lv)) / (pb_3pi_rf*pi_3pi_rf);
+      if (fabs(z)>1.) { std::cout << "Warning: |z|>1. Sc.pr" << (*beam_lv)*(*iso_lv)
+                                  << ", ee = " << eb_3pi_rf*ei_3pi_rf
+                                  << ", pp = " << pb_3pi_rf*pi_3pi_rf
+                                  << "\n"; continue; } 
       hz->Fill(z);
       double deck = MDeck::getDeck(m1sq, m2sq, m3sq, m4sq, mpi*mpi,
                                    s3pi, z,

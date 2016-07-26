@@ -19,7 +19,7 @@ double MDeck::getDeck(double m1sq, double m2sq, double m3sq, double m4sq, double
                                                     << POW2(sqrt(m3sq)+sqrt(m4sq))
                                                     << ", diff is " << s-POW2(sqrt(m3sq)+sqrt(m4sq))
                                                     << "\n"; return 0; }
-  std::cout << "~!!!\n";
+  // std::cout << "~!!!" << s << "\n";
   // calculate dependent variables
   double t = m1sq + m3sq - ((s + m3sq - m4sq)*(s + m1sq - m2sq))/(2.*s) +
     sqrt(LAMBDA(s, m1sq, m2sq)*LAMBDA(s, m3sq, m4sq))/(2.*s)*z;
@@ -46,7 +46,9 @@ double MDeck::getDeck(double m1sq, double m2sq, double m3sq, double m4sq, double
     pow(cd(m2sq), lamP/2.) * /* to suppress complexity */
     ClebschS;
 
-  if (fabs(imag(f)) > NUMERICAL_LIMIT_IM) std::cerr << "Warning<MDeck::getDeck> imag part [b] = " << f << "!= 0" << std::endl;
+  if (fabs(imag(f)) > NUMERICAL_LIMIT_IM) std::cerr << "Warning<MDeck::getDeck> imag part [b(s = "
+                                                    << s << ", z = "
+                                                    << z << ")] = " << f << "!= 0" << std::endl;
   return real(f);
 }
 

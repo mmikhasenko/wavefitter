@@ -43,6 +43,7 @@ class MIsobar {
  public:
   virtual double U(double s12) const;
   virtual cd     U(cd s)       const;
+  virtual cd     T(cd s)       const;
   double IntU() const {return intU;};
 
  private:
