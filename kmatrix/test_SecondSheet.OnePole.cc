@@ -9,6 +9,8 @@
 #include "MParKeeper.h"
 #include "mstructures.h"
 
+#include "MatrixInverse.h"
+
 #include "TH2D.h"
 
 
@@ -22,7 +24,7 @@ int main(int argc, char *argv[]) {
   MParKeeper::gI()->set("m0", 1.402);
   // MParKeeper::gI()->set("m1", 1.601);
   // couplings
-  MParKeeper::gI()->set("g0", 2.5);
+  MParKeeper::gI()->set("g0", 4.5);
   // MParKeeper::gI()->set("h0", 4.);
   MParKeeper::gI()->printAll();
 
@@ -62,18 +64,18 @@ int main(int argc, char *argv[]) {
           SET1(
                draw([&](double s)->double{return imag(rho_pi.rholtilde(cd(s, 1e-5)));}, 0.2, 4., 300),
                SetLineColor(kRed) ) )->Draw("al");
-  c1.SaveAs("/tmp/11.pdf");
-
+  const char* pdfout = "/tmp/plots.SecondSheet.OnePole.pdf";
+  c1.Print(TString::Format("%s(",pdfout));
   /************ Rho Isobar **************/
 
   combine(
           SET1(
-               draw([&](double s)->double{return real(rho_pi.rho(cd(s, 1e-1)));}, 0.2, 4., 300),
+               draw([&](double s)->double{return real(rho_pi.rho(cd(s, 1e-6)));}, 0.2, 4., 300),
                SetLineColor(kBlack) ),
           SET1(
-               draw([&](double s)->double{return imag(rho_pi.rho(cd(s, 1e-1)));}, 0.2, 4., 300),
+               draw([&](double s)->double{return imag(rho_pi.rho(cd(s, 1e-6)));}, 0.2, 4., 300),
                SetLineColor(kRed) ) )->Draw("al");
-  c1.SaveAs("/tmp/rho.SS.pdf");
+  c1.Print(pdfout);
 
   /************ Rho L tilde *************/
   std::transform(complex_s_values.begin(), complex_s_values.end(),
@@ -89,87 +91,87 @@ int main(int argc, char *argv[]) {
   hssh.SetTitle("real part of #tilde{#rho_{l}}");
   fill_hist(re_values);
   hssh.Draw("lego2");
-  c1.SaveAs("/tmp/real.rholtilde.test_Secondsheet.pdf");
+  c1.Print(pdfout);
 
   // Imaginary part
   hssh.SetTitle("imag part of #rholtilde");
   fill_hist(im_values);
   hssh.Draw("lego2");
-  c1.SaveAs("/tmp/imag.rholtilde.test_Secondsheet.pdf");
+  c1.Print(pdfout);
 
-  /************ km.getValue(0,0) *************/
+  /************ First sheet *************/
   std::transform(complex_s_values.begin(), complex_s_values.end(),
-                 cd_values.begin(), [&](cd s)->cd{ return km.getValue(s)(0, 0);});
+                 cd_values.begin(), [&](cd s)->cd{ return 1./det_fast(km.getFSdenominator(s));});
   std::transform(cd_values.begin(), cd_values.end(),
                  re_values.begin(), [&](cd v)->double{return real(v);});
   std::transform(cd_values.begin(), cd_values.end(),
                  im_values.begin(), [&](cd v)->double{return imag(v);});
   std::transform(cd_values.begin(), cd_values.end(),
-                 abs_values.begin(), [&](cd v) { return abs(1./v); });
+                 abs_values.begin(), [&](cd v) { return log10(abs(v)); });
 
   // Real part
-  hssh.SetTitle("real part of T_{I}");
+  hssh.SetTitle("Real part of D_{I}^{-1}");
   fill_hist(re_values);
   hssh.Draw("colz");
-  c1.SaveAs("/tmp/real.T.test_Secondsheet.pdf");
+  c1.Print(pdfout);
 
   // Imaginary part
-  hssh.SetTitle("imag part of T_{I}");
+  hssh.SetTitle("Imag part of D_{I}^{-1}");
   fill_hist(im_values);
   hssh.Draw("colz");
-  c1.SaveAs("/tmp/imag.T.test_Secondsheet.pdf");
+  c1.Print(pdfout);
 
   // Abs part
-  hssh.SetTitle("abs part of T_{I}^{-1}");
+  hssh.SetTitle("Ln@Abs part of log @ D_{I}^{-1}");
   fill_hist(abs_values);
   hssh.Draw("colz");
   hssh.Draw("cont3 same");
-  c1.SaveAs("/tmp/abs.T1_inv.test_Secondsheet.pdf");
+  c1.Print(pdfout);
 
-  /************ km.getSSInverseValue(0,0) *************/
+  /************ Second sheet *************/
   std::transform(complex_s_values.begin(), complex_s_values.end(),
-                 cd_values.begin(), [&](cd s)->cd{ return km.getSSInverseValue(s)(0, 0);});
+                 cd_values.begin(), [&](cd s)->cd{ return 1./det_fast(km.getSSdenominator(s));});
   std::transform(cd_values.begin(), cd_values.end(),
                  re_values.begin(), [&](cd v)->double{return real(v);});
   std::transform(cd_values.begin(), cd_values.end(),
                  im_values.begin(), [&](cd v)->double{return imag(v);});
   std::transform(cd_values.begin(), cd_values.end(),
-                 abs_values.begin(), [&](cd v) { return abs(v); });
+                 abs_values.begin(), [&](cd v) { return log10(abs(v)); });
 
   // Real part
-  hssh.SetTitle("real part of T_{II}");
+  hssh.SetTitle("Real part of D_{II}^{-1}");
   fill_hist(re_values);
   hssh.Draw("colz");
-  c1.SaveAs("/tmp/real.T2_inv.test_Secondsheet.pdf");
+  c1.Print(pdfout);
 
   // Imaginary part
-  hssh.SetTitle("imag part of T_{II}");
+  hssh.SetTitle("Imag part of D_{II}^{-1}");
   fill_hist(im_values);
   hssh.Draw("colz");
-  c1.SaveAs("/tmp/imag.T2_inv.test_Secondsheet.pdf");
+  c1.Print(pdfout);
 
   // Abs part
-  hssh.SetTitle("abs part of T_{II}^{-1}");
+  hssh.SetTitle("Ln@Abs part of D_{II}^{-1}");
   fill_hist(abs_values);
   hssh.Draw("colz");
   hssh.Draw("cont3 same");
-  c1.SaveAs("/tmp/abs.T2_inv.test_Secondsheet.pdf");
+  c1.Print(pdfout);
 
   /*****************************************************/
   // Combine two pictures;
   std::transform(complex_s_values.begin(), complex_s_values.end(),
                  cd_values.begin(), [&](cd s)->cd{
-                   if (imag(s) > 0) { return 1./km.getValue(s)(0, 0);
-                   } else { return km.getSSInverseValue(s)(0, 0);} } );
+                   if (imag(s) > 0) { return 1./det_fast(km.getFSdenominator(s));
+                   } else { return 1./det_fast(km.getSSdenominator(s));} } );
   std::transform(cd_values.begin(), cd_values.end(),
-                 abs_values.begin(), [&](cd v) { return abs(v); });
+                 abs_values.begin(), [&](cd v) { return log10(abs(v)); });
 
   // Abs part
-  hssh.SetTitle("abs part of T_{II}^{-1}");
+  hssh.SetTitle("Ln@Abs part of D_{I}^{-1}~D_{II}^{-1}");
   fill_hist(abs_values);
   hssh.Draw("colz");
   hssh.Draw("cont3 same");
-  c1.SaveAs("/tmp/abs.T1-2_inv.test_Secondsheet.pdf");
+  c1.Print(pdfout);
 
   /*****************************************************/
 
@@ -183,7 +185,7 @@ int main(int argc, char *argv[]) {
           SET1(
                draw([&](double s)->double{return  abs(km.getValue(s)(0, 0));}, 0.2, 4., 300),
                SetLineColor(kGreen) ) )->Draw("al");
-  c1.SaveAs("/tmp/T.physical.test_Secondsheet.pdf");
+  c1.Print(TString::Format("%s)",pdfout));
 
   return 1;
 }

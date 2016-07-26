@@ -23,10 +23,13 @@
 #include "MRelationHolder.h"
 #include "MDeck.h"
 
+#include "MatrixInverse.h"
+
 #include "TGraphErrors.h"
 #include "TCanvas.h"
 #include "TFile.h"
 #include "TTree.h"
+#include "TH2D.h"
 #include "TMultiGraph.h"
 #include "Math/MinimizerOptions.h"
 #include "Math/Minimizer.h"
@@ -883,6 +886,113 @@ int main(int argc, char *argv[]) {
     return EXIT_FAILURE;
   }
 
+  ///////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////
+  //////////////////// c o n t i n u a t i o n  s e t t i n g s /////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////
+
+  try {
+    if (root.exists("continuation_settings")) {
+      const libconfig::Setting &continuation_settings = root["continuation_settings"];
+
+      std::cout << "\n\n";
+      std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++++++++\n";
+      std::cout << "/////////////// Continuation settings: ///////////////////////\n";
+
+      // if file is specified
+      //  - open file
+      //  - find tree thee
+      //  - load perameters from particular entry of the tree
+      if (continuation_settings.exists("path_to_fit_results") && continuation_settings.exists("entry_fit_result")) {
+        std::string fres_name; continuation_settings.lookupValue("path_to_fit_results", fres_name);
+        uint entry =  continuation_settings["entry_fit_result"];  // throw exception it something is wrong
+        TFile *fres = TFile::Open(fres_name.c_str());
+        if (fres) {
+          std::cout << "File with results successfully opened!\n";
+          TTree *tres; gDirectory->GetObject("tout", tres);
+          if (tres) {
+            const uint Npars = MParKeeper::gI()->nPars();
+            double pars[Npars];
+            for (uint i = 0; i < Npars; i++) {
+              const std::string & name = MParKeeper::gI()->getName(i);
+              // check if it is at list of branches
+              tres->SetBranchAddress(name.c_str(), &pars[i]);
+            }
+            // set values from tree and set to keeper
+            tres->GetEntry(entry);
+            for (uint i = 0; i < Npars; i++) MParKeeper::gI()->set(i, pars[i]);
+          } else {
+            std::cerr << "Tree with results not found by name 'tout'!\n";
+            return 1;
+          }
+        } else {
+          std::cerr << "File with results specified but not found!\n";
+          return 1;
+        }
+      }
+
+      TCanvas canva_sheets("sheets");
+      const libconfig::Setting &ranges = continuation_settings["plot_range"];
+      const libconfig::Setting &real_range = ranges["real_range"];
+      const libconfig::Setting &imag_range = ranges["imag_range"];
+      if (real_range.getLength() != 3) {std::cerr << "Error<continuation_settings>: in plot_range, real_range "
+                                                  << "is expected in the form [Nbins, left_value, right_value]\n"; return 1; }
+      if (imag_range.getLength() != 3) {std::cerr << "Error<continuation_settings>: in plot_range, imag_range "
+                                                  << "is expected in the form [Nbins, left_value, right_value]\n"; return 1; }
+      const uint Nbx = real_range[0]; double lrx = real_range[1]; double rrx = real_range[2];
+      const uint Nby = imag_range[0]; double lry = imag_range[1]; double rry = imag_range[2];
+      TH2D hreal("realTm1","Real part of T^{-1}", Nbx, lrx, rrx, Nby, lry, rry);
+      TH2D himag("imagTm1","Imag part of T^{-1}", Nbx, lrx, rrx, Nby, lry, rry);
+      TH2D habs ( "absTm1", "Ln@Abs part of T^{-1}", Nbx, lrx, rrx, Nby, lry, rry);
+
+      // decide what to plot
+      const std::string what_to_plot = continuation_settings["what_to_plot"];
+      uint sheet = 0;
+      if ( what_to_plot.find("first") != std::string::npos ) { sheet = 1; std::cout << "---> First sheet will be plotted!\n";}
+      if ( what_to_plot.find("second") != std::string::npos ) { sheet = 2; std::cout << "---> Second sheet will be plotted!\n";}
+      if ( what_to_plot.find("first" ) != std::string::npos &&
+           what_to_plot.find("second") != std::string::npos) { sheet = 12; std::cout << "---> First and Second sheets will be plotted together!\n";}
+      
+      // calculation loop
+      km->RecalculateNextTime();
+      km->Print();
+      std::cout << "\nCalculations for " << Nbx*Nby << "points started:\n";
+      for (uint ix = 0; ix < Nbx; ix++) {
+        for (uint iy = 0; iy < Nbx; iy++) {
+          // if((ix*Nbx+iy) % 50 == 0) std::cout << std::setprecision(3) << 100.*(ix*Nbx+iy)/(Nbx*Nby) << "%\n";
+          cd s(habs.GetXaxis()->GetBinCenter(ix+1),
+               habs.GetYaxis()->GetBinCenter(iy+1));
+          cd Tm1 = 0;
+          if (sheet == 1)  Tm1 = 1./det_fast(km->getFSdenominator(s));
+          if (sheet == 2)  Tm1 = 1./det_fast(km->getSSdenominator(s));
+          if (sheet == 12) Tm1 = (imag(s) > 0) ? det_fast(km->getFSdenominator(s)) : det_fast(km->getSSdenominator(s));
+          std::cout << "s = " << s << ", Tm1 = " << Tm1 << "\n";
+          hreal.SetBinContent(ix+1, iy+1, real(Tm1));
+          himag.SetBinContent(ix+1, iy+1, imag(Tm1));
+          habs .SetBinContent(ix+1, iy+1,  log10(abs(Tm1)));
+        }
+      }
+      std::cout << "\n";
+      // save to pdf
+      std::string fplot_name = "/tmp/default_plot.read_model_settings.pdf";
+      if (!continuation_settings.lookupValue("fplot_name", fplot_name))
+        std::cerr << "Warning: fplot_name is not specified. A default name wil be used.\n";
+      // save multipage pdf;
+      habs .Draw("colz"); habs .Draw("cont3 same"); canva_sheets.Print(TString::Format("%s(", fplot_name.c_str()), "pdf");
+      hreal.Draw("colz"); hreal.Draw("cont3 same"); canva_sheets.Print(TString::Format("%s" , fplot_name.c_str()), "pdf");
+      himag.Draw("colz"); himag.Draw("cont3 same"); canva_sheets.Print(TString::Format("%s)", fplot_name.c_str()), "pdf");
+      TFile fout("/tmp/11.pdf", "recreate");
+      habs .Write();
+      hreal.Write();
+      himag.Write();
+      fout.Close();
+    }  // exists continuation_settings
+  }  // try
+  catch(const libconfig::SettingNotFoundException &nfex) {
+    std::cerr << "Error <> libconfig::SettingNotFoundException in \"continuation_settings\" secton" << std::endl;
+    return EXIT_FAILURE;
+  }
+  
   delete canva;
 
   // well done

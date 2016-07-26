@@ -74,26 +74,7 @@ void MmatrixK::addBackground(const std::string &bmass_name, const std::string &p
 template<typename sType>
 void MmatrixK::tmpl_calculate(sType s) {
   // clear K
-  b::symmetric_matrix<cd, b::upper> K = b::zero_matrix<cd>(_Nch);  // (_Nch) K*=0.;
-  // add poles terms
-  const uint Npoles = _mass.size();
-  for (uint i = 0; i < Npoles; i++) {
-    double gpart[_Nch];
-    for (uint j = 0; j < _Nch; j++) gpart[j] = MParKeeper::gI()->get(_coupling[i*_Nch+j]);
-    double mass = MParKeeper::gI()->get(_mass[i]);
-    for (uint j = 0; j < _Nch; j++)
-      for (uint t = j; t < _Nch; t++)
-        K(j, t) += gpart[j]*gpart[t]/(mass*mass-s);
-  }
-  // add background terms
-  for (uint i = 0; i < _bmass.size(); i++) {
-    double gpart[_Nch];
-    for (uint j = 0; j < _Nch; j++) gpart[j] = MParKeeper::gI()->get(_bcs[i*_Nch+j]);
-    double bmass = MParKeeper::gI()->get(_bmass[i]);
-    for (uint j = 0; j < _Nch; j++)
-      for (uint t = j; t < _Nch; t++)
-        K(j, t) += gpart[j]*gpart[t]/(POW2(bmass)+s);
-  }
+  b::symmetric_matrix<cd, b::upper> K = getK(s);
   // ph.sp.matrix
   b::symmetric_matrix<cd, b::upper> mrho(_Nch);
   // possibly add some background
@@ -114,22 +95,63 @@ void MmatrixK::tmpl_calculate(sType s) {
   _value = prod(K, din_inv);
 }
 
+b::matrix<cd> MmatrixK::getK(cd s) {
+  // clear K
+  b::symmetric_matrix<cd, b::upper> K = b::zero_matrix<cd>(_Nch);  // (_Nch) K*=0.;
+  // add poles terms
+  const uint Npoles = _mass.size();
+  for (uint i = 0; i < Npoles; i++) {
+    double gpart[_Nch];
+    for (uint j = 0; j < _Nch; j++) gpart[j] = MParKeeper::gI()->get(_coupling[i*_Nch+j]);
+    double mass = MParKeeper::gI()->get(_mass[i]);
+    for (uint j = 0; j < _Nch; j++)
+      for (uint t = j; t < _Nch; t++)
+        K(j, t) += gpart[j]*gpart[t]/(mass*mass-s);
+  }
+  // add background terms
+  for (uint i = 0; i < _bmass.size(); i++) {
+    double gpart[_Nch];
+    for (uint j = 0; j < _Nch; j++) gpart[j] = MParKeeper::gI()->get(_bcs[i*_Nch+j]);
+    double bmass = MParKeeper::gI()->get(_bmass[i]);
+    for (uint j = 0; j < _Nch; j++)
+      for (uint t = j; t < _Nch; t++)
+        K(j, t) += gpart[j]*gpart[t]/(POW2(bmass)+s);
+  }
+  return K;
+}
+
 b::matrix<cd> MmatrixK::getSSInverseValue(cd s) {
-  b::matrix<cd> T1 = getValue(s);
+  std::cerr << "Error<MmatrixK::getSSInverseValue>:The function is not supported anylonger, use \"getSSdemoninator(s)\"!\n";
+  return b::identity_matrix<cd>(_Nch);
+}
 
-  bool sing = false;
-  b::matrix<cd> T1_inv = gjinverse(T1, sing);
-  if (sing) {std::cerr << "\tERROR: SINGULAR" << std::endl;}  // exit(); }
-
+b::matrix<cd> MmatrixK::getSSdenominator(cd s) {
+  // value on the first sheet
+  b::matrix<cd> DI = getFSdenominator(s);
   // ph.sp.matrix
   b::symmetric_matrix<cd, b::upper> mrho(_Nch);
-  // possibly add some background
   for (uint i = 0; i < _Nch; i++)
     for (uint j = 0; j < _Nch; j++)
       mrho(i, j) = (i == j) ? _iso[i]->rho(s)*_iso[i]->DumpC(s) : 0.0;
 
-  b::matrix<cd> T2_inv = T1_inv + cd(0, 1)*mrho;
-  return T2_inv;
+  b::matrix<cd> K = getK(s);
+  b::matrix<cd> i2rhoK = cd(0, 1)*prod(mrho, K);
+  b::matrix<cd> DII = DI + i2rhoK;
+  return DII;
+}
+
+b::matrix<cd> MmatrixK::getFSdenominator(cd s) {
+  b::matrix<cd> K = getK(s);
+  // ph.sp.matrix
+  b::symmetric_matrix<cd, b::upper> mrho(_Nch);
+  // possibly add some background
+  for (uint i = 0; i < _Nch; i++)
+    for (uint j = 0; j < _Nch; j++) {
+      mrho(i, j) = (i == j) ? _iso[i]->rholtilde(s) : 0.0;
+    }
+  b::matrix<cd> irhoK = cd(0., 0.5)*prod(mrho, K);
+  b::matrix<cd> DI = b::identity_matrix<cd>(_Nch) - irhoK;
+  return DI;
 }
 
 
@@ -140,3 +162,25 @@ void MmatrixK::Print() {
   std::cout << "Number of background terms: " << _bmass.size() << std::endl;
   std::cout << "-----------------------------------------" << std::endl;
 }
+
+
+//b::zero_matrix<cd>(_Nch);  // (_Nch) K*=0.;
+//  // add poles terms
+//  const uint Npoles = _mass.size();
+//  for (uint i = 0; i < Npoles; i++) {
+//    double gpart[_Nch];
+//    for (uint j = 0; j < _Nch; j++) gpart[j] = MParKeeper::gI()->get(_coupling[i*_Nch+j]);
+//    double mass = MParKeeper::gI()->get(_mass[i]);
+//    for (uint j = 0; j < _Nch; j++)
+//      for (uint t = j; t < _Nch; t++)
+//        K(j, t) += gpart[j]*gpart[t]/(mass*mass-s);
+//  }
+//  // add background terms
+//  for (uint i = 0; i < _bmass.size(); i++) {
+//    double gpart[_Nch];
+//    for (uint j = 0; j < _Nch; j++) gpart[j] = MParKeeper::gI()->get(_bcs[i*_Nch+j]);
+//    double bmass = MParKeeper::gI()->get(_bmass[i]);
+//    for (uint j = 0; j < _Nch; j++)
+//      for (uint t = j; t < _Nch; t++)
+//        K(j, t) += gpart[j]*gpart[t]/(POW2(bmass)+s);
+//  }

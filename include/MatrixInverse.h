@@ -196,8 +196,10 @@ ValType det_fast(const b::matrix<ValType>& matrix) {
   b::matrix<ValType> mLu(matrix);
   b::permutation_matrix<std::size_t> pivots(matrix.size1());
   auto isSingular = b::lu_factorize(mLu, pivots);
-  if (isSingular)
+  if (isSingular) {
+    std::cerr << "Error<det_fast>: SINGULAR matrix\n";
     return static_cast<ValType>(0);
+  }
   ValType det = static_cast<ValType>(1);
   for (std::size_t i = 0; i < pivots.size(); ++i) {
     if (pivots(i) != i)
