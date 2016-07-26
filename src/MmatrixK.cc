@@ -120,6 +120,24 @@ b::matrix<cd> MmatrixK::getK(cd s) {
   return K;
 }
 
+b::matrix<cd> MmatrixK::getSSvalue(cd s) {
+  b::matrix<cd> TI = getValue(s);
+  // rho
+  b::symmetric_matrix<cd, b::upper> mrho(_Nch);
+  for (uint i = 0; i < _Nch; i++)
+    for (uint j = 0; j < _Nch; j++)
+      mrho(i, j) = (i == j) ? _iso[i]->rho(s)*_iso[i]->DumpC(s) : 0.0;
+
+  b::matrix<cd> i2rhoTI = cd(0., 1)*prod(mrho, TI);
+  b::matrix<cd> din = b::identity_matrix<cd>(_Nch) + i2rhoTI;
+
+  bool sing = false;
+  b::matrix<cd> din_inv = gjinverse(din, sing);
+  if (sing) {std::cerr << "ERROR: SINGULAR" << std::endl;}
+  // finally
+  return prod(TI, din_inv);
+}
+
 b::matrix<cd> MmatrixK::getSSInverseValue(cd s) {
   std::cerr << "Error<MmatrixK::getSSInverseValue>:The function is not supported anylonger, use \"getSSdemoninator(s)\"!\n";
   return b::identity_matrix<cd>(_Nch);

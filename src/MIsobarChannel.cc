@@ -8,7 +8,7 @@
 #include "deflib.h"
 #include "mintegrate.h"
 
-#define SCALEX_FOR_CUT 2.
+#define SCALEX_FOR_CUT 1.01
 #define SCALEY_FOR_CUT 10.0
 
 MIsobarChannel::MIsobarChannel(const MIsobar &iso,

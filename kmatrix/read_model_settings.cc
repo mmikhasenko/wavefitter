@@ -952,7 +952,7 @@ int main(int argc, char *argv[]) {
       if ( what_to_plot.find("second") != std::string::npos ) { sheet = 2; std::cout << "---> Second sheet will be plotted!\n";}
       if ( what_to_plot.find("first" ) != std::string::npos &&
            what_to_plot.find("second") != std::string::npos) { sheet = 12; std::cout << "---> First and Second sheets will be plotted together!\n";}
-      
+
       // calculation loop
       km->RecalculateNextTime();
       km->Print();
@@ -963,13 +963,16 @@ int main(int argc, char *argv[]) {
           cd s(habs.GetXaxis()->GetBinCenter(ix+1),
                habs.GetYaxis()->GetBinCenter(iy+1));
           cd Tm1 = 0;
-          if (sheet == 1)  Tm1 = 1./det_fast(km->getFSdenominator(s));
-          if (sheet == 2)  Tm1 = 1./det_fast(km->getSSdenominator(s));
-          if (sheet == 12) Tm1 = (imag(s) > 0) ? det_fast(km->getFSdenominator(s)) : det_fast(km->getSSdenominator(s));
-          std::cout << "s = " << s << ", Tm1 = " << Tm1 << "\n";
+          // if (sheet == 1)  Tm1 = 1./det_fast(km->getFSdenominator(s));
+          // if (sheet == 2)  Tm1 = 1./det_fast(km->getSSdenominator(s));
+          // if (sheet == 12) Tm1 = (imag(s) > 0) ? det_fast(km->getFSdenominator(s)) : det_fast(km->getSSdenominator(s));
+          if (sheet == 1)  Tm1 = 1./km->getValue(s)(0,0);
+          if (sheet == 2)  Tm1 = 1./km->getSSvalue(s)(0,0);
+          if (sheet == 12) Tm1 = (imag(s) > 0) ? 1./km->getValue(s)(0,0) : 1./km->getSSvalue(s)(0,0);
+          if((ix*Nbx+iy) % 50 == 0) std::cout << std::setprecision(3) << 100.*(ix*Nbx+iy)/(Nbx*Nby) << "%: s = " << s << ", Tm1 = " << Tm1 << "\n";
           hreal.SetBinContent(ix+1, iy+1, real(Tm1));
           himag.SetBinContent(ix+1, iy+1, imag(Tm1));
-          habs .SetBinContent(ix+1, iy+1,  log10(abs(Tm1)));
+          habs .SetBinContent(ix+1, iy+1, log10(abs(Tm1)));
         }
       }
       std::cout << "\n";
@@ -981,7 +984,7 @@ int main(int argc, char *argv[]) {
       habs .Draw("colz"); habs .Draw("cont3 same"); canva_sheets.Print(TString::Format("%s(", fplot_name.c_str()), "pdf");
       hreal.Draw("colz"); hreal.Draw("cont3 same"); canva_sheets.Print(TString::Format("%s" , fplot_name.c_str()), "pdf");
       himag.Draw("colz"); himag.Draw("cont3 same"); canva_sheets.Print(TString::Format("%s)", fplot_name.c_str()), "pdf");
-      TFile fout("/tmp/11.pdf", "recreate");
+      TFile fout(TString::Format("%s.root",fplot_name.c_str()), "recreate");
       habs .Write();
       hreal.Write();
       himag.Write();

@@ -28,6 +28,7 @@ class MmatrixK : public MChannelPhysics<b::matrix<cd> > {
   void addPole(const std::string &mass_name, const std::string &par_name);
   void addBackground(const std::string &msq_name, const std::string &par_name);
 
+  b::matrix<cd> getSSvalue(cd s);         // second sheet value
   b::matrix<cd> getSSInverseValue(cd s);  // second sheet value
   b::matrix<cd> getK(cd s);
   b::matrix<cd> getSSdenominator(cd s);
