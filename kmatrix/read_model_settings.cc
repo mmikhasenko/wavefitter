@@ -963,12 +963,12 @@ int main(int argc, char *argv[]) {
           cd s(habs.GetXaxis()->GetBinCenter(ix+1),
                habs.GetYaxis()->GetBinCenter(iy+1));
           cd Tm1 = 0;
-          // if (sheet == 1)  Tm1 = 1./det_fast(km->getFSdenominator(s));
-          // if (sheet == 2)  Tm1 = 1./det_fast(km->getSSdenominator(s));
-          // if (sheet == 12) Tm1 = (imag(s) > 0) ? det_fast(km->getFSdenominator(s)) : det_fast(km->getSSdenominator(s));
-          if (sheet == 1)  Tm1 = 1./km->getValue(s)(0,0);
-          if (sheet == 2)  Tm1 = 1./km->getSSvalue(s)(0,0);
-          if (sheet == 12) Tm1 = (imag(s) > 0) ? 1./km->getValue(s)(0,0) : 1./km->getSSvalue(s)(0,0);
+	  if (sheet == 1)  Tm1 = 1./det_fast(km->getFSdenominator(s));
+	  if (sheet == 2)  Tm1 = 1./det_fast(km->getSSdenominator(s));
+	  if (sheet == 12) Tm1 = (imag(s) > 0) ? det_fast(km->getFSdenominator(s)) : det_fast(km->getSSdenominator(s));
+          // if (sheet == 1)  Tm1 = 1./km->getValue(s)(0,0);
+          // if (sheet == 2)  Tm1 = 1./km->getSSvalue(s)(0,0);
+          // if (sheet == 12) Tm1 = (imag(s) > 0) ? 1./km->getValue(s)(0,0) : 1./km->getSSvalue(s)(0,0);
           if((ix*Nbx+iy) % 50 == 0) std::cout << std::setprecision(3) << 100.*(ix*Nbx+iy)/(Nbx*Nby) << "%: s = " << s << ", Tm1 = " << Tm1 << "\n";
           hreal.SetBinContent(ix+1, iy+1, real(Tm1));
           himag.SetBinContent(ix+1, iy+1, imag(Tm1));
