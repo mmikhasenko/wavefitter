@@ -20,4 +20,7 @@
 #define F0_COUPLING_PI  2.3
 #define F0_COUPLING_K   2*2.3
 
+#define PROT_MASS   0.938
+
+
 #endif
