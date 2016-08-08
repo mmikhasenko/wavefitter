@@ -1,10 +1,4 @@
-// Copyright of libconfig++
-// My modification of standard example
-
-// [] Use to compile
-// [] g++ -o read_model_settings
-//       /localhome/mikhasenko/Tools/libconfig-1.5/lib/libconfig++.so
-//       -I/localhome/mikhasenko/Tools/libconfig-1.5/include read_model_settings.cc
+// Copyright [2016] Mikhail Mikhasenko
 
 #include <iostream>
 #include <fstream>
@@ -22,6 +16,7 @@
 #include "MProductionPhysics.h"
 #include "MRelationHolder.h"
 #include "MDeck.h"
+#include "MAscoli.h"
 
 #include "MatrixInverse.h"
 
@@ -37,6 +32,8 @@
 #include "Math/Functor.h"
 
 #include "mstructures.h"
+
+#define E_BEAM_LAB 190
 
 int main(int argc, char *argv[]) {
   libconfig::Config cfg;
@@ -261,7 +258,7 @@ int main(int argc, char *argv[]) {
   /////////////////////// short range, long range, unitarisation ////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////
   std::vector<MProductionPhysics*> vpr;  // (iset);
-
+  std::vector<std::pair<double, double> > long_range_lookup_values[iset.size()];
   try {
     const libconfig::Setting &modelsA = root["modelA"];
     const uint Nmodels = modelsA.getLength();
@@ -328,6 +325,7 @@ int main(int argc, char *argv[]) {
       }
 
       std::vector<MDeck*> vdeck;
+      std::vector<MAscoli*> adeck;
       if (modelA.exists("long_range")) {
         const libconfig::Setting &long_range = modelA["long_range"];
         std::string type;
@@ -339,77 +337,122 @@ int main(int argc, char *argv[]) {
              long_range.lookupValue("pomeron_virtuality", tP) &&
              long_range.lookupValue("pomeron_S", Sp) &&
              long_range.lookupValue("pomeron_M", M)) {
-          if (type != "Deck") {
-            std::cerr << "Error: long range interaction is not 'Deck', but no other options are available!";
+          std::vector<std::function<cd(double)> > getB(iset.size());
+          if (type == "DeckJMS") {
+            std::cout << "Deck projections will be constructed with parameters: J = " << Jsector
+                      << ", Sp = " << Sp << ", M = " << M << ", R = " << R << "\n";
+            // check if there is lookup lable already
+            std::vector<std::string> long_range_lookup_path;
+            if (long_range.exists("long_range_lookup")) {
+              const libconfig::Setting &long_range_lookup = long_range["long_range_lookup"];
+              if (long_range_lookup.getLength() == static_cast<int>(iset.size())) {
+                long_range_lookup_path.resize(iset.size());
+                for (uint i=0; i < iset.size(); i++) {
+                  const std::string &name = long_range_lookup[i];
+                  long_range_lookup_path[i] = std::string(name);
+                }
+                std::cout << "--> Files for long range lookup tables are found!\n";
+              } else {
+                std::cout << "Warning: long_range.getLength() != static_cast<int>(iset.size())\n"; 
+              }
+            } else {
+              std::cout << "--> Files for long range lookup tables are not found!\n";
+            }
+            // create deck and add functions
+            vdeck.resize(iset.size());
+            TCanvas c3("c3"); c3.DivideSquare(iset.size());
+            for (uint i=0; i < iset.size(); i++) {
+              MIsobarChannel *ich = dynamic_cast<MIsobarChannel*>(iset[i]);
+              const MIsobar &iso = ich->getIsobar();
+              vdeck[i] = new MDeck(POW2(PI_MASS), tP, iso.GetM(), POW2(PI_MASS), POW2(PI_MASS),
+                                   Jsector, iset[i]->GetL(), Sp, -M,
+                                   iso.GetL(), 0, R);
+              // vdeck[i]->Print();
+
+              // check if it is possible to load it from somewhere
+              if (long_range_lookup_path.size()) {
+                TGraph *igr = new TGraph(long_range_lookup_path[i].c_str());
+                if (igr->GetN()) {
+                  std::vector<std::pair<double, double> > ltable;
+                  for (int j = 0; j < igr->GetN(); j++) ltable.push_back(std::make_pair(igr->GetX()[j], igr->GetY()[j]));
+                  vdeck[i]->setLookupTable(ltable);
+                  std::cout << "-> Lookup table is filled\n";
+                } else {
+                  std::cout << "Warning: igr.GetN() = 0\n";
+                  vdeck[i]->makeLookupTable(iso, ich->getBachelorMass(), ich->sth(), POW2(2.5), 30);
+                  const std::vector<std::pair<double, double> > &ltable = vdeck[i]->getLookupTable();
+                  // save to file
+                  std::ofstream myfile(long_range_lookup_path[i]);
+                  if (myfile.is_open()) {
+                    for (auto && it : ltable) myfile << it.first << " "  << it.second << "\n";
+                    myfile.close();
+                  }
+                  std::cout << "lookup table is saved at " << long_range_lookup_path[i] << "\n";
+                }
+              } else {
+                vdeck[i]->makeLookupTable(iso, ich->getBachelorMass(), ich->sth(), POW2(2.5), 30);
+              }
+
+              //
+              MDeck *iD = vdeck[i];
+              getB[i] = [&, iD](double s)->cd { return iD->getPrecalculated(s); };
+              c3.cd(i+1);
+              draw([&, i](double s)->double{return vdeck[i]->getPrecalculated(s);}, 1.0, POW2(4.2))->Draw("al");
+            }
+            c3.SaveAs("/tmp/deckJMS.pdf");
+            // finally add Long Range
+            if (long_range.exists("par_name")) {
+              std::string par_name = long_range["par_name"];
+              pr.addLongRange(getB, par_name);
+            } else pr.addLongRange(getB);
+          } else if (type == "DeckAJ") {
+            std::cout << "DeckAJ projections will be constructed with parameters: J = " << Jsector
+                      << ", Sp = " << Sp << ", M = " << M << ", R = " << R << "\n";
+            // create deck and add functions
+            adeck.resize(iset.size());
+            TCanvas c3("c3"); c3.DivideSquare(iset.size());
+            for (uint i=0; i < iset.size(); i++) {
+              MIsobarChannel *ich = dynamic_cast<MIsobarChannel*>(iset[i]);
+              const MIsobar &iso = ich->getIsobar();
+              double mR = iso.GetM();
+              adeck[i] = new MAscoli(POW2(PI_MASS), POW2(PROT_MASS), 2.2,
+                                     POW2(PROT_MASS), POW2(PI_MASS),
+                                     POW2(mR), 2*PI_MASS*E_BEAM_LAB,
+                                     tP, iso.GetL(), 0, R);  // Jsector, M, iset[i]->GetL(), 
+
+              double from = POW2(3*PI_MASS);
+              double to = POW2(2.5);
+              uint Npoints = 50;
+              long_range_lookup_values[i].resize(Npoints);
+              for (uint t = 0; t < Npoints; t++) {
+                double wsq = from + (to-from)/(Npoints-1)*t;
+                double w = sqrt(wsq);
+                double m23 = 2*PI_MASS+(mR-2*PI_MASS)*(1.-exp(-1./mR*(w-3*PI_MASS)));
+                double value_deck_AJ = adeck[i]->getProjection(wsq, m23*m23, Jsector, ich->GetL());
+                // std::cout << "m3pi = " << w << ", value_deck_AJ = " << value_deck_AJ << "\n";
+                long_range_lookup_values[i][t] = std::make_pair(wsq, value_deck_AJ);
+              }
+              const std::vector<std::pair<double, double> > *ltable = &(long_range_lookup_values[i]);
+              getB[i] = [&, ltable](double s)->cd {
+                auto it = --(ltable->end());
+                // std::cout << it->first << "\n"; 
+                if (s >= it->first) return it->second * it->first / s;
+                return getvalue(s, *ltable);
+              };
+              c3.cd(i+1);
+              draw([&, i](double s)->double{return real(getB[i](s));}, 1.0, POW2(4.2))->Draw("al");
+            }
+            c3.SaveAs("/tmp/deckAJ.pdf");
+
+            // finally add Long Range
+            if (long_range.exists("par_name")) {
+              std::string par_name = long_range["par_name"];
+              pr.addLongRange(getB, par_name);
+            } else pr.addLongRange(getB);
+          } else {
+            std::cerr << "Error: long range interaction is not 'DeckJMS' neither 'DeckAscoli', but no other options are available!";
             return 0;
           }
-          std::cout << "Deck projections will be constructed with parameters: J = " << Jsector
-                    << ", Sp = " << Sp << ", M = " << M << ", R = " << R << "\n";
-          // check if there is lookup lable already
-          std::vector<std::string> long_range_lookup_path;
-          if (long_range.exists("long_range_lookup")) {
-            const libconfig::Setting &long_range_lookup = long_range["long_range_lookup"];
-            if (long_range_lookup.getLength() == static_cast<int>(iset.size())) {
-              long_range_lookup_path.resize(iset.size());
-              for (uint i=0; i < iset.size(); i++) {
-                const std::string &name = long_range_lookup[i];
-                long_range_lookup_path[i] = std::string(name);
-              }
-              std::cout << "--> Files for long range lookup tables are found!\n";
-            } else {
-              std::cout << "Warning: long_range.getLength() != static_cast<int>(iset.size())\n"; 
-            }
-          } else {
-            std::cout << "--> Files for long range lookup tables are not found!\n";
-          }
-          // create deck and add functions
-          vdeck.resize(iset.size());
-          std::vector<std::function<cd(double)> > getB(iset.size());
-          TCanvas c3("c3"); c3.DivideSquare(iset.size());
-          for (uint i=0; i < iset.size(); i++) {
-            MIsobarChannel *ich = dynamic_cast<MIsobarChannel*>(iset[i]);
-            const MIsobar &iso = ich->getIsobar();
-            vdeck[i] = new MDeck(POW2(PI_MASS), tP, iso.GetM(), POW2(PI_MASS), POW2(PI_MASS),
-                                 Jsector, iset[i]->GetL(), Sp, -M,
-                                 iso.GetL(), 0, R);
-            // vdeck[i]->Print();
-
-            // check if it is possible to load it from somewhere
-            if (long_range_lookup_path.size()) {
-              TGraph *igr = new TGraph(long_range_lookup_path[i].c_str());
-              if (igr->GetN()) {
-                std::vector<std::pair<double, double> > ltable;
-                for (int j = 0; j < igr->GetN(); j++) ltable.push_back(std::make_pair(igr->GetX()[j], igr->GetY()[j]));
-                vdeck[i]->setLookupTable(ltable);
-                std::cout << "-> Lookup table is filled\n";
-              } else {
-                std::cout << "Warning: igr.GetN() = 0\n";
-                vdeck[i]->makeLookupTable(iso, ich->getBachelorMass(), ich->sth(), POW2(2.5), 30);
-                const std::vector<std::pair<double, double> > &ltable = vdeck[i]->getLookupTable();
-                // save to file
-                std::ofstream myfile(long_range_lookup_path[i]);
-                if (myfile.is_open()) {
-                  for (auto && it : ltable) myfile << it.first << " "  << it.second << "\n";
-                  myfile.close();
-                }
-                std::cout << "lookup table is saved at " << long_range_lookup_path[i] << "\n";
-              }
-            } else {
-              vdeck[i]->makeLookupTable(iso, ich->getBachelorMass(), ich->sth(), POW2(2.5), 30);
-            }
-
-            //
-            MDeck *iD = vdeck[i];
-            getB[i] = [&, iD](double s)->cd { return iD->getPrecalculated(s); };
-            c3.cd(i+1);
-            draw([&, i](double s)->double{return vdeck[i]->getPrecalculated(s);}, 1.0, POW2(4.2))->Draw("al");
-          }
-          c3.SaveAs("/tmp/deck.pdf");
-          // finally add Long Range
-          if (long_range.exists("par_name")) {
-            std::string par_name = long_range["par_name"];
-            pr.addLongRange(getB, par_name);
-          } else pr.addLongRange(getB);
         }
       }
       if (modelA.exists("unitarisation")) pr.unitarize();
