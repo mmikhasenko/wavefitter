@@ -10,6 +10,7 @@
 #include "libconfig.h++"
 
 #include "MIsobar.h"
+#include "MIsobarPiPiS.h"
 #include "MIsobarChannel.h"
 #include "MParKeeper.h"
 #include "MmatrixK.h"
@@ -142,7 +143,7 @@ int main(int argc, char *argv[]) {
   for (uint i = 0; i < Nhist; i++) {
     c1.cd(i+1); draw(whole_data[i])->Draw("ap");
   }
-  c1.SaveAs("/tmp/1.pdf");
+  c1.SaveAs("/tmp/default.data.pdf");
   std::cout << "\n";
 
   ///////////////////////////////////////////////////////////////////////////////////////
@@ -155,7 +156,8 @@ int main(int argc, char *argv[]) {
   // standard isobars
   MIsobar rho_iso(RHO_MASS, RHO_WIDTH, PI_MASS, PI_MASS, 1, 5.);
   MIsobar  f2_iso(F2_MASS, F2_WIDTH,  PI_MASS, PI_MASS, 2, 5.);
-  MIsobar  pipiS_iso(0.5, 0.5,  PI_MASS, PI_MASS, 0, 5.);
+  // MIsobar  pipiS_iso(0.5, 0.5,  PI_MASS, PI_MASS, 0);
+  MIsobarPiPiS  pipiS_iso;
   // model content is vector to fill K-matrix
 
   // K-matrix, just a reference
@@ -826,6 +828,7 @@ int main(int argc, char *argv[]) {
       // tout.Branch("can", "TCanvas", &canva);
       double chi2 = 0; tout.Branch("chi2", &chi2);
       uint iStep = 0; tout.Branch("fit_step", &iStep);
+      double status = 0; tout.Branch("status", &status);
       double pars_mirrow[MParKeeper::gI()->nPars()];
       for (uint i=0; i < MParKeeper::gI()->nPars(); i++)
         tout.Branch(MParKeeper::gI()->getName(i).c_str(), &pars_mirrow[i]);
@@ -883,26 +886,27 @@ int main(int argc, char *argv[]) {
           }
           // minimize
           min->Minimize();
+          status = min->Status();
 
-          // Plot all
-          km->RecalculateNextTime();
-          for (auto & pr : vpr) pr->RecalculateNextTime();
-          for (uint i=0; i < Nrels; i++) {
-            const DP & data = MRelationHolder::gI()->GetRelation(i).data;
-            std::function<double(double)> func = MRelationHolder::gI()->GetRelation(i).func;
-            // draw
-            canva->cd(i+1)->Clear();
-            draw(data)->Draw("ap");
-            SET1(draw(func,
-                      (data.data.begin())->x, (--data.data.end())->x, 200),
-                 SetLineColor(kOrange) )->Draw("l");
-            if (MRelationHolder::gI()->relationStatus(i))
-              SET1(draw(func,
-                        data.lrange, data.rrange, 200),
-                   SetLineColor(kRed))->Draw("l");
-          }
-          MParKeeper::gI()->printAll();
           if (fit_settings.exists("save_preview")) {
+            // Plot all
+            km->RecalculateNextTime();
+            for (auto & pr : vpr) pr->RecalculateNextTime();
+            for (uint i=0; i < Nrels; i++) {
+              const DP & data = MRelationHolder::gI()->GetRelation(i).data;
+              std::function<double(double)> func = MRelationHolder::gI()->GetRelation(i).func;
+              // draw
+              canva->cd(i+1)->Clear();
+              draw(data)->Draw("ap");
+              SET1(draw(func,
+                        (data.data.begin())->x, (--data.data.end())->x, 200),
+                   SetLineColor(kOrange) )->Draw("l");
+              if (MRelationHolder::gI()->relationStatus(i))
+                SET1(draw(func,
+                          data.lrange, data.rrange, 200),
+                     SetLineColor(kRed))->Draw("l");
+            }
+            MParKeeper::gI()->printAll();
             std::string save_preview = fit_settings["save_preview"];
             if (save_preview != "no" && save_preview != "false")
               canva->SaveAs(TString::Format("%s/att%03d.step%d.pid%d.rand%03d.pdf", dout_name.c_str(), e, iStep, pid, rand_file_id));

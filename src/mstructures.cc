@@ -59,3 +59,9 @@ TMultiGraph *combine(TGraph* g1, TGraph* g2, TGraph* g3) {
 TMultiGraph *combine(TGraph* g1, TGraph* g2, TGraph* g3, TGraph* g4) {
   return combine({g1, g2, g3, g4});
 }
+TMultiGraph *combine(TGraph* g1, TGraph* g2, TGraph* g3, TGraph* g4, TGraph* g5) {
+  return combine({g1, g2, g3, g4, g5});
+}
+TMultiGraph *combine(TGraph* g1, TGraph* g2, TGraph* g3, TGraph* g4, TGraph* g5, TGraph* g6) {
+  return combine({g1, g2, g3, g4, g5, g6});
+}

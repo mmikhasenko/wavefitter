@@ -32,10 +32,12 @@ int main(int argc, char *argv[]) {
   // Isobars
   MIsobar rho(0.77, 0.15, 0.14, 0.14, 1, 5.);
   MIsobar  f2(1.23, 0.2,  0.14, 0.14, 2, 5.);
-  constexpr uint Nch = 4;
-  const MIsobar *iso[Nch] = {&rho, &rho, &f2, &f2};
-  const MIsobar & ciso = rho; double mR = ciso.GetM();
-  uint L = 3;
+  // constexpr uint Nch = 4;
+  // const MIsobar *iso[Nch] = {&rho, &rho, &f2, &f2};
+  const MIsobar & ciso = rho;
+  // double mR = ciso.GetM();
+  uint cL = 3;
+
   // Deck channels
   uint lamS = 0;
   double R = 5.;
@@ -48,7 +50,7 @@ int main(int argc, char *argv[]) {
        draw([&](double z)->double{
            return bch.getValue(POW2(2.1), z);
          }, -1, 1, 300),
-       SetTitle("Ascoli-Jones \"Deck\".;Cos[#theta]"),
+       SetTitle("Angular dependence of Ascoli-Jones \"Deck\" #rho#pi F-wave;Cos[#theta]"),
        SetLineColor(kBlack),
        SetLineWidth(2),
        SetFillStyle(0))->Draw("alp");
@@ -57,27 +59,75 @@ int main(int argc, char *argv[]) {
   /* Mass distribution */
   SET4(
        draw([&](double w)->double{
-           return bch.getProjection(w*w, J, L);
+           return bch.getProjection(w*w, J, cL);
          }, ciso.GetM()+PI_MASS, 3.),
-       SetTitle("Ascoli-Jones \"Deck\".;M_{3#pi}"),
+       SetTitle("Ascoli-Jones \"Deck\", #rho#pi F-wave.;M_{3#pi}"),
        SetLineColor(kRed),
        SetLineWidth(2),
        SetFillStyle(0))->Draw("alp");
   c1.SaveAs("/tmp/test_MAscoli.pdf");
   
+  /*******************************************************************************************/
+  /*******************************************************************************************/
+  /*******************************************************************************************/
   SET4(
        draw([&](double w)->double{
+           double mR = rho.GetM();
+           uint S = rho.GetL();
+           uint L = 1;
            double m23 = 2*PI_MASS+(mR-2*PI_MASS)*(1.-exp(-1./mR*(w-3*PI_MASS)));
-           // double m23 = (w<mR) ? w-PI_MASS : mR;
-           return bch.getProjection(w*w, m23*m23, J, L);
+           return bch.getProjectedDeck(mAsq, mBsq, w*w, mDsq, mtRsq, m23*m23, s, t,
+                                        J, 0, L, S, R);
          }, 3*PI_MASS, 3.),
-       SetTitle("Ascoli-Jones \"Deck\".;M_{3#pi}"),
+       SetTitle("Smeared Ascoli-Jones \"Deck\" for #rho#pi P-wave.;M_{3#pi}"),
        SetLineColor(kRed),
        SetLineWidth(2),
-       SetFillStyle(0))->Draw("alp"); 
+       SetFillStyle(0))->Draw("alp");
   c1.SaveAs("/tmp/test_MAscoli.pdf");
- 
-//   SET4(
+  SET4(
+       draw([&](double w)->double{
+           double mR = rho.GetM();
+           uint S = rho.GetL();
+           uint L = 3;
+           double m23 = 2*PI_MASS+(mR-2*PI_MASS)*(1.-exp(-1./mR*(w-3*PI_MASS)));
+           return bch.getProjectedDeck(mAsq, mBsq, w*w, mDsq, mtRsq, m23*m23, s, t,
+                                        J, 0, L, S, R);
+         }, 3*PI_MASS, 3.),
+       SetTitle("Smeared Ascoli-Jones \"Deck\" for #rho#pi F-wave.;M_{3#pi}"),
+       SetLineColor(kRed),
+       SetLineWidth(2),
+       SetFillStyle(0))->Draw("alp");
+  c1.SaveAs("/tmp/test_MAscoli.pdf");
+  SET4(
+       draw([&](double w)->double{
+           double mR = f2.GetM();
+           uint S = f2.GetL();
+           uint L = 0;
+           double m23 = 2*PI_MASS+(mR-2*PI_MASS)*(1.-exp(-1./mR*(w-3*PI_MASS)));
+           return bch.getProjectedDeck(mAsq, mBsq, w*w, mDsq, mtRsq, m23*m23, s, t,
+                                        J, 0, L, S, R);
+         }, 3*PI_MASS, 3.),
+       SetTitle("Smeared Ascoli-Jones \"Deck\" for f_{2}#pi S-wave.;M_{3#pi}"),
+       SetLineColor(kRed),
+       SetLineWidth(2),
+       SetFillStyle(0))->Draw("alp");
+  c1.SaveAs("/tmp/test_MAscoli.pdf");
+  SET4(
+       draw([&](double w)->double{
+           double mR = f2.GetM();
+           uint S = f2.GetL();
+           uint L = 2;
+           double m23 = 2*PI_MASS+(mR-2*PI_MASS)*(1.-exp(-1./mR*(w-3*PI_MASS)));
+           return bch.getProjectedDeck(mAsq, mBsq, w*w, mDsq, mtRsq, m23*m23, s, t,
+                                        J, 0, L, S, R);
+         }, 3*PI_MASS, 3.),
+       SetTitle("Smeared Ascoli-Jones \"Deck\" for f_{2}#pi D-wave.;M_{3#pi}"),
+       SetLineColor(kRed),
+       SetLineWidth(2),
+       SetFillStyle(0))->Draw("alp");
+  c1.SaveAs("/tmp/test_MAscoli.pdf");
+
+  //   SET4(
 //        draw([&, ciso](double w)->double{
 //            std::function<double(double)> integrand = [&, ciso](double s1)->double {
 //              double pD = bch.getProjection(w*w, s1, J, L);
@@ -97,15 +147,15 @@ int main(int argc, char *argv[]) {
 //        SetFillStyle(0))->Draw("alp");
 //   c1.SaveAs("/tmp/test_MAscoli.pdf");
 
-  TH2D h2("2dDeck", "Ascoli-Jones \"Deck\";;M_{3#pi};;M_{2#pi}",
+  TH2D h2("2dDeck", "Ascoli-Jones \"Deck\", #rho#pi F-wave;M_{3#pi};M_{2#pi}",
           20, 3*PI_MASS, 3.,
           20, 2*PI_MASS, 2.5);
-  for (uint i=0; i < h2.GetXaxis()->GetNbins(); i++)
-    for (uint j=0; j < h2.GetYaxis()->GetNbins(); j++) {
+  for (int i=0; i < h2.GetXaxis()->GetNbins(); i++)
+    for (int j=0; j < h2.GetYaxis()->GetNbins(); j++) {
       double w =  h2.GetXaxis()->GetBinCenter(i+1);
       double m23 =  h2.GetYaxis()->GetBinCenter(j+1);
       if (w < m23+PI_MASS) continue;
-      h2.SetBinContent(i+1, j+1, bch.getProjection(w*w, m23*m23, J, L) );
+      h2.SetBinContent(i+1, j+1, bch.getProjection(w*w, m23*m23, J, cL) );
     }
   h2.Draw("colz");
   c1.SaveAs("/tmp/test_MAscoli.pdf)");

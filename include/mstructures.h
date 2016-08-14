@@ -54,6 +54,8 @@ TMultiGraph *combine(TGraph* g1);
 TMultiGraph *combine(TGraph* g1, TGraph* g2);
 TMultiGraph *combine(TGraph* g1, TGraph* g2, TGraph* g3);
 TMultiGraph *combine(TGraph* g1, TGraph* g2, TGraph* g3, TGraph* g4);
+TMultiGraph *combine(TGraph* g1, TGraph* g2, TGraph* g3, TGraph* g4, TGraph* g5);
+TMultiGraph *combine(TGraph* g1, TGraph* g2, TGraph* g3, TGraph* g4, TGraph* g5, TGraph* g6);
 
 template<class Array>
 TGraph *draw(const Array &a) {
