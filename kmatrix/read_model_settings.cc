@@ -876,6 +876,16 @@ int main(int argc, char *argv[]) {
           MRelationHolder::gI()->passiveAll();
           for (uint r=0; r < Nrelations; r++) MRelationHolder::gI()->activateRelation(relations[r]);
           MRelationHolder::gI()->Print();
+          
+          if (fit_step.exists("set_to_value")) {
+            const libconfig::Setting &setv = fit_step["set_to_value"];
+            const uint Nv = setv.getLength();
+            for (uint i = 0; i < Nv; i++) {
+              const std::string pname = setv[i][0];
+              const double value = setv[i][1];
+              MParKeeper::gI()->set(pname, value);
+            }
+          }
           // adjust which parameters to vary
           const uint nPars_to_vary = pars.getLength();
           // loop over all parameters for make fix them
