@@ -829,12 +829,13 @@ int main(int argc, char *argv[]) {
       double chi2 = 0; tout.Branch("chi2", &chi2);
       uint iStep = 0; tout.Branch("fit_step", &iStep);
       double status = 0; tout.Branch("status", &status);
+      double eAtt; tout.Branch("eAtt", &eAtt);
       double pars_mirrow[MParKeeper::gI()->nPars()];
       for (uint i=0; i < MParKeeper::gI()->nPars(); i++)
         tout.Branch(MParKeeper::gI()->getName(i).c_str(), &pars_mirrow[i]);
       // to copy to array from where it is copied to tree
-      for (uint e = 0; e < nAttempts; e++) {
-        std::cout << "---------- Attempt " << e << " -----------" << std::endl;
+      for (eAtt = 0; eAtt < nAttempts; eAtt++) {
+        std::cout << "---------- Attempt " << eAtt << " -----------" << std::endl;
         std::cout << "------------------------------------------" << std::endl;
 
         /**************************************MINIMIZE******************************************/
@@ -919,7 +920,7 @@ int main(int argc, char *argv[]) {
             MParKeeper::gI()->printAll();
             std::string save_preview = fit_settings["save_preview"];
             if (save_preview != "no" && save_preview != "false")
-              canva->SaveAs(TString::Format("%s/att%03d.step%d.pid%d.rand%03d.pdf", dout_name.c_str(), e, iStep, pid, rand_file_id));
+              canva->SaveAs(TString::Format("%s/att%03d.step%d.pid%d.rand%03d.pdf", dout_name.c_str(), eAtt, iStep, pid, rand_file_id));
           } else {
             std::cerr << "Warning: save_preview option is not specified. \"no\" is set by default.";
           }
