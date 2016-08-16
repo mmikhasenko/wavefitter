@@ -152,7 +152,7 @@ int main () {
   c1.SaveAs("/tmp/test_PiPiS.pdf");
 
   /* compare to BW */
-  MIsobar pipiS_bw(0.5, 0.5,  PI_MASS, PI_MASS, 0);
+  MIsobar pipiS_bw(1.1, 0.8,  PI_MASS, PI_MASS, 0);
 
   combine(
           SET3(
@@ -191,6 +191,23 @@ int main () {
   c1.BuildLegend();
   c1.SaveAs("/tmp/test_PiPiS.pdf");
 
+  combine(
+          SET3(
+               draw([&](double m)->double{return log(abs(pipiS.T(m*m)));}, 2*PI_MASS, 5.5),
+               SetTitle("Ln@|AMP|"),
+               SetFillColor(0),
+               SetLineColor(kGreen) ),
+          SET4(
+               draw([&](double m)->double{return log(abs(pipiS_bw.T(m*m)));}, 2*PI_MASS, 5.5),
+               SetTitle("Ln@|BW|"),
+               SetFillColor(0),
+               SetLineStyle(2),
+               SetLineColor(kGreen) ) )->Draw("al");
+  c1.GetLogy();
+  c1.BuildLegend();
+  c1.SaveAs("/tmp/test_PiPiS.pdf");
+
+  
   for (int i=0; i < h2.GetXaxis()->GetNbins(); i++)
     for (int j=0; j < h2.GetYaxis()->GetNbins(); j++) {
       cd s(h2.GetXaxis()->GetBinCenter(i+1), h2.GetYaxis()->GetBinCenter(j+1));

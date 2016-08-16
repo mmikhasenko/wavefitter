@@ -844,7 +844,7 @@ int main(int argc, char *argv[]) {
           ROOT::Math::Factory::CreateMinimizer("Minuit2", "Migrad");
 
         // set tolerance , etc...
-        min->SetMaxFunctionCalls(100000);
+        min->SetMaxFunctionCalls(1e12);
         min->SetTolerance(0.001);
         min->SetStrategy(1);
         min->SetPrintLevel(3);
