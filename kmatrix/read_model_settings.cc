@@ -264,7 +264,8 @@ int main(int argc, char *argv[]) {
   try {
     const libconfig::Setting &modelsA = root["modelA"];
     const uint Nmodels = modelsA.getLength();
-
+    for (uint i = 0; i < iset.size(); i++) long_range_lookup_values[i].resize(Nmodels);
+    
     std::cout << "\n\n";
     std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++++++++\n";
     std::cout << "/////////////// Production model: ////////////////////\n";
