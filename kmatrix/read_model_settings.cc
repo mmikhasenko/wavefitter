@@ -538,25 +538,28 @@ int main(int argc, char *argv[]) {
         uint iModel = iRel[2][0];
         uint iCh = iRel[2][1];
         MProductionPhysics *pr = vpr[iModel];
-        MRelationHolder::gI()->AddRelation(whole_data[jData], [&, iCh, pr](double e)->double{
+        MChannel *ciso = iset[iCh];
+        MRelationHolder::gI()->AddRelation(whole_data[jData], [&, iCh, ciso, pr](double e)->double{
             auto v = pr->getValue(e*e);
-            return norm(v(iCh))*iset[iCh]->rho(e*e);
+            return norm(v(iCh))*ciso->rho(e*e);
           });
       } else if (type == "Re@") {
         uint iModel = iRel[2][0];
         uint iCh = iRel[2][1];
         MProductionPhysics *pr = vpr[iModel];
-        MRelationHolder::gI()->AddRelation(whole_data[jData], [&, iCh, pr](double e)->double{
+        MChannel *ciso = iset[iCh];
+        MRelationHolder::gI()->AddRelation(whole_data[jData], [&, iCh, ciso, pr](double e)->double{
             auto v = pr->getValue(e*e);
-            return real(v(iCh))*iset[iCh]->rho(e*e);
+            return real(v(iCh))*ciso->rho(e*e);
           });
       } else if (type == "Im@") {
         uint iModel = iRel[2][0];
         uint iCh = iRel[2][1];
         MProductionPhysics *pr = vpr[iModel];
-        MRelationHolder::gI()->AddRelation(whole_data[jData], [&, iCh, pr](double e)->double{
+        MChannel *ciso = iset[iCh];
+        MRelationHolder::gI()->AddRelation(whole_data[jData], [&, iCh, ciso, pr](double e)->double{
             auto v = pr->getValue(e*e);
-            return imag(v(iCh))*iset[iCh]->rho(e*e);
+            return imag(v(iCh))*ciso->rho(e*e);
           });
       } else if (type == "Phi@") {
         uint iModel0 = iRel[2][0][0]; uint iCh0 = iRel[2][0][1];
@@ -678,7 +681,7 @@ int main(int argc, char *argv[]) {
       }
 
       for (uint pg = 0; pg < Npages; pg++) {
-        const libconfig::Setting &mapping = (Npages == 1) ? plot_settings["mapping"] : plot_settings["mapping_list"][pg];
+        const libconfig::Setting &mapping = (plot_settings.exists("mapping")) ? plot_settings["mapping"] : plot_settings["mapping_list"][pg];
         const uint NrelsToPlot = mapping.getLength();
         canva->Clear(); canva->DivideSquare(NrelsToPlot);
 
