@@ -260,7 +260,7 @@ int main(int argc, char *argv[]) {
   /////////////////////// short range, long range, unitarisation ////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////
   std::vector<MProductionPhysics*> vpr;  // (iset);
-  std::vector<std::pair<double, double> > long_range_lookup_values[iset.size()];
+  std::vector<std::vector<std::pair<double, double> > > long_range_lookup_values[iset.size()];
   try {
     const libconfig::Setting &modelsA = root["modelA"];
     const uint Nmodels = modelsA.getLength();
@@ -425,16 +425,16 @@ int main(int argc, char *argv[]) {
               double from = POW2(3*PI_MASS);
               double to = POW2(2.5);
               uint Npoints = 50;
-              long_range_lookup_values[i].resize(Npoints);
+              long_range_lookup_values[i][imodelA].resize(Npoints);
               for (uint t = 0; t < Npoints; t++) {
                 double wsq = from + (to-from)/(Npoints-1)*t;
                 double w = sqrt(wsq);
                 double m23 = 2*PI_MASS+(mR-2*PI_MASS)*(1.-exp(-1./mR*(w-3*PI_MASS)));
                 double value_deck_AJ = adeck[i]->getProjection(wsq, m23*m23, Jsector, ich->GetL());
                 // std::cout << "m3pi = " << w << ", value_deck_AJ = " << value_deck_AJ << "\n";
-                long_range_lookup_values[i][t] = std::make_pair(wsq, value_deck_AJ);
+                long_range_lookup_values[i][imodelA][t] = std::make_pair(wsq, value_deck_AJ);
               }
-              const std::vector<std::pair<double, double> > *ltable = &(long_range_lookup_values[i]);
+              const std::vector<std::pair<double, double> > *ltable = &(long_range_lookup_values[i][imodelA]);
               getB[i] = [&, ltable](double s)->cd {
                 auto it = --(ltable->end());
                 // std::cout << it->first << "\n"; 
