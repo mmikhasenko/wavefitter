@@ -16,6 +16,10 @@ class MParKeeper {
   static MParKeeper *getInstance();
   static MParKeeper *gI();
 
+  // const
+  static const uint error_uint = 42424242;
+
+  // functions
   uint add(const std::string &pname, double v0 = 0., double lrange = -1., double rrange = 1.);
   inline uint nPars() const {return _pars.size();}
   /* main */

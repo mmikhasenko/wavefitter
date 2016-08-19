@@ -6,8 +6,6 @@
 
 #include "MParKeeper.h"
 
-#define ERROR_VALUE -11.11
-
 MParKeeper *MParKeeper::_ref = 0;
 
 MParKeeper::MParKeeper() {
@@ -35,7 +33,7 @@ uint MParKeeper::getIndex(const std::string &name) const {
             [&](const parameter_description &d)->bool{
                            return (d.name == name) ? true : false;
                          });
-  if (it == _map.end()) {std::cerr << "Error<MParKeeper::getIndex>: no name \"" << name << "\" found\n"; return 0;}
+  if (it == _map.end()) {std::cerr << "Error<MParKeeper::getIndex>: no name \"" << name << "\" found\n"; return error_uint;}
   return it->index;
 }
 
@@ -61,7 +59,7 @@ uint MParKeeper::pgetIndex(const std::string &name) const {
                          [&, name](uint i)->bool{
                            return (_map[i].name == name) ? true : false;
                          });
-  if (it == _pool.end()) {std::cerr << "Error<MParKeeper::pgetIndex>: no name \"" << name << "\" found in the pool\n"; return 0;}
+  if (it == _pool.end()) {std::cerr << "Error<MParKeeper::pgetIndex>: no name \"" << name << "\" found in the pool\n"; return error_uint;}
   return it - _pool.begin();
 }
 

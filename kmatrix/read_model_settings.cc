@@ -338,7 +338,7 @@ int main(int argc, char *argv[]) {
         
         // check if title is specified
         if ( !long_range.lookupValue("type", type)) {
-          std::cerr << "Error<main>: long_range \"type\" is missing!\n";
+          std::cerr << "Error<main,production>: long_range \"type\" is missing!\n";
           return EXIT_FAILURE;
         }
         // cases for different types
@@ -349,7 +349,7 @@ int main(int argc, char *argv[]) {
                   long_range.lookupValue("pomeron_S", Sp) &&
                   long_range.lookupValue("pomeron_M", M))
                ) {
-            std::cerr << "Error<main>: some papapeters of Long range is missing!\n";
+            std::cerr << "Error<main,production>: some papapeters of Long range is missing!\n";
             return EXIT_FAILURE;
           }
           std::cout << "Deck projections will be constructed with parameters: J = " << Jsector
@@ -384,7 +384,7 @@ int main(int argc, char *argv[]) {
                   long_range.lookupValue("pomeron_S", Sp) &&
                   long_range.lookupValue("pomeron_M", M))
                ) {
-            std::cerr << "Error<main>: some papapeters of Long range is missing!\n";
+            std::cerr << "Error<main,production>: some papapeters of Long range is missing!\n";
             return EXIT_FAILURE;
           }
           std::cout << "DeckAJ projections will be constructed with parameters: J = " << Jsector
@@ -437,13 +437,13 @@ int main(int argc, char *argv[]) {
 
             // check if paths are present
             if (!long_range.exists("long_range_lookup")) {
-              std::cerr << "Error<main> : No paths \"long_range_lookup\" to save lookup are provided!\n";
+              std::cerr << "Error<main,production> : No paths \"long_range_lookup\" to save lookup are provided!\n";
               return EXIT_FAILURE;
             }
             const libconfig::Setting &long_range_lookup = long_range["long_range_lookup"];
             // check amount of lookup tables
             if (long_range_lookup.getLength() != static_cast<int>(iset.size())) {
-              std::cerr << "Error<main>: long_range_lookup.getLength() != iset.size()\n";
+              std::cerr << "Error<main,production>: long_range_lookup.getLength() != iset.size()\n";
               return EXIT_FAILURE;
             }
             for (uint i=0; i < iset.size(); i++) {
@@ -463,14 +463,14 @@ int main(int argc, char *argv[]) {
 
           // check of paths are present
           if (!long_range.exists("long_range_lookup")) {
-            std::cerr << "Error<main> : long range type is \"txt\" but paths \"long_range_lookup\" are not provided!\n";
+            std::cerr << "Error<main,production> : long range type is \"txt\" but paths \"long_range_lookup\" are not provided!\n";
             return EXIT_FAILURE;
           }
           const libconfig::Setting &long_range_lookup = long_range["long_range_lookup"];
 
           // check amount of lookup tables
           if (long_range_lookup.getLength() != static_cast<int>(iset.size())) {
-            std::cerr << "Error<main>: long_range_lookup.getLength() != iset.size()\n";
+            std::cerr << "Error<main,production>: long_range_lookup.getLength() != iset.size()\n";
             return EXIT_FAILURE;
           }
           std::cout << "DeckAJ projections will be constructed from txt lookup tables\n";
@@ -480,7 +480,7 @@ int main(int argc, char *argv[]) {
             const std::string &lut_path = long_range_lookup[i];
             TGraph *igr = new TGraph(lut_path.c_str());
             if (igr && igr->GetN() <= 0) {
-              std::cerr << "Error<main>: long_range_lookup_table is empry or not appropriate format\n";
+              std::cerr << "Error<main,production>: long_range_lookup_table is empry or not appropriate format\n";
               return EXIT_FAILURE;
             }
             uint Npoints = igr->GetN();
@@ -731,7 +731,7 @@ int main(int argc, char *argv[]) {
         Npages = plot_settings["mapping_list"].getLength();
         std::cout << "A parameter \"mapping_list\" is found and " << Npages << "-pages pdf will be produced!";
       } else {
-        std::cerr << "Error<main>: mapping or mapping_list has to be specified!";
+        std::cerr << "Error<main,plot>: mapping or mapping_list has to be specified!";
         return 1;
       }
 
@@ -751,7 +751,7 @@ int main(int argc, char *argv[]) {
           if ( type.find("data") != std::string::npos ) mgr[i]->Add(draw(data), "p");
         }
 
-        // add model model
+        // add model
         if ( type.find("model") != std::string::npos ) {
           if (plot_settings.exists("what_to_plot")) {
             const libconfig::Setting &what_to_plot = plot_settings["what_to_plot"];
@@ -769,6 +769,7 @@ int main(int argc, char *argv[]) {
                 for (uint p = 0; p < NparsToZero; p++) {
                   const char *pname = set_to_zero[p];
                   uint ip = MParKeeper::gI()->getIndex(std::string(pname));
+                  if (ip == MParKeeper::error_uint) {std::cerr << "Error<main,plot>: \"set_to_zero\" check parameter name!\n"; return EXIT_FAILURE;}
                   double vp = MParKeeper::gI()->get(ip);
                   parsBackUp.push_back(std::make_pair(ip, vp));
                   MParKeeper::gI()->set(ip, 0.);
@@ -943,16 +944,21 @@ int main(int argc, char *argv[]) {
             for (uint i = 0; i < Nv; i++) {
               const std::string pname = setv[i][0];
               const double value = setv[i][1];
-              MParKeeper::gI()->set(pname, value);
+              // MParKeeper::gI()->set(pname, value);
+              min->SetVariableValue(min->VariableIndex(pname), value);
+              std::cout << "-------> set_to_value: \"" << pname << "\" is set to " << value << "\n";
             }
           }
+          MParKeeper::gI()->printAll();
           // adjust which parameters to vary
           const uint nPars_to_vary = pars.getLength();
           // loop over all parameters for make fix them
           for (uint r=0; r < pnPars; r++) min->FixVariable(r);
           for (uint r=0; r < nPars_to_vary; r++) {
             const std::string &pname = pars[r];
-            min->ReleaseVariable(MParKeeper::gI()->pgetIndex(pname));
+            const int index = MParKeeper::gI()->pgetIndex(pname);
+            if (index == MParKeeper::error_uint) {std::cerr << "Error<main,fit>: \"pars_to_vary\" check parameter name!\n"; return EXIT_FAILURE;}
+            min->ReleaseVariable(index);
           }
           // minimize
           min->Minimize();
