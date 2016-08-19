@@ -732,7 +732,7 @@ int main(int argc, char *argv[]) {
         std::cout << "A parameter \"mapping_list\" is found and " << Npages << "-pages pdf will be produced!";
       } else {
         std::cerr << "Error<main,plot>: mapping or mapping_list has to be specified!";
-        return 1;
+        return EXIT_FAILURE;
       }
 
       for (uint pg = 0; pg < Npages; pg++) {
@@ -881,7 +881,7 @@ int main(int argc, char *argv[]) {
       /****************************************************************************************/
       const int rand_file_id = std::rand()%1000;
       TFile *fout = new TFile(TString::Format("%s/fit.results.root.pid%d.rand%03d", dout_name.c_str(), pid, rand_file_id), "RECREATE");
-      if (!fout) { std::cerr << "no fout acceptable!\n"; return 1; }
+      if (!fout) { std::cerr << "no fout acceptable!\n"; return EXIT_FAILURE; }
       TTree tout("tout", "Results of fit");
       // set branches
       // tout.Branch("can", "TCanvas", &canva);
@@ -1046,11 +1046,11 @@ int main(int argc, char *argv[]) {
             for (uint i = 0; i < Npars; i++) MParKeeper::gI()->set(i, pars[i]);
           } else {
             std::cerr << "Tree with results not found by name 'tout'!\n";
-            return 1;
+            return EXIT_FAILURE;
           }
         } else {
           std::cerr << "File with results specified but not found!\n";
-          return 1;
+          return EXIT_FAILURE;
         }
       }
 
@@ -1059,9 +1059,9 @@ int main(int argc, char *argv[]) {
       const libconfig::Setting &real_range = ranges["real_range"];
       const libconfig::Setting &imag_range = ranges["imag_range"];
       if (real_range.getLength() != 3) {std::cerr << "Error<continuation_settings>: in plot_range, real_range "
-                                                  << "is expected in the form [Nbins, left_value, right_value]\n"; return 1; }
+                                                  << "is expected in the form [Nbins, left_value, right_value]\n"; return EXIT_FAILURE; }
       if (imag_range.getLength() != 3) {std::cerr << "Error<continuation_settings>: in plot_range, imag_range "
-                                                  << "is expected in the form [Nbins, left_value, right_value]\n"; return 1; }
+                                                  << "is expected in the form [Nbins, left_value, right_value]\n"; return EXIT_FAILURE; }
       const uint Nbx = real_range[0]; double lrx = real_range[1]; double rrx = real_range[2];
       const uint Nby = imag_range[0]; double lry = imag_range[1]; double rry = imag_range[2];
       TH2D hreal("realTm1","Real part of T^{-1}", Nbx, lrx, rrx, Nby, lry, rry);
@@ -1104,9 +1104,9 @@ int main(int argc, char *argv[]) {
       if (!continuation_settings.lookupValue("fplot_name", fplot_name))
         std::cerr << "Warning: fplot_name is not specified. A default name wil be used.\n";
       // save multipage pdf;
-      habs .Draw("colz"); habs .Draw("cont3 same"); canva_sheets.Print(TString::Format("%s(", fplot_name.c_str()), "pdf");
-      hreal.Draw("colz"); hreal.Draw("cont3 same"); canva_sheets.Print(TString::Format("%s" , fplot_name.c_str()), "pdf");
-      himag.Draw("colz"); himag.Draw("cont3 same"); canva_sheets.Print(TString::Format("%s)", fplot_name.c_str()), "pdf");
+      habs .SetStats(kFALSE); habs .Draw("colz"); habs .Draw("cont3 same"); canva_sheets.Print(TString::Format("%s(", fplot_name.c_str()), "pdf");
+      hreal.SetStats(kFALSE); hreal.Draw("colz"); hreal.Draw("cont3 same"); canva_sheets.Print(TString::Format("%s" , fplot_name.c_str()), "pdf");
+      himag.SetStats(kFALSE); himag.Draw("colz"); himag.Draw("cont3 same"); canva_sheets.Print(TString::Format("%s)", fplot_name.c_str()), "pdf");
       TFile fout(TString::Format("%s.root",fplot_name.c_str()), "recreate");
       habs .Write();
       hreal.Write();

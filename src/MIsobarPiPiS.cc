@@ -11,7 +11,7 @@
 namespace b = boost::numeric::ublas;
 
 MIsobarPiPiS::MIsobarPiPiS() :
-  MIsobar(0.5, 0.5, PI_MASS, PI_MASS, 0, 5.),
+  MIsobar(1.1, 0.7, PI_MASS, PI_MASS, 0, 5.),
   _a(2, b::matrix<cd>(2,2)), _c(5, b::matrix<cd>(2,2)), _sP(1, 2) {
 
   // digitize table given in 
@@ -87,7 +87,7 @@ cd MIsobarPiPiS::U(cd s) const {
     M00 += sc *_c[i](0,0);
   }
 
-  cd _U00 = POW2(16*M_PI)/(M00*M00 + rho00*rho00) * 1./(8*M_PI)*sqrt(LAMBDA(s, POW2(PI_MASS), POW2(PI_MASS)))/s;
+  cd _U00 = 16*M_PI/(M00*M00 + rho00*rho00) * 1./(8*M_PI)*sqrt(LAMBDA(s, POW2(PI_MASS), POW2(PI_MASS)))/s;
   return _U00;
 }
 
