@@ -23,8 +23,11 @@
 
 #include "TGraphErrors.h"
 #include "TCanvas.h"
+#include "TVirtualPad.h"
+#include "TStyle.h"
 #include "TFile.h"
 #include "TTree.h"
+#include "TColor.h"
 #include "TH2D.h"
 #include "TMultiGraph.h"
 #include "Math/MinimizerOptions.h"
@@ -753,8 +756,7 @@ int main(int argc, char *argv[]) {
         canva->Clear();
 
 	/**************  TEMPERARY FIX ******************/
-	if (NrelsToPlot == 10) canva->Divide(5,2);
-	else canva->DivideSquare(NrelsToPlot);
+	canva->DivideSquare(NrelsToPlot);
 
         std::vector<TMultiGraph*> mgr(NrelsToPlot);
         // add data in order by mapping
@@ -840,9 +842,23 @@ int main(int argc, char *argv[]) {
           // setTitle
           const uint iPad = mapping[i][0];
           const DP & data = MRelationHolder::gI()->GetRelation(iPad).data;
-          mgr[i]->SetTitle(data.title.c_str());
           // draw
-          canva->cd(i+1); mgr[i]->Draw("a");
+          TVirtualPad *pd = canva->cd(i+1);
+	  pd->SetRightMargin(0.);
+	  pd->SetTopMargin(0.);
+
+          mgr[i]->SetTitle(data.title.c_str());
+	  // gStyle->SetTitleSize(0.0015);
+	  // gStyle->SetTitleOffset(-0.2);
+	  mgr[i]->Draw("a");
+          mgr[i]->GetHistogram()->SetTitle(data.title.c_str());
+          mgr[i]->GetHistogram()->SetTitleSize(0.0015);
+          mgr[i]->GetHistogram()->SetTitleOffset(-0.2);
+
+	  mgr[i]->GetXaxis()->SetLabelSize(0.07);
+	  mgr[i]->GetYaxis()->SetLabelSize(0.05);
+	  mgr[i]->GetXaxis()->SetTitleSize(0.07);
+	  mgr[i]->GetXaxis()->SetTitleOffset(-0.35);
         }
 
         // save to pdf
@@ -936,14 +952,46 @@ int main(int argc, char *argv[]) {
             return MRelationHolder::gI()->CalculateChi2();
           }, pnPars);
         min->SetFunction(functor);
-        // specify parameters
-        MParKeeper::gI()->randomizePool();
-        MParKeeper::gI()->printAll();
+
+        // set starting parameters
+	// if possible then from the file
+	if (fit_settings.exists("path_to_starting_value") &&
+	    fit_settings.exists("entry")) {
+	  const std::string spar_path = fit_settings["path_to_starting_value"];
+	  const uint entry = fit_settings["entry"];
+	  TFile *fres = TFile::Open(spar_path.c_str());
+	  if (!fres) {
+	    std::cerr << "File with results specified but not found!\n";
+	    return EXIT_FAILURE;
+	  }
+	  std::cout << "File with parameter values successfully opened!\n";
+	  TTree *tres; gDirectory->GetObject("tout", tres);
+	  if (!tres) {
+	    std::cerr << "Tree with starting values not found by name 'tout'!\n";
+	    return EXIT_FAILURE;
+	  }
+	  const uint Npars = MParKeeper::gI()->nPars();
+	  double pars[Npars];
+	  for (uint i = 0; i < Npars; i++) {
+	    const std::string & name = MParKeeper::gI()->getName(i);
+	    // check if it is at list of branches
+	    tres->SetBranchAddress(name.c_str(), &pars[i]);
+	  }
+	  // set values from tree and set to keeper
+	  tres->GetEntry(entry);
+	  for (uint i = 0; i < Npars; i++) MParKeeper::gI()->set(i, pars[i]);
+	} else {
+	  // otherwise from random
+	  MParKeeper::gI()->randomizePool();
+	}
+	MParKeeper::gI()->printAll();
         for (uint i=0; i < pnPars; i++) min->SetVariable(i,
                                                          MParKeeper::gI()->pgetName(i),
                                                          MParKeeper::gI()->pget(i),
                                                          0.1);
-        /*ooooooooooooooooooooooooooooooooooooooo Fit itself ooooooooooooooooooooooooooooooooooo*/
+	
+
+	/*ooooooooooooooooooooooooooooooooooooooo Fit itself ooooooooooooooooooooooooooooooooooo*/
         // step fit
         const uint count = strategy.getLength();
         for (iStep = 0; iStep < count; iStep++) {
@@ -1083,9 +1131,9 @@ int main(int argc, char *argv[]) {
                                                   << "is expected in the form [Nbins, left_value, right_value]\n"; return EXIT_FAILURE; }
       const uint Nbx = real_range[0]; double lrx = real_range[1]; double rrx = real_range[2];
       const uint Nby = imag_range[0]; double lry = imag_range[1]; double rry = imag_range[2];
-      TH2D hreal("realTm1","Real part of T^{-1}", Nbx, lrx, rrx, Nby, lry, rry);
-      TH2D himag("imagTm1","Imag part of T^{-1}", Nbx, lrx, rrx, Nby, lry, rry);
-      TH2D habs ( "absTm1", "Ln@Abs part of T^{-1}", Nbx, lrx, rrx, Nby, lry, rry);
+      TH2D hreal("realTm1","Real part of det[T_{I,II}^{-1}K];Re@w^{2};Im@w^{2}", Nbx, lrx, rrx, Nby, lry, rry);
+      TH2D himag("imagTm1","Imag part of det[T_{I,II}^{-1}K];Re@w^{2};Im@w^{2}", Nbx, lrx, rrx, Nby, lry, rry);
+      TH2D habs ( "absTm1", "Ln@Abs part of det[T_{I,II}^{-1}K];Re@w^{2};Im@w^{2}", Nbx, lrx, rrx, Nby, lry, rry);
 
       // decide what to plot
       const std::string what_to_plot = continuation_settings["what_to_plot"];
@@ -1122,6 +1170,18 @@ int main(int argc, char *argv[]) {
       std::string fplot_name = "/tmp/default_plot.read_model_settings.pdf";
       if (!continuation_settings.lookupValue("fplot_name", fplot_name))
         std::cerr << "Warning: fplot_name is not specified. A default name wil be used.\n";
+
+      /* TEMPERARY FIX */
+      // Adjustion style
+      const Int_t NRGBs = 5;
+      const Int_t NCont = 70;
+      Double_t stops[NRGBs] = { 0.00, 0.34, 0.61, 0.84, 1.00 };
+      Double_t red[NRGBs]   = { 0.00, 0.00, 0.87, 1.00, 0.51 };
+      Double_t green[NRGBs] = { 0.00, 0.81, 1.00, 0.20, 0.00 };
+      Double_t blue[NRGBs]  = { 0.51, 1.00, 0.12, 0.00, 0.00 };
+      TColor::CreateGradientColorTable(NRGBs, stops, red, green, blue, NCont);
+      gStyle->SetNumberContours(NCont);
+
       // save multipage pdf;
       habs .SetStats(kFALSE); habs .Draw("colz"); habs .Draw("cont3 same"); canva_sheets.Print(TString::Format("%s(", fplot_name.c_str()), "pdf");
       hreal.SetStats(kFALSE); hreal.Draw("colz"); hreal.Draw("cont3 same"); canva_sheets.Print(TString::Format("%s" , fplot_name.c_str()), "pdf");
