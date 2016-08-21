@@ -671,7 +671,6 @@ int main(int argc, char *argv[]) {
 
   const uint Nrels = MRelationHolder::gI()->Nrels();
   MRelationHolder::gI()->Print();
-  TCanvas *canva = new TCanvas("canva", "title");
 
   ///////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////
@@ -735,10 +734,27 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
       }
 
+      TCanvas *canva = new TCanvas("canva", "title");
+      if (plot_settings.exists("canva_settings")) {
+	const libconfig::Setting &canva_sets = plot_settings["canva_settings"];
+	delete canva;
+	double canva_width, canva_height;
+	if ( !canva_sets.lookupValue("width", canva_width) ||
+	     !canva_sets.lookupValue("height", canva_height) ) {
+	  std::cerr << "Error<main,plot>:\"canva_settings\" is present but does not have \"width\" or \"heigth\"!\n";
+	  return EXIT_FAILURE;
+	}
+	canva = new TCanvas("canva", "title", 0., 0.,
+			    canva_width, canva_height);
+      }
       for (uint pg = 0; pg < Npages; pg++) {
         const libconfig::Setting &mapping = (plot_settings.exists("mapping")) ? plot_settings["mapping"] : plot_settings["mapping_list"][pg];
         const uint NrelsToPlot = mapping.getLength();
-        canva->Clear(); canva->DivideSquare(NrelsToPlot);
+        canva->Clear();
+
+	/**************  TEMPERARY FIX ******************/
+	if (NrelsToPlot == 10) canva->Divide(5,2);
+	else canva->DivideSquare(NrelsToPlot);
 
         std::vector<TMultiGraph*> mgr(NrelsToPlot);
         // add data in order by mapping
@@ -841,7 +857,8 @@ int main(int argc, char *argv[]) {
           canva->Print(TString::Format("%s", fplot_name.c_str()), "pdf");
         }  // if
       }  // Npages
-    }  // exists plot_settings
+      delete canva;
+    }  // exists plot_settings    
   }  // try
   catch(const libconfig::SettingNotFoundException &nfex) {
     std::cerr << "Error <> libconfig::SettingNotFoundException in \"plot_settings\" secton" << std::endl;
@@ -854,7 +871,6 @@ int main(int argc, char *argv[]) {
   ////////////////////////////// f i t  s e t t i n g s /////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////
 
-  canva->Clear(); canva->DivideSquare(Nrels);
   try {
     if (root.exists("fit_settings")) {
       const libconfig::Setting &fit_settings = root["fit_settings"];
@@ -877,6 +893,8 @@ int main(int argc, char *argv[]) {
 
       const std::string &dout_name = fit_settings["dout_name"];
 
+
+      TCanvas *canva = new TCanvas("canva", "title"); canva->DivideSquare(Nrels);
       /*********************************** Fit itself *****************************************/
       /****************************************************************************************/
       const int rand_file_id = std::rand()%1000;
@@ -1002,6 +1020,7 @@ int main(int argc, char *argv[]) {
 
       tout.Write();
       fout->Close();
+      delete canva;
     }
   }
   catch(const libconfig::SettingNotFoundException &nfex) {
@@ -1119,8 +1138,6 @@ int main(int argc, char *argv[]) {
     return EXIT_FAILURE;
   }
   
-  delete canva;
-
   // well done
 
   return(EXIT_SUCCESS);
