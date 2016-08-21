@@ -110,11 +110,27 @@ int main () {
           SET3(
                draw([&](double m)->double{return real(pipiS.T(m*m));}, 2*PI_MASS, 2.2),
                SetFillColor(0),
-               SetTitle("Real part [real s]"),
+               SetTitle("Re@T[real s]"),
                SetLineColor(kBlack)),
           SET4(
                draw([&](double m)->double{return real(pipiS.T(cd(m*m,1e-3)));}, 2*PI_MASS, 2.2),
-               SetTitle("Real part [s + i0]"),
+               SetTitle("Re@T[s + i0]"),
+               SetLineColor(kBlack),
+               SetFillColor(0),
+               SetLineStyle(2) ) )->Draw("al");
+  c1.BuildLegend();
+  c1.SaveAs("/tmp/test_PiPiS.pdf");
+
+  /* Plot: real part T(Real s) and real part of T(s+i0) */
+  combine(
+          SET3(
+               draw([&](double m)->double{return pipiS.U(m*m);}, 2*PI_MASS, 2.2),
+               SetFillColor(0),
+               SetTitle("U[real s]"),
+               SetLineColor(kBlack)),
+          SET4(
+               draw([&](double m)->double{return real(pipiS.U(cd(m*m, 1e-3)));}, 2*PI_MASS, 2.2),
+               SetTitle("Re@U[s + i0]"),
                SetLineColor(kBlack),
                SetFillColor(0),
                SetLineStyle(2) ) )->Draw("al");
@@ -127,23 +143,23 @@ int main () {
                draw([&](double m)->double{return norm(pipiS.T(m*m)) *
                      1./(8*M_PI)*sqrt(LAMBDA(m*m, POW2(PI_MASS), POW2(PI_MASS)))/(m*m);
                  }, 2*PI_MASS, 2.2),
-               SetTitle("Real part [real s]"),
+               SetTitle("|T|^{2} #Phi_{2}[real s]"),
                SetFillColor(0),
                SetLineColor(kBlack)),
           SET4(
                draw([&](double m)->double{return real(pipiS.U(cd(m*m, 1e-3)));}, 2*PI_MASS, 2.2),
-               SetTitle("Real part [s + i0]"),
+               SetTitle("U[s + i0]"),
                SetFillColor(0),
                SetLineColor(kBlack),
                SetLineStyle(2) ) )->Draw("al");
   c1.BuildLegend();
   c1.SaveAs("/tmp/test_PiPiS.pdf");
 
-  TH2D h2("h2","Complex sheet of U(s);Re@s;Im@s", 100, 0.1, POW2(2.2), 100 ,-0.4, 0.4);
+  TH2D h2("h2","Complex sheet of Im@U(s);Re@s;Im@s", 100, 0.1, POW2(2.2), 100 ,-0.4, 0.4);
   for (int i=0; i < h2.GetXaxis()->GetNbins(); i++)
     for (int j=0; j < h2.GetYaxis()->GetNbins(); j++) {
       cd s(h2.GetXaxis()->GetBinCenter(i+1), h2.GetYaxis()->GetBinCenter(j+1));
-      double U_II = abs(pipiS.U(s));
+      double U_II = real(pipiS.U(s));
       h2.SetBinContent(i+1, j+1, U_II);
     }
   h2.SetStats(kFALSE);

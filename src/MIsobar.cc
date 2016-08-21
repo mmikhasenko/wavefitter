@@ -41,7 +41,7 @@ cd     MIsobar::T(cd     s) const {
   const double p0_2 = LAMBDA(M*M, m1*m1, m2*m2)/(4.*M*M);
   G *=  pow(p_2/p0_2 * (1.+R*R*p0_2)/(1.+R*R*p_2), L);
   double gsq = 2*M*G0/RHO(M*M, m1*m1, m2*m2);
-  return sqrt(gsq)/(M*M-s-cd(0., M)*G);
+  return gsq/(M*M-s-cd(0., M)*G);
 }
 
 cd     MIsobar::T(double s) const {
@@ -50,5 +50,5 @@ cd     MIsobar::T(double s) const {
   const double p0_2 = LAMBDA(M*M, m1*m1, m2*m2)/(4.*M*M);
   G *=  pow(p_2/p0_2 * (1.+R*R*p0_2)/(1.+R*R*p_2), L);
   double gsq = 2*M*G0/RHO(M*M, m1*m1, m2*m2);
-  return sqrt(gsq)/(M*M-s-cd(0., M)*G);
+  return gsq/(M*M-s-cd(0., M)*G);
 }

@@ -66,7 +66,8 @@ MIsobarPiPiS::MIsobarPiPiS() :
 }
 
 double MIsobarPiPiS::U(double s) const {
-  return abs(T(s)) * 1./(8*M_PI) * sqrt(LAMBDA(s, POW2(PI_MASS), POW2(PI_MASS)))/s;
+  const double cR = 1./35;
+  return cR * norm(T(s)) * 1./(8*M_PI)*sqrt(LAMBDA(s, POW2(PI_MASS), POW2(PI_MASS)))/s;
 }
 
 cd MIsobarPiPiS::U(cd s) const {
@@ -87,7 +88,8 @@ cd MIsobarPiPiS::U(cd s) const {
     M00 += sc *_c[i](0,0);
   }
 
-  cd _U00 = 16*M_PI/(M00*M00 + rho00*rho00) * 1./(8*M_PI)*sqrt(LAMBDA(s, POW2(PI_MASS), POW2(PI_MASS)))/s;
+  double cR = 1./35.;
+  cd _U00 = cR*POW2(16*M_PI)/(M00*M00 + rho00*rho00) * 1./(8*M_PI)*sqrt(LAMBDA(s, POW2(PI_MASS), POW2(PI_MASS)))/s;
   return _U00;
 }
 
@@ -129,7 +131,7 @@ cd MIsobarPiPiS::T(double s) const {
   rho(1, 1) = ((2. * qKK)   / mass + (2. * qK0K0)   / mass) / 2.;
   rho(0, 1) = rho(1, 0) = 0;
 
-  const double scale = (s / (4 * POW2((K_MASS+K0_MASS)/2.))) - 1;
+  const double scale = (s / (4 * POW2((K_MASS+K0_MASS)/2.))) - 1.;
 
   b::matrix<cd> M(b::zero_matrix<cd>(2, 2));
   for (uint i = 0; i < _sP.size2(); ++i) {
