@@ -750,12 +750,21 @@ int main(int argc, char *argv[]) {
 	canva = new TCanvas("canva", "title", 0., 0.,
 			    canva_width, canva_height);
       }
+
+      // name of pdf output
+      std::string fplot_name = "/tmp/default_plot.read_model_settings.pdf";
+      if (!plot_settings.lookupValue("fplot_name", fplot_name))
+	std::cerr << "Warning: fplot_name is not specified. A default name wil be used.\n";
+
+      // open file for canvas 
+      TFile fcanvas(TString::Format("%s.root", fplot_name.c_str()), "RECREATE");
+
+      // loop ove pages
       for (uint pg = 0; pg < Npages; pg++) {
         const libconfig::Setting &mapping = (plot_settings.exists("mapping")) ? plot_settings["mapping"] : plot_settings["mapping_list"][pg];
         const uint NrelsToPlot = mapping.getLength();
         canva->Clear();
 
-	/**************  TEMPERARY FIX ******************/
 	canva->DivideSquare(NrelsToPlot);
 
         std::vector<TMultiGraph*> mgr(NrelsToPlot);
@@ -861,17 +870,16 @@ int main(int argc, char *argv[]) {
 	  mgr[i]->GetXaxis()->SetTitleOffset(-0.35);
         }
 
-        // save to pdf
-        std::string fplot_name = "/tmp/default_plot.read_model_settings.pdf";
-        if (!plot_settings.lookupValue("fplot_name", fplot_name))
-          std::cerr << "Warning: fplot_name is not specified. A default name wil be used.\n";
         // save multipage pdf;
         if (Npages != 1 && pg == Npages-1) { canva->Print(TString::Format("%s)", fplot_name.c_str()), "pdf");
         } else if (Npages != 1 && pg == 0) { canva->Print(TString::Format("%s(", fplot_name.c_str()), "pdf");
         } else {
           std::cout << "-----> Saving page " << pg << "\n";
           canva->Print(TString::Format("%s", fplot_name.c_str()), "pdf");
-        }  // if
+	}  // if
+	// save root pictures to file
+	canva->SetName(TString::Format("page%d", pg));
+	fcanvas.cd(); canva->Write();
       }  // Npages
       delete canva;
     }  // exists plot_settings    
@@ -922,7 +930,7 @@ int main(int argc, char *argv[]) {
       double chi2 = 0; tout.Branch("chi2", &chi2);
       uint iStep = 0; tout.Branch("fit_step", &iStep);
       double status = 0; tout.Branch("status", &status);
-      double eAtt; tout.Branch("eAtt", &eAtt);
+      uint eAtt; tout.Branch("eAtt", &eAtt);
       tout.Branch("pid", &pid);
       double pars_mirrow[MParKeeper::gI()->nPars()];
       for (uint i=0; i < MParKeeper::gI()->nPars(); i++)
@@ -938,7 +946,7 @@ int main(int argc, char *argv[]) {
           ROOT::Math::Factory::CreateMinimizer("Minuit2", "Migrad");
 
         // set tolerance , etc...
-        min->SetMaxFunctionCalls(1e12);
+        min->SetMaxFunctionCalls(1e10);
         min->SetTolerance(0.001);
         min->SetStrategy(1);
         min->SetPrintLevel(3);
@@ -980,6 +988,7 @@ int main(int argc, char *argv[]) {
 	  // set values from tree and set to keeper
 	  tres->GetEntry(entry);
 	  for (uint i = 0; i < Npars; i++) MParKeeper::gI()->set(i, pars[i]);
+	  fres->Close(); fout->cd();
 	} else {
 	  // otherwise from random
 	  MParKeeper::gI()->randomizePool();
