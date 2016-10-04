@@ -739,24 +739,24 @@ int main(int argc, char *argv[]) {
 
       TCanvas *canva = new TCanvas("canva", "title");
       if (plot_settings.exists("canva_settings")) {
-	const libconfig::Setting &canva_sets = plot_settings["canva_settings"];
-	delete canva;
-	double canva_width, canva_height;
-	if ( !canva_sets.lookupValue("width", canva_width) ||
-	     !canva_sets.lookupValue("height", canva_height) ) {
-	  std::cerr << "Error<main,plot>:\"canva_settings\" is present but does not have \"width\" or \"heigth\"!\n";
-	  return EXIT_FAILURE;
-	}
-	canva = new TCanvas("canva", "title", 0., 0.,
-			    canva_width, canva_height);
+        const libconfig::Setting &canva_sets = plot_settings["canva_settings"];
+        delete canva;
+        double canva_width, canva_height;
+        if ( !canva_sets.lookupValue("width", canva_width) ||
+             !canva_sets.lookupValue("height", canva_height) ) {
+          std::cerr << "Error<main,plot>:\"canva_settings\" is present but does not have \"width\" or \"heigth\"!\n";
+          return EXIT_FAILURE;
+        }
+        canva = new TCanvas("canva", "title", 0., 0.,
+                            canva_width, canva_height);
       }
       for (uint pg = 0; pg < Npages; pg++) {
         const libconfig::Setting &mapping = (plot_settings.exists("mapping")) ? plot_settings["mapping"] : plot_settings["mapping_list"][pg];
         const uint NrelsToPlot = mapping.getLength();
         canva->Clear();
 
-	/**************  TEMPERARY FIX ******************/
-	canva->DivideSquare(NrelsToPlot);
+        /**************  TEMPERARY FIX ******************/
+        canva->DivideSquare(NrelsToPlot);
 
         std::vector<TMultiGraph*> mgr(NrelsToPlot);
         // add data in order by mapping
@@ -844,21 +844,21 @@ int main(int argc, char *argv[]) {
           const DP & data = MRelationHolder::gI()->GetRelation(iPad).data;
           // draw
           TVirtualPad *pd = canva->cd(i+1);
-	  pd->SetRightMargin(0.);
-	  pd->SetTopMargin(0.);
+          pd->SetRightMargin(0.);
+          pd->SetTopMargin(0.);
 
           mgr[i]->SetTitle(data.title.c_str());
-	  // gStyle->SetTitleSize(0.0015);
-	  // gStyle->SetTitleOffset(-0.2);
-	  mgr[i]->Draw("a");
+          // gStyle->SetTitleSize(0.0015);
+          // gStyle->SetTitleOffset(-0.2);
+          mgr[i]->Draw("a");
           mgr[i]->GetHistogram()->SetTitle(data.title.c_str());
           mgr[i]->GetHistogram()->SetTitleSize(0.0015);
           mgr[i]->GetHistogram()->SetTitleOffset(-0.2);
 
-	  mgr[i]->GetXaxis()->SetLabelSize(0.07);
-	  mgr[i]->GetYaxis()->SetLabelSize(0.05);
-	  mgr[i]->GetXaxis()->SetTitleSize(0.07);
-	  mgr[i]->GetXaxis()->SetTitleOffset(-0.35);
+          mgr[i]->GetXaxis()->SetLabelSize(0.07);
+          mgr[i]->GetYaxis()->SetLabelSize(0.05);
+          mgr[i]->GetXaxis()->SetTitleSize(0.07);
+          mgr[i]->GetXaxis()->SetTitleOffset(-0.35);
         }
 
         // save to pdf
@@ -902,8 +902,8 @@ int main(int argc, char *argv[]) {
       int seed;
       uint pid = ::getpid();
       if (!fit_settings.lookupValue("seed", seed)) {
-	std::srand(pid); const uint frand = std::rand();
-	seed = frand+std::time(0);
+        std::srand(pid); const uint frand = std::rand();
+        seed = frand+std::time(0);
       }
       std::srand(seed);
 
@@ -954,44 +954,44 @@ int main(int argc, char *argv[]) {
         min->SetFunction(functor);
 
         // set starting parameters
-	// if possible then from the file
-	if (fit_settings.exists("path_to_starting_value") &&
-	    fit_settings.exists("entry")) {
-	  const std::string spar_path = fit_settings["path_to_starting_value"];
-	  const uint entry = fit_settings["entry"];
-	  TFile *fres = TFile::Open(spar_path.c_str());
-	  if (!fres) {
-	    std::cerr << "File with results specified but not found!\n";
-	    return EXIT_FAILURE;
-	  }
-	  std::cout << "File with parameter values successfully opened!\n";
-	  TTree *tres; gDirectory->GetObject("tout", tres);
-	  if (!tres) {
-	    std::cerr << "Tree with starting values not found by name 'tout'!\n";
-	    return EXIT_FAILURE;
-	  }
-	  const uint Npars = MParKeeper::gI()->nPars();
-	  double pars[Npars];
-	  for (uint i = 0; i < Npars; i++) {
-	    const std::string & name = MParKeeper::gI()->getName(i);
-	    // check if it is at list of branches
-	    tres->SetBranchAddress(name.c_str(), &pars[i]);
-	  }
-	  // set values from tree and set to keeper
-	  tres->GetEntry(entry);
-	  for (uint i = 0; i < Npars; i++) MParKeeper::gI()->set(i, pars[i]);
-	} else {
-	  // otherwise from random
-	  MParKeeper::gI()->randomizePool();
-	}
-	MParKeeper::gI()->printAll();
+        // if possible then from the file
+        if (fit_settings.exists("path_to_starting_value") &&
+            fit_settings.exists("entry")) {
+          const std::string spar_path = fit_settings["path_to_starting_value"];
+          const uint entry = fit_settings["entry"];
+          TFile *fres = TFile::Open(spar_path.c_str());
+          if (!fres) {
+            std::cerr << "File with results specified but not found!\n";
+            return EXIT_FAILURE;
+          }
+          std::cout << "File with parameter values successfully opened!\n";
+          TTree *tres; gDirectory->GetObject("tout", tres);
+          if (!tres) {
+            std::cerr << "Tree with starting values not found by name 'tout'!\n";
+            return EXIT_FAILURE;
+          }
+          const uint Npars = MParKeeper::gI()->nPars();
+          double pars[Npars];
+          for (uint i = 0; i < Npars; i++) {
+            const std::string & name = MParKeeper::gI()->getName(i);
+            // check if it is at list of branches
+            tres->SetBranchAddress(name.c_str(), &pars[i]);
+          }
+          // set values from tree and set to keeper
+          tres->GetEntry(entry);
+          for (uint i = 0; i < Npars; i++) MParKeeper::gI()->set(i, pars[i]);
+        } else {
+          // otherwise from random
+          MParKeeper::gI()->randomizePool();
+        }
+        MParKeeper::gI()->printAll();
         for (uint i=0; i < pnPars; i++) min->SetVariable(i,
                                                          MParKeeper::gI()->pgetName(i),
                                                          MParKeeper::gI()->pget(i),
                                                          0.1);
-	
 
-	/*ooooooooooooooooooooooooooooooooooooooo Fit itself ooooooooooooooooooooooooooooooooooo*/
+
+        /*ooooooooooooooooooooooooooooooooooooooo Fit itself ooooooooooooooooooooooooooooooooooo*/
         // step fit
         const uint count = strategy.getLength();
         for (iStep = 0; iStep < count; iStep++) {
@@ -1003,7 +1003,7 @@ int main(int argc, char *argv[]) {
           MRelationHolder::gI()->passiveAll();
           for (uint r=0; r < Nrelations; r++) MRelationHolder::gI()->activateRelation(relations[r]);
           MRelationHolder::gI()->Print();
-          
+
           if (fit_step.exists("set_to_value")) {
             const libconfig::Setting &setv = fit_step["set_to_value"];
             const uint Nv = setv.getLength();
