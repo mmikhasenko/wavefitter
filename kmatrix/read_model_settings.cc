@@ -263,7 +263,8 @@ int main(int argc, char *argv[]) {
   /////////////////////// short range, long range, unitarisation ////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////
   std::vector<MProductionPhysics*> vpr;  // (iset);
-  std::vector<std::vector<std::pair<double, double> > > long_range_lookup_values[iset.size()];
+  const uint isetsize = iset.size();
+  std::vector<std::vector<std::pair<double, double> > > long_range_lookup_values[isetsize];
   try {
     const libconfig::Setting &modelsA = root["modelA"];
     const uint Nmodels = modelsA.getLength();
