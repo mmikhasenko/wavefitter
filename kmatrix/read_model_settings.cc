@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <cstdlib>
 #include <vector>
+#include <climits>
 
 #include "libconfig.h++"
 
@@ -263,7 +264,9 @@ int main(int argc, char *argv[]) {
   /////////////////////// short range, long range, unitarisation ////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////
   std::vector<MProductionPhysics*> vpr;  // (iset);
-  std::vector<std::vector<std::pair<double, double> > > long_range_lookup_values[iset.size()];
+  // std::vector<std::vector<std::pair<double, double> > > long_range_lookup_values[iset.size()];
+  std::vector<std::vector<std::vector<std::pair<double, double> > > > long_range_lookup_values(iset.size());
+  // channels<     modelA<     points< m, value > > >
   try {
     const libconfig::Setting &modelsA = root["modelA"];
     const uint Nmodels = modelsA.getLength();
@@ -922,7 +925,7 @@ int main(int argc, char *argv[]) {
       double chi2 = 0; tout.Branch("chi2", &chi2);
       uint iStep = 0; tout.Branch("fit_step", &iStep);
       double status = 0; tout.Branch("status", &status);
-      double eAtt; tout.Branch("eAtt", &eAtt);
+      uint eAtt; tout.Branch("eAtt", &eAtt);
       tout.Branch("pid", &pid);
       double pars_mirrow[MParKeeper::gI()->nPars()];
       for (uint i=0; i < MParKeeper::gI()->nPars(); i++)
@@ -938,7 +941,7 @@ int main(int argc, char *argv[]) {
           ROOT::Math::Factory::CreateMinimizer("Minuit2", "Migrad");
 
         // set tolerance , etc...
-        min->SetMaxFunctionCalls(1e12);
+        min->SetMaxFunctionCalls(UINT_MAX);
         min->SetTolerance(0.001);
         min->SetStrategy(1);
         min->SetPrintLevel(3);
