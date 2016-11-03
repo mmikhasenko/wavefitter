@@ -595,11 +595,12 @@ int main(int argc, char *argv[]) {
       if (type == "I@") {
         uint iModel = iRel[2][0];
         uint iCh = iRel[2][1];
+        double cbFactor = (iRel.getLength() <= 2) ? 1. : iRel[3];
         MProductionPhysics *pr = vpr[iModel];
         MChannel *ciso = iset[iCh];
-        MRelationHolder::gI()->AddRelation(whole_data[jData], [&, iCh, ciso, pr](double e)->double{
+        MRelationHolder::gI()->AddRelation(whole_data[jData], [&, iCh, ciso, pr, cbFactor](double e)->double{
             auto v = pr->getValue(e*e);
-            return norm(v(iCh))*ciso->rho(e*e);
+            return cbFactor*norm(v(iCh))*ciso->rho(e*e);
           });
       } else if (type == "Re@") {
         uint iModel = iRel[2][0];
