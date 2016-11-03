@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <cstdlib>
 #include <vector>
+#include <climits>
 
 #include "libconfig.h++"
 
@@ -263,7 +264,9 @@ int main(int argc, char *argv[]) {
   /////////////////////// short range, long range, unitarisation ////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////
   std::vector<MProductionPhysics*> vpr;  // (iset);
-  std::vector<std::vector<std::pair<double, double> > > long_range_lookup_values[iset.size()];
+  // std::vector<std::vector<std::pair<double, double> > > long_range_lookup_values[iset.size()];
+  std::vector<std::vector<std::vector<std::pair<double, double> > > > long_range_lookup_values(iset.size());
+  // channels<     modelA<     points< m, value > > >
   try {
     const libconfig::Setting &modelsA = root["modelA"];
     const uint Nmodels = modelsA.getLength();
@@ -595,11 +598,12 @@ int main(int argc, char *argv[]) {
       if (type == "I@") {
         uint iModel = iRel[2][0];
         uint iCh = iRel[2][1];
+        double cbFactor = (iRel.getLength() <= 2) ? 1. : iRel[3];
         MProductionPhysics *pr = vpr[iModel];
         MChannel *ciso = iset[iCh];
-        MRelationHolder::gI()->AddRelation(whole_data[jData], [&, iCh, ciso, pr](double e)->double{
+        MRelationHolder::gI()->AddRelation(whole_data[jData], [&, iCh, ciso, pr, cbFactor](double e)->double{
             auto v = pr->getValue(e*e);
-            return norm(v(iCh))*ciso->rho(e*e);
+            return cbFactor*norm(v(iCh))*ciso->rho(e*e);
           });
       } else if (type == "Re@") {
         uint iModel = iRel[2][0];
@@ -739,16 +743,16 @@ int main(int argc, char *argv[]) {
 
       TCanvas *canva = new TCanvas("canva", "title");
       if (plot_settings.exists("canva_settings")) {
-	const libconfig::Setting &canva_sets = plot_settings["canva_settings"];
-	delete canva;
-	double canva_width, canva_height;
-	if ( !canva_sets.lookupValue("width", canva_width) ||
-	     !canva_sets.lookupValue("height", canva_height) ) {
-	  std::cerr << "Error<main,plot>:\"canva_settings\" is present but does not have \"width\" or \"heigth\"!\n";
-	  return EXIT_FAILURE;
-	}
-	canva = new TCanvas("canva", "title", 0., 0.,
-			    canva_width, canva_height);
+        const libconfig::Setting &canva_sets = plot_settings["canva_settings"];
+        delete canva;
+        double canva_width, canva_height;
+        if ( !canva_sets.lookupValue("width", canva_width) ||
+             !canva_sets.lookupValue("height", canva_height) ) {
+          std::cerr << "Error<main,plot>:\"canva_settings\" is present but does not have \"width\" or \"heigth\"!\n";
+          return EXIT_FAILURE;
+        }
+        canva = new TCanvas("canva", "title", 0., 0.,
+                            canva_width, canva_height);
       }
 
       // name of pdf output
@@ -765,8 +769,8 @@ int main(int argc, char *argv[]) {
         const uint NrelsToPlot = mapping.getLength();
         canva->Clear();
 
-	canva->DivideSquare(NrelsToPlot);
-
+        /**************  TEMPERARY FIX ******************/
+        canva->DivideSquare(NrelsToPlot);
         std::vector<TMultiGraph*> mgr(NrelsToPlot);
         // add data in order by mapping
         for (uint i=0; i < NrelsToPlot; i++) {
@@ -853,21 +857,21 @@ int main(int argc, char *argv[]) {
           const DP & data = MRelationHolder::gI()->GetRelation(iPad).data;
           // draw
           TVirtualPad *pd = canva->cd(i+1);
-	  pd->SetRightMargin(0.);
-	  pd->SetTopMargin(0.);
+          pd->SetRightMargin(0.);
+          pd->SetTopMargin(0.);
 
           mgr[i]->SetTitle(data.title.c_str());
-	  // gStyle->SetTitleSize(0.0015);
-	  // gStyle->SetTitleOffset(-0.2);
-	  mgr[i]->Draw("a");
+          // gStyle->SetTitleSize(0.0015);
+          // gStyle->SetTitleOffset(-0.2);
+          mgr[i]->Draw("a");
           mgr[i]->GetHistogram()->SetTitle(data.title.c_str());
           mgr[i]->GetHistogram()->SetTitleSize(0.0015);
           mgr[i]->GetHistogram()->SetTitleOffset(-0.2);
 
-	  mgr[i]->GetXaxis()->SetLabelSize(0.07);
-	  mgr[i]->GetYaxis()->SetLabelSize(0.05);
-	  mgr[i]->GetXaxis()->SetTitleSize(0.07);
-	  mgr[i]->GetXaxis()->SetTitleOffset(-0.35);
+          mgr[i]->GetXaxis()->SetLabelSize(0.07);
+          mgr[i]->GetYaxis()->SetLabelSize(0.05);
+          mgr[i]->GetXaxis()->SetTitleSize(0.07);
+          mgr[i]->GetXaxis()->SetTitleOffset(-0.35);
         }
 
         // save multipage pdf;
@@ -910,8 +914,8 @@ int main(int argc, char *argv[]) {
       int seed;
       uint pid = ::getpid();
       if (!fit_settings.lookupValue("seed", seed)) {
-	std::srand(pid); const uint frand = std::rand();
-	seed = frand+std::time(0);
+        std::srand(pid); const uint frand = std::rand();
+        seed = frand+std::time(0);
       }
       std::srand(seed);
 
@@ -946,7 +950,7 @@ int main(int argc, char *argv[]) {
           ROOT::Math::Factory::CreateMinimizer("Minuit2", "Migrad");
 
         // set tolerance , etc...
-        min->SetMaxFunctionCalls(1e10);
+        min->SetMaxFunctionCalls(UINT_MAX);
         min->SetTolerance(0.001);
         min->SetStrategy(1);
         min->SetPrintLevel(3);
@@ -998,9 +1002,9 @@ int main(int argc, char *argv[]) {
                                                          MParKeeper::gI()->pgetName(i),
                                                          MParKeeper::gI()->pget(i),
                                                          0.1);
-	
 
-	/*ooooooooooooooooooooooooooooooooooooooo Fit itself ooooooooooooooooooooooooooooooooooo*/
+
+        /*ooooooooooooooooooooooooooooooooooooooo Fit itself ooooooooooooooooooooooooooooooooooo*/
         // step fit
         const uint count = strategy.getLength();
         for (iStep = 0; iStep < count; iStep++) {
@@ -1012,7 +1016,7 @@ int main(int argc, char *argv[]) {
           MRelationHolder::gI()->passiveAll();
           for (uint r=0; r < Nrelations; r++) MRelationHolder::gI()->activateRelation(relations[r]);
           MRelationHolder::gI()->Print();
-          
+
           if (fit_step.exists("set_to_value")) {
             const libconfig::Setting &setv = fit_step["set_to_value"];
             const uint Nv = setv.getLength();

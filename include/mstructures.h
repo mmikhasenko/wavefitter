@@ -41,6 +41,8 @@ TGraphErrors *draw(const DP & data);
 TGraph *draw(std::function<double(double)> funct,
              double lrange, double rrange, uint nPoints = 100);
 
+TGraph *draw(const std::vector<double> & xv, const std::vector<double> & yv);
+
 TGraph *style(TGraph *lgr, double color, double style = 1);
 
 #define SET1(f, a) ([&]()->TGraph* {TGraph *g = f; g->a; return g;})()
