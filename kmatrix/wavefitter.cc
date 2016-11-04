@@ -137,7 +137,7 @@ int main(int argc, char *argv[]) {
     }
   }
   catch(const libconfig::SettingNotFoundException &nfex) {
-    std::cerr << "Error <> libconfig::SettingNotFoundException in \"data\" secton!" << std::endl;
+    std::cerr << "Error <> libconfig::SettingNotFoundException in \"data\" section!" << std::endl;
     return EXIT_FAILURE;
   }
 
@@ -254,7 +254,7 @@ int main(int argc, char *argv[]) {
     // create the model
   }
   catch(const libconfig::SettingNotFoundException &nfex) {
-    std::cerr << "Error <> libconfig::SettingNotFoundException in \"model\" secton!" << std::endl;
+    std::cerr << "Error <> libconfig::SettingNotFoundException in \"model\" section!" << std::endl;
     return EXIT_FAILURE;
   }
 
@@ -522,7 +522,7 @@ int main(int argc, char *argv[]) {
     }
   }
   catch(const libconfig::SettingNotFoundException &nfex) {
-    std::cerr << "Error <> libconfig::SettingNotFoundException in \"production model\" secton!" << std::endl;
+    std::cerr << "Error <> libconfig::SettingNotFoundException in \"production model\" section!" << std::endl;
     return EXIT_FAILURE;
   }
   MParKeeper::gI()->printAll();
@@ -598,7 +598,7 @@ int main(int argc, char *argv[]) {
       if (type == "I@") {
         uint iModel = iRel[2][0];
         uint iCh = iRel[2][1];
-        double cbFactor = (iRel.getLength() <= 2) ? 1. : iRel[3];
+        double cbFactor = (iRel.getLength() <= 3) ? 1. : iRel[3];
         MProductionPhysics *pr = vpr[iModel];
         MChannel *ciso = iset[iCh];
         MRelationHolder::gI()->AddRelation(whole_data[jData], [&, iCh, ciso, pr, cbFactor](double e)->double{
@@ -672,7 +672,7 @@ int main(int argc, char *argv[]) {
     }
   }
   catch(const libconfig::SettingNotFoundException &nfex) {
-    std::cerr << "Error <> libconfig::SettingNotFoundException in \"relation\" secton" << std::endl;
+    std::cerr << "Error <> libconfig::SettingNotFoundException in \"relation\" section" << std::endl;
     return EXIT_FAILURE;
   }
 
@@ -889,7 +889,7 @@ int main(int argc, char *argv[]) {
     }  // exists plot_settings    
   }  // try
   catch(const libconfig::SettingNotFoundException &nfex) {
-    std::cerr << "Error <> libconfig::SettingNotFoundException in \"plot_settings\" secton" << std::endl;
+    std::cerr << "Error <> libconfig::SettingNotFoundException in \"plot_settings\" section" << std::endl;
     return EXIT_FAILURE;
   }
 
@@ -1085,7 +1085,7 @@ int main(int argc, char *argv[]) {
     }
   }
   catch(const libconfig::SettingNotFoundException &nfex) {
-    std::cerr << "Error <> libconfig::SettingNotFoundException in \"fit\" secton" << std::endl;
+    std::cerr << "Error <> libconfig::SettingNotFoundException in \"fit\" section" << std::endl;
     return EXIT_FAILURE;
   }
 
@@ -1207,7 +1207,7 @@ int main(int argc, char *argv[]) {
     }  // exists continuation_settings
   }  // try
   catch(const libconfig::SettingNotFoundException &nfex) {
-    std::cerr << "Error <> libconfig::SettingNotFoundException in \"continuation_settings\" secton" << std::endl;
+    std::cerr << "Error <> libconfig::SettingNotFoundException in \"continuation_settings\" section" << std::endl;
     return EXIT_FAILURE;
   }
   
