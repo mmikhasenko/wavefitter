@@ -9,7 +9,6 @@
 #include "Math/SpecFuncMathMore.h"
 
 #include "constants.h"
-#include "deflib.h"
 // #include "mstructures.h"
 #include "dFunction.hpp"
 
@@ -37,7 +36,7 @@ double MAscoli::getDeck(double mAsq, double mBsq, double wsq, double mDsq, doubl
   double qdsq = LAMBDA(mIsq, mAsq, tR)/(4*mIsq);
   // double R = 5;
   double damp = R*R*qdsq/(1.+R*R*qdsq);
-  double val = ((S%2==0) ? 1. : -1.)*  // (-1)^S
+  double val = ((S%2 == 0) ? 1. : -1.)*  // (-1)^S
     rpwa::dFunction<double>(2*S, 0, 2*lamS, atan2(sqrt(mIsq)*pa*sqrt(1-z*z), eI*pa*z-p1*ea))*
     1./(mtRsq - tR) *  // pion propagator
     sqrt(2*S+1) *  // kind of normalisation
@@ -67,3 +66,78 @@ double MAscoli::getProjectedDeck(double mAsq, double mBsq, double wsq, double mD
 
   return int_val;
 }
+
+cd MAscoli::fullDeckTerm(double costheta, double phi,
+                         double mS1sq, uint S1, int lamS1, double RS1,
+                         double costheta_pr, double phi_pr,
+                         double wsq, double t,
+                         double mtRsq,
+                         double stot,
+                         double mAsq, double mBsq, double mDsq,
+                         double m1sq) {
+  if (sqrt(wsq) <= sqrt(mS1sq)+sqrt(m1sq)) return 0;
+  // calculate from three component
+  cd one_term =
+    sPionProton(costheta, phi, mS1sq, wsq, t, stot, mAsq, mBsq, mDsq, m1sq) *
+    upperPart(costheta, mS1sq, S1, lamS1, RS1, wsq, t, mtRsq, mAsq, m1sq) *
+    isobarDecayAnglesTerm(costheta_pr, phi_pr, S1, lamS1);
+  return one_term;
+}
+
+
+// to calculate M = 0, you can just put phi = M_PI/2 and get integration factor 2*M_PI
+double MAscoli::sPionProton(double costheta, double phi,
+                           double mS1sq,
+                           double wsq, double t,
+                           double stot,
+                           double mAsq, double mBsq, double mDsq,
+                           double m1sq) {
+  double pa = sqrt(LAMBDA(wsq, mAsq, t)/(4*wsq));  // GJ
+  double pd = sqrt(LAMBDA(wsq, mDsq, stot)/(4*wsq));  // GJ
+  double u = mAsq + wsq + mBsq + mDsq - stot - t;     // GJ
+  double pb = sqrt(LAMBDA(wsq, mDsq, u)/(4*wsq));  // GJ
+  double ed = sqrt(pd*pd + mDsq);                  // GJ
+  double p1 = sqrt(LAMBDA(wsq, mS1sq, m1sq)/(4*wsq));  // break up at GJ
+  double e1 = sqrt(p1*p1 + m1sq);  // E_{pion1} at GJ
+  // pion-proton vertex
+  double cos_epsilon = (pb*pb - pd*pd - pa*pa)/(2.*pd*pa);  // some epsilon angle for pion-proton vertex
+  // Warning: the expression has not been checked!
+  double epsilon = acos(cos_epsilon);  // angle in triagle
+  double spip_int_phi = m1sq + mDsq + 2.*ed*e1 - 2.*pd*p1 *
+    (cos_epsilon*costheta + sin(epsilon)*sqrt(1-costheta*costheta)*cos(phi));
+
+  return spip_int_phi;
+}
+
+cd MAscoli::isobarDecayAnglesTerm(double costheta_pr, double phi_pr, int S1, int lamS1) {
+  return rpwa::DFunction<cd>(2*S1, 2*lamS1, 0, phi_pr, acos(costheta_pr), 0.0, false);
+}
+
+double MAscoli::upperPart(double costheta,
+                          double mS1sq, uint S1, int lamS1, double RS1,
+                          double wsq, double t,
+                          double mtRsq,
+                          double mAsq,
+                          double m1sq) {
+  if (sqrt(wsq) <= sqrt(mS1sq)+sqrt(m1sq)) return 0;
+
+  double pa = sqrt(LAMBDA(wsq, mAsq, t)/(4*wsq));  // GJ
+  double p1 = sqrt(LAMBDA(wsq, mS1sq, m1sq)/(4*wsq));  // break up at GJ
+  double e1 = sqrt(p1*p1 + m1sq);  // E_{pion1} at GJ
+  double eI = sqrt(wsq) - e1;  // E_{isobar} at GJ
+  double ea = sqrt(pa*pa + mAsq);
+  // virtuality
+  double tR = mAsq + mS1sq - 2.*ea*eI + 2.*pa*p1*costheta;  // GJ
+  // left break-up momentum for damping
+  double qdsq = LAMBDA(mS1sq, mAsq, tR)/(4*mS1sq);  // tR OR mtRsq?
+  double damp = RS1*RS1*qdsq/(1.+RS1*RS1*qdsq);
+  // calculation for the main quantity
+  double psi = atan2(sqrt(mS1sq)*pa*sqrt(1-costheta*costheta), eI*pa*costheta-p1*ea);
+
+  double val =
+    rpwa::dFunction<double>(2*S1, 0, 2*lamS1, psi)*  // strange angle phi
+    1./(mtRsq - tR) *  // pion propagator
+    pow(damp, S1/2.);  // left damping
+  return val;
+}
+

@@ -3,6 +3,8 @@
 #ifndef SRC_MASCOLI_H_
 #define SRC_MASCOLI_H_
 
+#include "deflib.h"
+
 #include <iostream>
 #define _USE_MATH_DEFINES
 
@@ -35,6 +37,8 @@ class MAscoli {
 //  std::vector<std::pair<double, double> > _ltable;
 
  public:
+
+  //************** static functions **************//
   static double getDeck(double mAsq, double mBsq, double wsq, double mDsq, double mtRsq,
                         double mIsq, double s, double t, double z,
                         uint S, int lamS, double R);
@@ -42,7 +46,33 @@ class MAscoli {
   static double getProjectedDeck(double mAsq, double mBsq, double wsq, double mDsq, double mtRsq,
                                  double mIsq, double s, double t,
                                  uint J, uint M, uint L, uint S, double R);
+  
+  static double upperPart(double costheta,
+                            double mS1sq, uint S1, int lamS1, double RS1,
+                            double wsq, double t,
+                            double mtRsq,
+                            double mAsq,
+                            double m1sq);
 
+  static cd isobarDecayAnglesTerm(double costheta_pr, double phi_pr, int S1, int lamS1);
+
+  static double sPionProton(double costheta, double phi,
+                            double mS1sq,
+                            double wsq, double t,
+                            double stot,
+                            double mAsq, double mBsq, double mDsq,
+                            double m1sq);
+
+  static cd fullDeckTerm(double costheta, double phi,
+                         double mS1sq, uint S1, int lamS1, double RS1,
+                         double costheta_pr, double phi_pr,
+                         double wsq, double t,
+                         double mtRsq,
+                         double stot,
+                         double mAsq, double mBsq, double mDsq,
+                         double m1sq);
+
+  //************** functions which use information given to the class **************//
   inline double getValue(double wsq, double z) const {
     return getDeck(_mAsq, _mBsq, wsq, _mDsq, _mtRsq,
                    _mIsq, _s, _t, z,
