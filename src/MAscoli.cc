@@ -103,7 +103,7 @@ double MAscoli::sPionProton(double costheta, double phi,
   double cos_epsilon = (pb*pb - pd*pd - pa*pa)/(2.*pd*pa);  // some epsilon angle for pion-proton vertex
   // Warning: the expression has not been checked!
   double epsilon = acos(cos_epsilon);  // angle in triagle
-  double spip_int_phi = m1sq + mDsq + 2.*ed*e1 - 2.*pd*p1 *
+  double spip_int_phi = m1sq + mDsq + 2.*ed*e1 - 2.*pd*p1*
     (cos_epsilon*costheta + sin(epsilon)*sqrt(1-costheta*costheta)*cos(phi));
 
   return spip_int_phi;
