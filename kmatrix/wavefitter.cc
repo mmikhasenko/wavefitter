@@ -230,22 +230,22 @@ int main(int argc, char *argv[]) {
       const libconfig::Setting &kcomp = content[i];
 
       std::string type = "?",
-        mass = "?",
+        masssq = "?",
         couplings = "?";
 
       if (  !(kcomp.lookupValue("type", type) &&
-              kcomp.lookupValue("mass", mass) &&
+              kcomp.lookupValue("masssq", masssq) &&
               kcomp.lookupValue("couplings", couplings)))
         continue;
 
       std::cout << "READ: " << type << " ("
-                << mass << ", " << couplings << "*)"
+                << masssq << ", " << couplings << "*)"
                 << std::endl;
 
       if (type == "pole") {
-        km->addPole(mass, couplings);
+        km->addPole(masssq, couplings);
       } else if (type == "pole-like-background") {
-        km->addBackground(mass, couplings);
+        km->addBackground(masssq, couplings);
       } else {
         std::cerr << "Error: model blok is not a pole or pole-like-background. Only poles and bgds are available.";
         return EXIT_FAILURE;

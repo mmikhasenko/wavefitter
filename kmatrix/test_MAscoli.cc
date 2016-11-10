@@ -20,7 +20,7 @@
 int main(int argc, char *argv[]) {
   // define all variables
 
-  uint J = 2;
+  // uint J = 2;
 
   double mAsq = POW2(PI_MASS);
   double mBsq = POW2(PROT_MASS);
