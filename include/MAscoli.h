@@ -72,6 +72,12 @@ class MAscoli {
                          double mAsq, double mBsq, double mDsq,
                          double m1sq);
 
+  static double psi(double costheta,
+                    double mS1sq,
+                    double wsq, double t,
+                    double mAsq,
+                    double m1sq);
+
   //************** functions which use information given to the class **************//
   inline double getValue(double wsq, double z) const {
     return getDeck(_mAsq, _mBsq, wsq, _mDsq, _mtRsq,
@@ -89,7 +95,6 @@ class MAscoli {
                             s1, _s, _t,
                             J, 0, L, _S, _R);
   }
-
 };
 
 #endif  // SRC_MASCOLI_H_

@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
                                              t, mtRsq, mAsq, POW2(PI_MASS)) *
                      2*M_PI *
                      MAscoli::sPionProton(z, M_PI/2, POW2(ciso.GetM()), POW2(2.2),
-                                                 t, stot, mAsq, mBsq, mDsq, POW2(PI_MASS)) * 
+                                          t, stot, mAsq, mBsq, mDsq, POW2(PI_MASS)) *
                      sqrt(2*ciso.GetL()+1);
                  }, -1, 1, 300),
                SetLineColor(kOrange),

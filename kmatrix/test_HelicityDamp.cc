@@ -8,7 +8,7 @@
 #include "Math/SpecFuncMathMore.h"
 
 #include "MIsobar.h"
-#include "MDeck.h"
+#include "MHelicityDeck.h"
 #include "MmatrixK.h"
 #include "MProductionPhysics.h"
 #include "MParKeeper.h"
@@ -19,7 +19,7 @@
 #include "dFunction.hpp"
 
 std::vector<std::pair<double, double> >
-makeLookupTable(const MDeck &b, const MIsobar &iso, double from, double to, uint Npoints);
+makeLookupTable(const MHelicityDeck &b, const MIsobar &iso, double from, double to, uint Npoints);
 
 
 int main(int argc, char *argv[]) {
@@ -43,11 +43,11 @@ int main(int argc, char *argv[]) {
   // Deck channels
   constexpr uint Nch = 4;
   double R[Nch] = {0.0001, 1., 5., 50.};
-  MDeck *bch[Nch];
-  bch[0] = new MDeck(m1sq, m2sq, POW2(iso->GetM()), m4sq, mtsq, J, L, Sp, lamP, iso->GetL(), 0, R[0]);
-  bch[1] = new MDeck(m1sq, m2sq, POW2(iso->GetM()), m4sq, mtsq, J, L, Sp, lamP, iso->GetL(), 0, R[1]);
-  bch[2] = new MDeck(m1sq, m2sq, POW2(iso->GetM()), m4sq, mtsq, J, L, Sp, lamP, iso->GetL(), 0, R[2]);
-  bch[3] = new MDeck(m1sq, m2sq, POW2(iso->GetM()), m4sq, mtsq, J, L, Sp, lamP, iso->GetL(), 0, R[3]);
+  MHelicityDeck *bch[Nch];
+  bch[0] = new MHelicityDeck(m1sq, m2sq, POW2(iso->GetM()), m4sq, mtsq, J, L, Sp, lamP, iso->GetL(), 0, R[0]);
+  bch[1] = new MHelicityDeck(m1sq, m2sq, POW2(iso->GetM()), m4sq, mtsq, J, L, Sp, lamP, iso->GetL(), 0, R[1]);
+  bch[2] = new MHelicityDeck(m1sq, m2sq, POW2(iso->GetM()), m4sq, mtsq, J, L, Sp, lamP, iso->GetL(), 0, R[2]);
+  bch[3] = new MHelicityDeck(m1sq, m2sq, POW2(iso->GetM()), m4sq, mtsq, J, L, Sp, lamP, iso->GetL(), 0, R[3]);
   // colors
   constexpr int colors[Nch] = {kBlue, kOrange, kGreen, kMagenta};
 

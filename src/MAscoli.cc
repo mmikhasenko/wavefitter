@@ -129,15 +129,30 @@ double MAscoli::upperPart(double costheta,
   // virtuality
   double tR = mAsq + mS1sq - 2.*ea*eI + 2.*pa*p1*costheta;  // GJ
   // left break-up momentum for damping
-  double qdsq = LAMBDA(mS1sq, mAsq, tR)/(4*mS1sq);  // tR OR mtRsq?
-  double damp = RS1*RS1*qdsq/(1.+RS1*RS1*qdsq);
+  // double qdsq = LAMBDA(mS1sq, mAsq, tR)/(4*mS1sq);  // tR OR mtRsq?
+  // double damp = RS1*RS1*qdsq/(1.+RS1*RS1*qdsq);
   // calculation for the main quantity
-  double psi = atan2(sqrt(mS1sq)*pa*sqrt(1-costheta*costheta), eI*pa*costheta-p1*ea);
+  double psi = MAscoli::psi(costheta, mS1sq, wsq, t, mAsq, m1sq);
 
   double val =
     rpwa::dFunction<double>(2*S1, 0, 2*lamS1, psi)*  // strange angle phi
-    1./(mtRsq - tR) *  // pion propagator
-    pow(damp, S1/2.);  // left damping
+    1./(mtRsq - tR);  // *  // pion propagator
+  // pow(damp, S1/2.);  // left damping
   return val;
 }
 
+double MAscoli::psi(double costheta,
+                    double mS1sq,
+                    double wsq, double t,
+                    double mAsq,
+                    double m1sq) {
+  if (sqrt(wsq) <= sqrt(mS1sq)+sqrt(m1sq)) return 0;
+
+  double pa = sqrt(LAMBDA(wsq, mAsq, t)/(4*wsq));  // GJ
+  double p1 = sqrt(LAMBDA(wsq, mS1sq, m1sq)/(4*wsq));  // break up at GJ
+  double e1 = sqrt(p1*p1 + m1sq);  // E_{pion1} at GJ
+  double eI = sqrt(wsq) - e1;  // E_{isobar} at GJ
+  double ea = sqrt(pa*pa + mAsq);
+  double psi = atan2(sqrt(mS1sq)*pa*sqrt(1-costheta*costheta), eI*pa*costheta-p1*ea);
+  return psi;
+}

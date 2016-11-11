@@ -17,7 +17,6 @@
 #include "MmatrixK.h"
 #include "MProductionPhysics.h"
 #include "MRelationHolder.h"
-#include "MDeck.h"
 #include "MAscoli.h"
 
 #include "MatrixInverse.h"
@@ -333,7 +332,6 @@ int main(int argc, char *argv[]) {
         }
       }
 
-      std::vector<MDeck*> vdeck;
       std::vector<MAscoli*> adeck;
       if (modelA.exists("long_range")) {
         const libconfig::Setting &long_range = modelA["long_range"];
@@ -350,40 +348,8 @@ int main(int argc, char *argv[]) {
         // cases for different types
         std::vector<std::function<cd(double)> > getB(iset.size());
         if (type == "DeckJMS") {
-          if ( !( long_range.lookupValue("damping_R", R) &&
-                  long_range.lookupValue("pomeron_virtuality", tP) &&
-                  long_range.lookupValue("pomeron_S", Sp) &&
-                  long_range.lookupValue("pomeron_M", M))
-               ) {
-            std::cerr << "Error<main,production>: some papapeters of Long range is missing!\n";
-            return EXIT_FAILURE;
-          }
-          std::cout << "Deck projections will be constructed with parameters: J = " << Jsector
-                    << ", Sp = " << Sp << ", M = " << M << ", R = " << R << "\n";
-
-          // create deck and add functions
-          vdeck.resize(iset.size());
-          TCanvas c3("c3"); c3.DivideSquare(iset.size());
-          for (uint i=0; i < iset.size(); i++) {
-            MIsobarChannel *ich = dynamic_cast<MIsobarChannel*>(iset[i]);
-            const MIsobar &iso = ich->getIsobar();
-            vdeck[i] = new MDeck(POW2(PI_MASS), tP, iso.GetM(), POW2(PI_MASS), POW2(PI_MASS),
-                                 Jsector, iset[i]->GetL(), Sp, -M,
-                                 iso.GetL(), 0, R);
-            vdeck[i]->makeLookupTable(iso, ich->getBachelorMass(), ich->sth(), POW2(2.5), 30);
-            
-            MDeck *iD = vdeck[i];
-            getB[i] = [&, iD](double s)->cd { return iD->getPrecalculated(s); };
-            c3.cd(i+1);
-            draw([&, i](double s)->double{return vdeck[i]->getPrecalculated(s);}, 1.0, POW2(4.2))->Draw("al");
-          }
-          c3.SaveAs("/tmp/deckJMS.pdf");
-          // finally add Long Range
-          if (long_range.exists("par_name")) {
-            std::string par_name = long_range["par_name"];
-            pr.addLongRange(getB, par_name);
-          } else pr.addLongRange(getB);
-
+          std::cerr << "Error<modelA setting> : DeckJMS is not supported anymore!\n";
+          return 1.;
         } else if (type == "DeckAJ") {
           if ( !( long_range.lookupValue("damping_R", R) &&
                   long_range.lookupValue("pomeron_virtuality", tP) &&
