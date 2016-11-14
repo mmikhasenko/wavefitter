@@ -55,9 +55,9 @@ double MAscoli::getProjectedDeck(double mAsq, double mBsq, double wsq, double mD
     integrate([&, mAsq, mBsq, wsq, mDsq, mtRsq, mIsq, s, J, L, S, minSJ, R](double z)->double{
       double val = 0;
       for (int lamS = -minSJ; lamS <= minSJ; lamS++)
-        val +=
+        val += (((L-S+(-lamS))%2==1) ? (-1) : (1)) * 
           ROOT::Math::wigner_3j(2*L, 2*S, 2*J, 2*0, 2*lamS, -2*lamS) *
-          getDeck(mAsq, mBsq, wsq, mDsq, mtRsq, mIsq, s, t, z, S, -lamS, R) *
+          getDeck(mAsq, mBsq, wsq, mDsq, mtRsq, mIsq, s, t, z, S, lamS, R) *
           rpwa::dFunction<double> (2*J, 2*M, 2*lamS, acos(z));
       return val;
       }, -1., 1.);
