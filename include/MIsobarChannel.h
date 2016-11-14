@@ -18,7 +18,7 @@
 
 class MIsobarChannel : public MChannel {
  public:
-  MIsobarChannel(const MIsobar &iso,
+  MIsobarChannel(MIsobar &iso,
                  double m3,
                  int L = 0, double R = 5);
 
