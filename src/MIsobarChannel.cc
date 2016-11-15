@@ -11,10 +11,10 @@
 #define SCALEX_FOR_CUT 1.01
 #define SCALEY_FOR_CUT 10.0
 
-MIsobarChannel::MIsobarChannel(const MIsobar &iso,
+MIsobarChannel::MIsobarChannel(MIsobar &iso,
                                double m3,
                                int iL, double iR) :
-  MChannel(iL, iR), _iso(iso), _m3(m3), ltable(0) {;}
+  MChannel(iL, iR), _iso(*iso.setIntU()), _m3(m3), ltable(0) {;}
 
 
 void MIsobarChannel::makeLookupTable(double from, double to, uint Npoints) {

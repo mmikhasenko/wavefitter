@@ -10,10 +10,22 @@ MIsobar::MIsobar(double Mi, double G0i,
                  uint Li, double Ri):
   M(Mi), G0(G0i), m1(m1i), m2(m2i), L(Li), R(Ri) {
   // calculate isobar shape integral
+  intU = -1.;
+}
+
+MIsobar * const MIsobar::setIntU() {
+  if (intU >= 0) return this;
   intU = integrate([&](double u)->double{
-      return U(1./u)*1./(u*u)/(2*M_PI);
-    }, 0, 1./sth());
+    return U(1./u)*1./(u*u)/(2*M_PI);
+  }, 0, 1./sth());
   std::cout << "Integral over isobar shape is calculated. Value is " << intU << "\n";
+  return this;
+}
+
+double MIsobar::IntU() const {
+  if (intU >= 0) return intU;
+  std::cerr << "Error<> : integral over isobar shape has not been calculated yet, use MIsobar::setIntU()\n";
+  return 0.0;
 }
 
 double MIsobar::U(double s) const {

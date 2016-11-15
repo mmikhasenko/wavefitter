@@ -58,11 +58,7 @@ MIsobarPiPiS::MIsobarPiPiS() :
   _a[1](1, 1) = 0;
 
   // calculate isobar shape integral
-  intU = integrate([&](double u)->double{
-      return U(1./u)*1./(u*u)/(2*M_PI);
-    }, 0, 1./sth());
-  std::cout << "Integral over isobar shape is recalculated. Value is " << intU << "\n";
-
+  intU = -1.;
 }
 
 double MIsobarPiPiS::U(double s) const {
