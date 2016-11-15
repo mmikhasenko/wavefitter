@@ -30,6 +30,11 @@ class MDeck {
                          double mAsq, double mBsq, double mDsq,
                          double m1sq, double m2sq, double m3sq);
 
+  static cd getAmplitude(double p1x, double p1y, double p1z,  // pi-
+                         double p2x, double p2y, double p2z,  // pi+
+                         double t, double mtRsq, double stot,
+                         double mAsq, double mBsq, double mDsq,
+                         double m1sq, double m2sq, double m3sq);
 };
 
 #endif  // SRC_MDECK_H_

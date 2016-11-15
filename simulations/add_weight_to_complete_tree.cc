@@ -52,8 +52,6 @@ int add_weight_to_tree(const char *fin_name, bool save_flag, const char* fout_na
   // for out mode;
   MIsobar rho_iso(RHO_MASS, RHO_WIDTH, PI_MASS, PI_MASS, 1, 5.);
   MIsobar  f2_iso(F2_MASS, F2_WIDTH,  PI_MASS, PI_MASS, 2, 5.);
-  // MIsobar  pipiS_iso(0.5, 0.5,  PI_MASS, PI_MASS, 0, 5.);
-  // MIsobarPiPiS pipiS_iso;
 
   const int Nentries = tin->GetEntries();
   for (int i = 0; i < Nentries; i++) {
@@ -62,7 +60,6 @@ int add_weight_to_tree(const char *fin_name, bool save_flag, const char* fout_na
 
     // introduce quantity which does not depend on subchannels
     TLorentzVector t_lv = *beam_lv - *reso_lv;
-
 
     cd amp_w0 = 0.;
     cd amp_w1 = 0.;
@@ -97,13 +94,11 @@ int add_weight_to_tree(const char *fin_name, bool save_flag, const char* fout_na
       cd pipi_amp_w0 = 0.;
       MIsobar *iso;                                                                                        /* Clebsh coefficient  */
       iso = &rho_iso;   pipi_amp_w0 += (2*iso->GetL()+1)*ROOT::Math::legendre(iso->GetL(), z_iso) * iso->T(misq) * 1.;
-      iso = &f2_iso;    pipi_amp_w0 += (2*iso->GetL()+1)*ROOT::Math::legendre(iso->GetL(), z_iso) * iso->T(misq) * (1./3.);
-      // iso = &pipiS_iso; pipi_amp_w0 += (2*iso->GetL()+1)*ROOT::Math::legendre(iso->GetL(), z_iso) * iso->T(misq);
+      iso = &f2_iso;    pipi_amp_w0 += (2*iso->GetL()+1)*ROOT::Math::legendre(iso->GetL(), z_iso) * iso->T(misq) * (2./3.);
       // GKPY pipiS
       pipi_amp_w0 += (2*0+1)*ROOT::Math::legendre(0, z_iso) * waves::GKPY::T(misq) * (2./3.);
 
       // diffractive slope
-      // double tPomeron = (*beam_lv - *reso_lv).M2();
 
       // calculate weight
       amp_w0 += exch_amp_w0*pipi_amp_w0;  // *exp(12.*tPomeron);
