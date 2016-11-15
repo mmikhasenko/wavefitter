@@ -95,7 +95,7 @@ int add_weight_to_tree(const char *fin_name, bool save_flag, const char* fout_na
                                   t, mpisq, stot,
                                   beam_lv->M2(), recl_lv->M2(), recl_lv->M2(),
                                   pi1_lv->M2(), pi2_lv->M2(), pi3_lv->M2());
-    amp_w1 = amp_w0;
+    cd amp_w1 = amp_w0;
 
     amp_w0 += MDeck::getAmplitude(pi3_lv->Px(), pi3_lv->Py(), pi3_lv->Pz(),  // pi3-
                                   pi2_lv->Px(), pi2_lv->Py(), pi2_lv->Pz(),  // pi+
@@ -105,7 +105,7 @@ int add_weight_to_tree(const char *fin_name, bool save_flag, const char* fout_na
 
     // calculate weight
     w0 = norm(amp_w0);
-    // std::cout << "w0 = " << w0 << std::endl;
+    w1 = norm(amp_w1);
 
     // fill tree branches
     if (bpt0) bpt0->Fill();
