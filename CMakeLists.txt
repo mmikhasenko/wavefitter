@@ -27,7 +27,7 @@ FIND_PACKAGE(Libconfig 1.4 REQUIRED)
 #   -pthread to support multithreading, while I don't use it
 #   -std=gnu++11 to use c++11 
 #   -Wno-c99-extensions to remove warning about c++11
-set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-deprecated-declarations -D_GNU_SOURCE -fexceptions -pthread -std=gnu++11 -Wno-c99-extensions" )
+set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-deprecated-declarations -D_GNU_SOURCE -fexceptions -std=gnu++11 -Wno-c99-extensions" )
 
 # include directories
 include_directories(${CMAKE_SOURCE_DIR}/include)

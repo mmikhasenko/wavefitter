@@ -51,8 +51,6 @@ class MIsobarChannel : public MChannel {
   cd rho(cd s) const { return CalculateQuasiTwoBodyEdge(s); }
 
  private:
-  double _SHAPE_FROM;
-  double _SHAPE_TO;
   std::vector<std::pair<double, double> > ltable;
 };
 

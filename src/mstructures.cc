@@ -53,9 +53,7 @@ TMultiGraph *combine(std::list<TGraph*> grs) {
   }
   return lm;
 }
-TMultiGraph *combine(TGraph* g1) {
-  return combine({g1});
-}
+
 TMultiGraph *combine(TGraph* g1, TGraph* g2) {
   return combine({g1, g2});
 }

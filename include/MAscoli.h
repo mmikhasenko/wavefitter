@@ -13,13 +13,12 @@ class MAscoli {
  MAscoli(double mAsq, double mBsq, double wsq, double mDsq, double mtRsq, double mIsq,
          double s, double t,
          uint S, int lamS, double R) :
-  _mAsq(mAsq), _mBsq(mBsq), _wsq(wsq), _mDsq(mDsq), _mtRsq(mtRsq), _mIsq(mIsq),
+  _mAsq(mAsq), _mBsq(mBsq), _mDsq(mDsq), _mtRsq(mtRsq), _mIsq(mIsq),
     _s(s), _t(t), _S(S), _lamS(lamS), _R(R)/*, _table(0)*/ { ; }
 
  private:
   double _mAsq;
   double _mBsq;
-  double _wsq;
   double _mDsq;
   double _mtRsq;
   double _mIsq;
@@ -28,7 +27,7 @@ class MAscoli {
   double _t;
 
  private:
-  uint _J, _M, _L, _S;
+  uint _S;
   int _lamS;
 
   double _R;
