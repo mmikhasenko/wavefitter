@@ -3,8 +3,7 @@
 #include "TMath.h"
 #include "TWigner.h"
 
-double WignerD(double aj, double am, double an, double beta) {
-
+double WignerD(int aj, int am, int an, double beta) {
   // Calculates the beta-term
   //                         d j mn (beta)
   // in the matrix element of the finite rotation operator
@@ -44,15 +43,15 @@ double WignerD(double aj, double am, double an, double beta) {
                            1.40673923648234259e02, 1.44565743946344886e02,
                            1.48477766951773032e02};
   
-  int jpm = TMath::Nint(aj+am);
-  int jpn = TMath::Nint(aj+an);
-  int jmm = TMath::Nint(aj-am);
+  int jpm = (aj+am)/2;
+  int jpn = (aj+an)/2;
+  int jmm = (aj-am)/2;
 
-  int jmn = TMath::Nint(aj-an);
-  int mpn = TMath::Nint(am+an);
+  int jmn = (aj-an)/2;
+  int mpn = (am+an)/2;
   double r = 0;
-  if (jpm < 0 || jpn < 0 || jmm < 0 || jmn < 0 || aj < 0 || aj > 25 || beta < 0 || beta > 360) {
-    printf("WignerD: Illegal argument(s) aj=%g, am=%g, an=%g, beta=%g\n", aj, am, an, beta);
+  if (jpm < 0 || jpn < 0 || jmm < 0 || jmn < 0 || aj < 0 || aj > 50 || beta < 0 || beta > 360) {
+    printf("WignerD: Illegal argument(s) 2*aj=%d, 2*am=%d, 2*an=%d, beta=%g\n", aj, am, an, beta);
   } else if (beta == 0) {
     if (jpm == jpn) r = 1;
   } else if (beta == 180) {
@@ -88,6 +87,6 @@ double WignerD(double aj, double am, double an, double beta) {
   return r;
 }
 
-std::complex<double> WignerD(double aj, double am, double an, double alpha, double beta, double gamma) {
-  return WignerD(aj, am, an, beta) * exp((-alpha*am-an*gamma)*std::complex<double>(0., 1.));
+std::complex<double> WignerD(int aj, int am, int an, double alpha, double beta, double gamma) {
+  return WignerD(aj, am, an, beta) * exp((-alpha*am-an*gamma)/2.*std::complex<double>(0., 1.));
 }

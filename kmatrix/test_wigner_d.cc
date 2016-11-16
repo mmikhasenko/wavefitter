@@ -34,7 +34,7 @@ void test1() {
     int m2 = gRandom->Integer(2*j)-j;
     double theta = M_PI*gRandom->Rndm();
     double rpwa = rpwa::dFunction<double>(2*j, 2*m1, 2*m2, theta);
-    double wigd = WignerD(j, m1, m2, theta);
+    double wigd = WignerD(2*j, 2*m1, 2*m2, theta);
     if (fabs(rpwa - wigd) > 1e-10 || (e % (Nent/10)) == 0) {
       if ((e % (Nent/10)) == 0) std::cout << "Good! ";
       else std::cout << "Error<> : ";
@@ -54,7 +54,7 @@ void test2() {
     double phi   = 2*M_PI*gRandom->Rndm();
     double psi   = 2*M_PI*gRandom->Rndm();
     cd rpwa = rpwa::DFunction<cd>(2*j, 2*m1, 2*m2, phi, theta, psi);
-    cd wigd = WignerD(j, m1, m2, phi, theta, psi);
+    cd wigd = WignerD(2*j, 2*m1, 2*m2, phi, theta, psi);
     if (fabs(rpwa - wigd) > 1e-10 || (e % (Nent/10)) == 0) {
       if ((e % (Nent/10)) == 0) std::cout << "Good! ";
       else std::cout << "Error<> : ";
