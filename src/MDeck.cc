@@ -21,9 +21,9 @@ cd MDeck::getAmplitude(double costheta, double phi,
   MIsobar f2(F2_MASS, F2_WIDTH, sqrt(m2sq), sqrt(m3sq), 2, RS1);
 
   std::function<cd(double)> isobarT[3];
-  isobarT[0] = [&](double s) -> cd { return waves::GKPY::T(s) * 2./3.; };
+  isobarT[0] = [&](double s) -> cd { return waves::GKPY::T(s) * sqrt(2.)/3.; };
   isobarT[1] = [&](double s) -> cd { return rho.T(s); };
-  isobarT[2] = [&](double s) -> cd { return f2.T(s) * 2./3.; };
+  isobarT[2] = [&](double s) -> cd { return f2.T(s) * sqrt(2.)/3.; };
 
   // loop over spin, helicity
   cd amp = 0.0;

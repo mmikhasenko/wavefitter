@@ -58,6 +58,7 @@ int add_weight_to_tree(const char *fin_name, bool save_flag, const char* fout_na
     double stot = (*recl_lv+*reso_lv).M2();
     double t = (*beam_lv-*reso_lv).M2();
 
+    /*************************** Transformation to GJ frame ********************************/
     // boost and rotation to GJ frame
     // boost
     TVector3 bv = -reso_lv->BoostVector();
@@ -79,13 +80,14 @@ int add_weight_to_tree(const char *fin_name, bool save_flag, const char* fout_na
     beam_lv->RotateZ(-beam_lv->Phi());  beam_lv->RotateY(-beam_lv->Theta());
 
     // rotation xy
-    double phi = M_PI-recl_lv->Phi();
+    double phi = M_PI-recl_lv->Phi();  // M_PI is really important to check!!
     pi1_lv->RotateZ(phi);
     pi2_lv->RotateZ(phi);
     pi3_lv->RotateZ(phi);
     beam_lv->RotateZ(phi);
     // to check
-    recl_lv->RotateZ(phi);  // M_PI is really important to check!!
+    recl_lv->RotateZ(phi);
+    /*****************************************************************************************/
 
     // calculate amplitude
     cd amp_w0 = 0.;

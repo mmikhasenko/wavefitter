@@ -94,15 +94,15 @@ int add_weight_to_tree(const char *fin_name, bool save_flag, const char* fout_na
       cd pipi_amp_w0 = 0.;
       MIsobar *iso;                                                                                        /* Clebsh coefficient  */
       iso = &rho_iso;   pipi_amp_w0 += (2*iso->GetL()+1)*ROOT::Math::legendre(iso->GetL(), z_iso) * iso->T(misq) * 1.;
-      iso = &f2_iso;    pipi_amp_w0 += (2*iso->GetL()+1)*ROOT::Math::legendre(iso->GetL(), z_iso) * iso->T(misq) * (2./3.);
+      iso = &f2_iso;    pipi_amp_w0 += (2*iso->GetL()+1)*ROOT::Math::legendre(iso->GetL(), z_iso) * iso->T(misq) * (sqrt(2.)/3.);
       // GKPY pipiS
-      pipi_amp_w0 += (2*0+1)*ROOT::Math::legendre(0, z_iso) * waves::GKPY::T(misq) * (2./3.);
+      pipi_amp_w0 += (2*0+1)*ROOT::Math::legendre(0, z_iso) * waves::GKPY::T(misq) * (sqrt(2.)/3.);
 
       // diffractive slope
 
       // calculate weight
       amp_w0 += exch_amp_w0*pipi_amp_w0;  // *exp(12.*tPomeron);
-      
+
       if (bose == 0) amp_w1 += exch_amp_w0*pipi_amp_w0;
     }
 
