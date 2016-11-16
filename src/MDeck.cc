@@ -9,7 +9,6 @@
 #include "MDeck.h"
 #include "MAscoli.h"
 
-
 #define NUMPRESICION 1e-8
 
 cd MDeck::getAmplitude(double costheta, double phi,
@@ -99,72 +98,61 @@ cd MDeck::getAmplitude(double p1x, double p1y, double p1z,  // pi-
   return amp;
 }
 
+#include "TLorentzVector.h"
+
 // function is not finished
-// [not finished] cd MDeck::getAmplitude(double pAx, double pAy, double pAz, double mAsq,
-// [not finished]                        double pBx, double pBy, double pBz, double mBsq,
-// [not finished]                        double p1x, double p1y, double p1z, double m1sq,  // pi-
-// [not finished]                        double p2x, double p2y, double p2z, double m2sq,  // pi+
-// [not finished]                        double p3x, double p3y, double p3z, double m3sq,  // pi-
-// [not finished]                        double mDsq) {
-// [not finished]   // function is not finished
-// [not finished]
-// [not finished]   double eA = sqrt(POW2(pAx)+POW2(pAy)+POW2(pAz)+mAsq);
-// [not finished]   double eB = sqrt(POW2(pBx)+POW2(pBy)+POW2(pBz)+mBsq);
-// [not finished]   double e1 = sqrt(POW2(p1x)+POW2(p1y)+POW2(p1z)+m1sq);
-// [not finished]   double e2 = sqrt(POW2(p2x)+POW2(p2y)+POW2(p2z)+m2sq);
-// [not finished]   double e3 = sqrt(POW2(p3x)+POW2(p3y)+POW2(p3z)+m3sq);
-// [not finished]
-// [not finished]   // invariants
-// [not finished]   double stot = POW2(eA+eB)-POW2(pAx+pBx)-POW2(pAy+pBy)-POW2(pAz+pBz);
-// [not finished]   double s = POW2(e1+e2+e3)-POW2(p1x+p2x+p3x)-POW2(p1y+p2y+p3y)-POW2(p1z+p2z+p3z);
-// [not finished]   double t = POW2(e1+e2+e3-eA)-POW2(p1x+p2x+p3x-pAx)-POW2(p1y+p2y+p3y-pAy)-POW2(p1z+p2z+p3z-pAz);
-// [not finished]
-// [not finished]   // GJ-frame quantities
-// [not finished]   double pAGJ = sqrt(LAMBDA(s, t, mAsq)/(4*s));
-// [not finished]   double eAGJ = (s+mAsq-t)/(2.*sqrt(s));
-// [not finished]
-// [not finished]   double mS1sq = POW2(e2+e3)-POW2(p2x+p3x)-POW2(p2y+p3y)-POW2(p2z+p3z);
-// [not finished]   double mS3sq = POW2(e2+e1)-POW2(p2x+p1x)-POW2(p2y+p1y)-POW2(p2z+p1z);
-// [not finished]   double RS1 = 5; double RS3 = 5;
-// [not finished]
-// [not finished]   /* Isobar (23) */
-// [not finished]   // cos theta, phi
-// [not finished]   double P23PA = (e2+e3)*eA - (p2x+p3x)*pAx - (p2y+p3y)*pAy - (p2z+p3z)*pAz;
-// [not finished]   double e23GJ = (s+mS1sq-m1sq)/(2*sqrt(s));
-// [not finished]   double p23GJ = sqrt(LAMBDA(s, mS1sq, m1sq)/(4*s));
-// [not finished]   double costhetaS1 = (eAGJ*e23GJ-P23PA) / (pAGJ*p23GJ);
-// [not finished]   double phiS1 = 0.0;
-// [not finished]   // cos theta', phi
-// [not finished]   double costheta_pr_S1 = 0.0;
-// [not finished]   double phi_pr_S1 = 0.0;
-// [not finished]
-// [not finished]   getAmplitude(costhetaS1, phiS1,
-// [not finished]                mS1sq, RS1,
-// [not finished]                costheta_pr_S1, phi_pr_S1,
-// [not finished]                s, t,
-// [not finished]                POW2(PI_MASS),
-// [not finished]                stot,
-// [not finished]                mAsq, mBsq, mDsq,
-// [not finished]                m1sq, m2sq, m3sq);
-// [not finished]
-// [not finished]   /* Isobar (12) */
-// [not finished]   // cos theta, phi
-// [not finished]   double P23PA = (e2+e3)*eA - (p2x+p3x)*pAx - (p2y+p3y)*pAy - (p2z+p3z)*pAz;
-// [not finished]   double e23GJ = (s+mS1sq-m1sq)/(2*sqrt(s));
-// [not finished]   double p23GJ = sqrt(LAMBDA(s, mS1sq, m1sq)/(4*s));
-// [not finished]   double costhetaS3 = (eAGJ*e23GJ-P23PA) / (pAGJ*p23GJ);
-// [not finished]   double phiS3 = 0.0;
-// [not finished]   // cos theta', phi
-// [not finished]   double costheta_pr_S3 = 0.0;
-// [not finished]   double phi_pr_S3 = 0.0;
-// [not finished]   getAmplitude(costhetaS3, phiS3,
-// [not finished]                mS3sq, RS3,
-// [not finished]                costheta_pr_S3, phi_pr_S3,
-// [not finished]                s, t,
-// [not finished]                POW2(PI_MASS),
-// [not finished]                stot,
-// [not finished]                mAsq, mBsq, mDsq,
-// [not finished]                m1sq, m2sq, m3sq);
-// [not finished]   return 0.0;
-// [not finished]
-// [not finished] }
+uint MDeck::fromLabToGJ(double pAx, double pAy, double pAz, double mAsq,
+                        double pBx, double pBy, double pBz, double mBsq,
+                        double p1x, double p1y, double p1z, double m1sq,  // pi-
+                        double p2x, double p2y, double p2z, double m2sq,  // pi+
+                        double p3x, double p3y, double p3z, double m3sq,  // pi-
+                        double mDsq) {
+  // function is not finished
+
+  TLorentzVector pi1_lv, pi2_lv, pi3_lv, beam_lv, trgt_lv;
+  pi1_lv.SetXYZM(p1x, p1y, p1z, sqrt(m1sq));
+  pi2_lv.SetXYZM(p2x, p2y, p2z, sqrt(m2sq));
+  pi3_lv.SetXYZM(p3x, p3y, p3z, sqrt(m3sq));
+  // beam and target
+  beam_lv.SetXYZM(pAx, pAy, pAz, sqrt(mAsq));
+  trgt_lv.SetXYZM(pBx, pBy, pBz, sqrt(mBsq));
+  TLorentzVector reso_lv = pi1_lv + pi2_lv + pi3_lv;
+  TLorentzVector recl_lv = beam_lv + trgt_lv - reso_lv;
+  if (mDsq != 0. && recl_lv.M2() != mDsq) {
+    std::cerr << "Error <MDeck::fromLabToGJ> you provided inconsistent information, recl_lv.M2() != mDsq!";
+    return 0;
+  }
+
+  /*************************** Transformation to GJ frame ********************************/
+  // boost and rotation to GJ frame
+  // boost
+  TVector3 bv = -reso_lv.BoostVector();
+  pi1_lv.Boost(bv);
+  pi2_lv.Boost(bv);
+  pi3_lv.Boost(bv);
+  beam_lv.Boost(bv);
+  recl_lv.Boost(bv);
+  // to check
+  reso_lv.Boost(bv);
+
+  // rotation beam to z
+  TVector3 oldZ = beam_lv.Vect().Unit();
+  pi1_lv .RotateZ(-beam_lv.Phi());  pi1_lv .RotateY(-beam_lv.Theta());
+  pi2_lv .RotateZ(-beam_lv.Phi());  pi2_lv .RotateY(-beam_lv.Theta());
+  pi3_lv .RotateZ(-beam_lv.Phi());  pi3_lv .RotateY(-beam_lv.Theta());
+  recl_lv.RotateZ(-beam_lv.Phi());  recl_lv.RotateY(-beam_lv.Theta());
+  // to check
+  beam_lv.RotateZ(-beam_lv.Phi());  beam_lv.RotateY(-beam_lv.Theta());
+
+  // rotation xy
+  double phi = M_PI-recl_lv.Phi();  // M_PI is really important to check!!
+  pi1_lv.RotateZ(phi);
+  pi2_lv.RotateZ(phi);
+  pi3_lv.RotateZ(phi);
+  beam_lv.RotateZ(phi);
+  // to check
+  recl_lv.RotateZ(phi);
+  /*****************************************************************************************/
+
+  return 0;
+}
