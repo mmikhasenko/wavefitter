@@ -1,11 +1,14 @@
 // Copyright [14.07.2015] Misha Mikhasenko
 
+#include <functional>
+
 #include "waves.h"
 #include "deflib.h"
 
 #include "MIsobar.h"
 #include "MDeck.h"
 #include "MAscoli.h"
+
 
 #define NUMPRESICION 1e-8
 

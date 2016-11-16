@@ -16,8 +16,6 @@
 #include "mintegrate.h"
 #include "deflib.h"
 
-#include "dFunction.hpp"
-
 std::vector<std::pair<double, double> >
 makeLookupTable(const MDeck &b, const MIsobar &iso, double from, double to, uint Npoints);
 

@@ -8,6 +8,7 @@
 #include "TDirectory.h"
 #include "TH1D.h"
 #include "TCanvas.h"
+#include "Math/SpecFuncMathMore.h"
 
 #include "MDeck.h"
 #include "MIsobar.h"

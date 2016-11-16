@@ -13,7 +13,7 @@
 #include "mintegrate.h"
 #include "deflib.h"
 
-#include "dFunction.hpp"
+#include "TWigner.h"
 
 uint i_m1sq;
 uint i_m2sq;
@@ -268,8 +268,11 @@ cd getDeck(double s, double z,
   cd f = ClebschP *
     pow(cd(LAMBDA(t, m1sq, m3sq))/(LAMBDA(t, m1sq, m3sq) - 4.*t/POW2(R)), S/2.) *
     1./(mtsq - t) *
-    rpwa::dFunction<cd>(2*Sp, 0, 2*lamP, Chi2) *
-    rpwa::dFunction<cd>(2*S,  0, 2*lamS, Chi3) *
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // temperary fix with real part
+    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    Math::WignerD(2*Sp, 0, 2*lamP, real(Chi2)) *
+    Math::WignerD(2*S,  0, 2*lamS, real(Chi3)) *
     pow(cd(LAMBDA(t, m2sq, m4sq))/(LAMBDA(t, m2sq, m4sq) - 4.*t/POW2(R)), Sp/2.) /
     pow(cd(m2sq), lamP/2.) * /* to suppress complexity*/
     ClebschS;
@@ -290,7 +293,7 @@ double getProjectedDeck(double s,
         val +=
           ROOT::Math::wigner_3j(2*L, 2*S, 2*J, 2*0, 2*lamS, -2*lamS) *
           getDeck(s, z, Sp, lamP, S, -lamS) *
-          rpwa::dFunction<double> (2*J, 2*lamP, 2*lamS, acos(z));
+          Math::WignerD(2*J, 2*lamP, 2*lamS, acos(z));
       return real(val);
       }, -1., 1.);
   int_val *= sqrt(2*J+1) * /*because of Clebsch and 3j*/

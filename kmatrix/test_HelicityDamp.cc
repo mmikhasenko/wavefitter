@@ -16,11 +16,9 @@
 #include "mintegrate.h"
 #include "deflib.h"
 
-#include "dFunction.hpp"
 
 std::vector<std::pair<double, double> >
 makeLookupTable(const MHelicityDeck &b, const MIsobar &iso, double from, double to, uint Npoints);
-
 
 int main(int argc, char *argv[]) {
   // define all variables

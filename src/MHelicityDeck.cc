@@ -2,9 +2,13 @@
 
 #include "MHelicityDeck.h"
 #include "mintegrate.h"
-#include "deflib.h"
 
+#include "TWigner.h"
 #include "MIsobar.h"
+
+#include "TWigner.h"
+#include "TMath.h"
+#include "Math/SpecFuncMathMore.h"
 
 #define NUMERICAL_LIMIT_IM 1e-6
 
@@ -38,8 +42,11 @@ double MHelicityDeck::getDeck(double m1sq, double m2sq, double m3sq, double m4sq
     pow(cd(LAMBDA(t, m1sq, m3sq))/(LAMBDA(t, m1sq, m3sq) - 4.*t/POW2(R)), S/2.) *
     // pow(cd(LAMBDA(t, m1sq, m3sq))/(POW2(R)*LAMBDA(t, m1sq, m3sq) + 1.), S/2.) *
     1./(mtsq - t) *
-    rpwa::dFunction<cd>(2*Sp, 0, 2*lamP, Chi2) *
-    rpwa::dFunction<cd>(2*S,  0, 2*lamS, Chi3) *
+      // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      // temperary fix with real part
+      // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      Math::WignerD(2*Sp, 0, 2*lamP, real(Chi2)) *
+      Math::WignerD(2*S,  0, 2*lamS, real(Chi3)) *
     // pow(cd(POW2(R)*POW2(R)*LAMBDA(t, m2sq, m4sq))/POW2(1. - t*POW2(R)), Sp/2.) /
     pow(cd(LAMBDA(t, m2sq, m4sq))/(LAMBDA(t, m2sq, m4sq) - 4.*t/POW2(R)), Sp/2.) /
     // pow(cd(LAMBDA(t, m2sq, m4sq))/(POW2(R)*LAMBDA(t, m2sq, m4sq) + 1.), Sp/2.) /
@@ -66,7 +73,7 @@ double MHelicityDeck::getProjectedDeck(double m1sq, double m2sq, double m3sq, do
         val +=
           ROOT::Math::wigner_3j(2*L, 2*S, 2*J, 2*0, 2*lamS, -2*lamS) *
           getDeck(m1sq, m2sq, m3sq, m4sq, mtsq, s, z, Sp, lamP, S, -lamS, R) *
-          rpwa::dFunction<double> (2*J, 2*lamP, 2*lamS, acos(z));
+          Math::WignerD(2*J, 2*lamP, 2*lamS, acos(z));
       return val;
       }, -1., 1.);
   int_val *= sqrt(2*J+1) * /*because of Clebsch and 3j*/

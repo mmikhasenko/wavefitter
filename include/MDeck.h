@@ -9,13 +9,7 @@
 #include <vector>
 #include <utility>
 
-#include "TMath.h"
-#include "Math/SpecFuncMathMore.h"
-
 #include "deflib.h"
-#include "mstructures.h"
-
-#include "dFunction.hpp"
 
 class MIsobar;
 

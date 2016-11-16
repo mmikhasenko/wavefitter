@@ -5,7 +5,8 @@
 
 #include <complex>
 
-double WignerD(int aj, int am, int an, double beta);
-std::complex<double> WignerD(int aj, int am, int an, double alpha, double beta, double gamma);
-
+namespace Math {
+  double WignerD(int aj, int am, int an, double beta);
+  std::complex<double> WignerD(int aj, int am, int an, double alpha, double beta, double gamma);
+}
 #endif

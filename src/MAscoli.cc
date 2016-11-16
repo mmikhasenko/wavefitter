@@ -10,7 +10,7 @@
 
 #include "constants.h"
 // #include "mstructures.h"
-#include "dFunction.hpp"
+#include "TWigner.h"
 
 #include "mintegrate.h"
 
@@ -37,7 +37,7 @@ double MAscoli::getDeck(double mAsq, double mBsq, double wsq, double mDsq, doubl
   // double R = 5;
   double damp = R*R*qdsq/(1.+R*R*qdsq);
   double val = ((S%2 == 0) ? 1. : -1.)*  // (-1)^S
-    rpwa::dFunction<double>(2*S, 0, 2*lamS, atan2(sqrt(mIsq)*pa*sqrt(1-z*z), eI*pa*z-p1*ea))*
+    Math::WignerD(2*S, 0, 2*lamS, atan2(sqrt(mIsq)*pa*sqrt(1-z*z), eI*pa*z-p1*ea))*
     1./(mtRsq - tR) *  // pion propagator
     sqrt(2*S+1) *  // kind of normalisation
     spip_int_phi *
@@ -58,7 +58,7 @@ double MAscoli::getProjectedDeck(double mAsq, double mBsq, double wsq, double mD
         val += (((L-S+(-lamS))%2==1) ? (-1) : (1)) * 
           ROOT::Math::wigner_3j(2*L, 2*S, 2*J, 2*0, 2*lamS, -2*lamS) *
           getDeck(mAsq, mBsq, wsq, mDsq, mtRsq, mIsq, s, t, z, S, lamS, R) *
-          rpwa::dFunction<double> (2*J, 2*M, 2*lamS, acos(z));
+          Math::WignerD(2*J, 2*M, 2*lamS, acos(z));
       return val;
       }, -1., 1.);
   int_val *= sqrt(2*J+1) * /*because of Clebsch and 3j*/
@@ -110,7 +110,7 @@ double MAscoli::sPionProton(double costheta, double phi,
 }
 
 cd MAscoli::isobarDecayAnglesTerm(double costheta_pr, double phi_pr, int S1, int lamS1) {
-  return rpwa::DFunction<cd>(2*S1, 2*lamS1, 0, phi_pr, acos(costheta_pr), 0.0, false);
+  return Math::WignerD(2*S1, 2*lamS1, 0, phi_pr, acos(costheta_pr), 0.0);
 }
 
 double MAscoli::upperPart(double costheta,
@@ -135,7 +135,7 @@ double MAscoli::upperPart(double costheta,
   double psi = MAscoli::psi(costheta, mS1sq, wsq, t, mAsq, m1sq);
 
   double val =
-    rpwa::dFunction<double>(2*S1, 0, 2*lamS1, psi)*  // strange angle phi
+    Math::WignerD(2*S1, 0, 2*lamS1, psi)*  // strange angle phi
     1./(mtRsq - tR);  // *  // pion propagator
   // pow(damp, S1/2.);  // left damping
   return val;

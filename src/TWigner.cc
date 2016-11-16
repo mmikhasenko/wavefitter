@@ -3,7 +3,7 @@
 #include "TMath.h"
 #include "TWigner.h"
 
-double WignerD(int aj, int am, int an, double beta) {
+double Math::WignerD(int aj, int am, int an, double beta) {
   // Calculates the beta-term
   //                         d j mn (beta)
   // in the matrix element of the finite rotation operator
@@ -42,7 +42,7 @@ double WignerD(int aj, int am, int an, double beta) {
                            1.32952575035616310e02, 1.36802722637326368e02,
                            1.40673923648234259e02, 1.44565743946344886e02,
                            1.48477766951773032e02};
-  
+
   int jpm = (aj+am)/2;
   int jpn = (aj+an)/2;
   int jmm = (aj-am)/2;
@@ -87,6 +87,6 @@ double WignerD(int aj, int am, int an, double beta) {
   return r;
 }
 
-std::complex<double> WignerD(int aj, int am, int an, double alpha, double beta, double gamma) {
+std::complex<double> Math::WignerD(int aj, int am, int an, double alpha, double beta, double gamma) {
   return WignerD(aj, am, an, beta) * exp((-alpha*am-an*gamma)/2.*std::complex<double>(0., 1.));
 }
