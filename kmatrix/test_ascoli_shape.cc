@@ -16,11 +16,12 @@ int main(int argc, char *argv[]) {
 
   // Deck parameters
   uint J = 2;
+  int M = 0;
   double mAsq = POW2(PI_MASS);
   double mBsq = POW2(PROT_MASS);
   double mDsq = POW2(PROT_MASS);
   double mtRsq = POW2(PI_MASS);
-  double s = 2*190*PROT_MASS;
+  double stot = 2*190*PROT_MASS;
   double t = -0.01;
   double R = 5.;
 
@@ -45,8 +46,13 @@ int main(int argc, char *argv[]) {
   for (uint i=0; i < sVls.size(); i++) sVls[i] = ranges.first + (ranges.second-ranges.first)/(Npoints-1)*i;
   // calculate value of the function
   std::transform(sVls.begin(), sVls.end(), amp.begin(), [&](double e)->cd {
-      return MAscoli::getProjectedDeck(mAsq, mBsq, e*e, mDsq, mtRsq, POW2(iso_mass), s, t,
-                                  J, 0, L, S, R);
+      return MAscoli::getProjectedReducedDeck(J, M, L,
+                                              POW2(iso_mass), S, R,
+                                              e*e, t,
+                                              mtRsq,
+                                              stot,
+                                              mAsq, mBsq, mDsq,
+                                              POW2(PI_MASS));
     });
   std::transform(amp.begin(), amp.end(), reA.begin(), [](cd A)->double { return real(A); });
   std::transform(amp.begin(), amp.end(), imA.begin(), [](cd A)->double { return imag(A); });
@@ -80,8 +86,13 @@ int main(int argc, char *argv[]) {
   for (uint i=0; i < sVls.size(); i++) sVls[i] = ranges.first + (ranges.second-ranges.first)/(Npoints-1)*i;
   // calculate value of the function
   std::transform(sVls.begin(), sVls.end(), amp.begin(), [&](double e)->cd {
-      return MAscoli::getProjectedDeck(mAsq, mBsq, e*e, mDsq, mtRsq, POW2(iso_mass), s, t,
-                                  J, 0, L, S, R);
+      return MAscoli::getProjectedReducedDeck(J, M, L,
+                                              POW2(iso_mass), S, R,
+                                              e*e, t,
+                                              mtRsq,
+                                              stot,
+                                              mAsq, mBsq, mDsq,
+                                              POW2(PI_MASS));
     });
   std::transform(amp.begin(), amp.end(), reA.begin(), [](cd A)->double { return real(A); });
   std::transform(amp.begin(), amp.end(), imA.begin(), [](cd A)->double { return imag(A); });
@@ -113,8 +124,13 @@ int main(int argc, char *argv[]) {
   for (uint i=0; i < sVls.size(); i++) sVls[i] = ranges.first + (ranges.second-ranges.first)/(Npoints-1)*i;
   // calculate value of the function
   std::transform(sVls.begin(), sVls.end(), amp.begin(), [&](double e)->cd {
-      return MAscoli::getProjectedDeck(mAsq, mBsq, e*e, mDsq, mtRsq, POW2(iso_mass), s, t,
-                                  J, 0, L, S, R);
+      return MAscoli::getProjectedReducedDeck(J, M, L,
+                                              POW2(iso_mass), S, R,
+                                              e*e, t,
+                                              mtRsq,
+                                              stot,
+                                              mAsq, mBsq, mDsq,
+                                              POW2(PI_MASS));
     });
   std::transform(amp.begin(), amp.end(), reA.begin(), [](cd A)->double { return real(A); });
   std::transform(amp.begin(), amp.end(), imA.begin(), [](cd A)->double { return imag(A); });
@@ -146,8 +162,13 @@ int main(int argc, char *argv[]) {
   for (uint i=0; i < sVls.size(); i++) sVls[i] = ranges.first + (ranges.second-ranges.first)/(Npoints-1)*i;
   // calculate value of the function
   std::transform(sVls.begin(), sVls.end(), amp.begin(), [&](double e)->cd {
-      return MAscoli::getProjectedDeck(mAsq, mBsq, e*e, mDsq, mtRsq, POW2(iso_mass), s, t,
-                                  J, 0, L, S, R);
+      return MAscoli::getProjectedReducedDeck(J, M, L,
+                                              POW2(iso_mass), S, R,
+                                              e*e, t,
+                                              mtRsq,
+                                              stot,
+                                              mAsq, mBsq, mDsq,
+                                              POW2(PI_MASS));
     });
   std::transform(amp.begin(), amp.end(), reA.begin(), [](cd A)->double { return real(A); });
   std::transform(amp.begin(), amp.end(), imA.begin(), [](cd A)->double { return imag(A); });
@@ -179,8 +200,13 @@ int main(int argc, char *argv[]) {
   for (uint i=0; i < sVls.size(); i++) sVls[i] = ranges.first + (ranges.second-ranges.first)/(Npoints-1)*i;
   // calculate value of the function
   std::transform(sVls.begin(), sVls.end(), amp.begin(), [&](double e)->cd {
-      return MAscoli::getProjectedDeck(mAsq, mBsq, e*e, mDsq, mtRsq, POW2(iso_mass), s, t,
-                                  J, 0, L, S, R);
+      return MAscoli::getProjectedReducedDeck(J, M, L,
+                                              POW2(iso_mass), S, R,
+                                              e*e, t,
+                                              mtRsq,
+                                              stot,
+                                              mAsq, mBsq, mDsq,
+                                              POW2(PI_MASS));
     });
   std::transform(amp.begin(), amp.end(), reA.begin(), [](cd A)->double { return real(A); });
   std::transform(amp.begin(), amp.end(), imA.begin(), [](cd A)->double { return imag(A); });

@@ -19,11 +19,12 @@
 
 int main(int argc, char *argv[]) {
   // define all variables
-  double mAsq = POW2(PI_MASS);
-  double mBsq = POW2(PROT_MASS);
-  double mDsq = POW2(PROT_MASS);
-  double mtRsq = POW2(PI_MASS);
-  double s = 2*190*PROT_MASS;
+  double mAsq = POW2(PI_MASS);  // beam
+  double mBsq = POW2(PROT_MASS);  // target
+  double mDsq = POW2(PROT_MASS);  // recoil
+  double mtRsq = POW2(PI_MASS);  // exchange
+  double m1sq = POW2(PI_MASS);  // bachelor
+  double stot = 2*190*PROT_MASS;
   double t = -0.01;
   
   // Isobars
@@ -46,8 +47,13 @@ int main(int argc, char *argv[]) {
     for (int j = 0; j < eVSz.GetYaxis()->GetNbins(); j++) {
       double e = eVSz.GetXaxis()->GetBinCenter(i+1);
       double z = eVSz.GetYaxis()->GetBinCenter(j+1);
-      double f = MAscoli::getDeck(mAsq, mBsq, e*e, mDsq, mtRsq, POW2(ciso.GetM()), s, t,
-                                  z, ciso.GetL(), lamS, R);
+      double f = 2*M_PI*MAscoli::getReducedDeck(z, M_PI/2.,
+                                  POW2(ciso.GetM()), ciso.GetL(), lamS, R,
+                                  e*e, t,
+                                  mtRsq,
+                                  stot,
+                                  mAsq, mBsq, mDsq,
+                                  m1sq);
       eVSz.SetBinContent(i+1, j+1, f);
     }
   eVSz.Draw("colz");

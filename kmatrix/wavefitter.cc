@@ -332,7 +332,6 @@ int main(int argc, char *argv[]) {
         }
       }
 
-      std::vector<MAscoli*> adeck;
       if (modelA.exists("long_range")) {
         const libconfig::Setting &long_range = modelA["long_range"];
         std::string type;
@@ -361,17 +360,11 @@ int main(int argc, char *argv[]) {
           }
           std::cout << "DeckAJ projections will be constructed with parameters: J = " << Jsector
                     << ", Sp = " << Sp << ", M = " << M << ", R = " << R << "\n";
-          // create deck and add functions
-          adeck.resize(iset.size());
           TCanvas c3("c3"); c3.DivideSquare(iset.size());
           for (uint i=0; i < iset.size(); i++) {
             MIsobarChannel *ich = dynamic_cast<MIsobarChannel*>(iset[i]);
             const MIsobar &iso = ich->getIsobar();
             double mR = iso.GetM();
-            adeck[i] = new MAscoli(POW2(PI_MASS), POW2(PROT_MASS), 2.2,
-                                   POW2(PROT_MASS), POW2(PI_MASS),
-                                   POW2(mR), 2*PI_MASS*E_BEAM_LAB,
-                                   tP, iso.GetL(), 0, R);  // Jsector, M, iset[i]->GetL(), 
 
             double from = POW2(3*PI_MASS);
             double to = POW2(2.5);
@@ -381,8 +374,17 @@ int main(int argc, char *argv[]) {
               double wsq = from + (to-from)/(Npoints-1)*t;
               double w = sqrt(wsq);
               double m23 = 2*PI_MASS+(mR-2*PI_MASS)*(1.-exp(-1./mR*(w-3*PI_MASS)));
-              double value_deck_AJ = adeck[i]->getProjection(wsq, m23*m23, Jsector, ich->GetL());
-              // std::cout << "m3pi = " << w << ", value_deck_AJ = " << value_deck_AJ << "\n";
+              double mAsq = POW2(PI_MASS);  // pion beam
+              double mBsq = POW2(PROT_MASS);  // prothon target
+              double mDsq = POW2(PROT_MASS);  // elastic recoil
+              double m1sq = POW2(PI_MASS);  // bachelor is pion
+              double value_deck_AJ =
+                MAscoli::getProjectedReducedDeck(Jsector, M, ich->GetL(),
+                                                 m23, iso.GetL(), R,
+                                                 wsq, tP,
+                                                 POW2(PI_MASS),
+                                                 2*PI_MASS*E_BEAM_LAB,
+                                                 mAsq, mBsq, mDsq, m1sq);
               long_range_lookup_values[i][imodelA][t] = std::make_pair(wsq, value_deck_AJ);
             }
             const std::vector<std::pair<double, double> > *ltable = &(long_range_lookup_values[i][imodelA]);

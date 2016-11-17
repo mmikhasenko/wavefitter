@@ -36,9 +36,6 @@ int main() {
   std::cout << "d_{1,0}^2(1.1) = " << Math::WignerD(7, 1, -3, 1.1) << "\n";
 
 
-  std::cout << "proj = " << MAscoli::getDeck(POW2(PI_MASS), POW2(PROT_MASS), 3.0, POW2(PROT_MASS), POW2(PI_MASS),
-                                                       2.0, 2.*PROT_MASS*190, -0.1, 0.5,
-                                                       7, -4, 5.0) << "\n";
   std::cout << "clebsch = " << sqrt(2*2+1)*ROOT::Math::wigner_3j(2*3, 2*1, 2*2, 2*0, 2*1, -2*1) << "\n";
   return 0.0;
 
