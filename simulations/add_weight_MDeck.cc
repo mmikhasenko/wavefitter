@@ -45,65 +45,54 @@ int add_weight_to_tree(const char *fin_name, bool save_flag, const char* fout_na
   TH1D *ht  = new TH1D("transfM", "t distribution;t(GeV^{2})", 100, -1, 0);
   TH1D *hz  = new TH1D("scatt_angle", "z distribution", 100, -1, 1);
 
-  double mpisq = PI_MASS*PI_MASS;
-
   const int Nentries = tin->GetEntries();
   for (int i = 0; i < Nentries; i++) {
     if (i%1000000 == 0 && i != 0) std::cout << "Processing entry " << i << "\n";
     tin->GetEntry(i);
 
-    // introduce quantity which does not depend on subchannels
     TLorentzVector t_lv = *beam_lv - *reso_lv;
+    TLorentzVector trgt_lv = *recl_lv - t_lv;
+
+    //**************************************************************************
+    //* First method, boost and call twice *************************************
+    //**************************************************************************
 
     double stot = (*recl_lv+*reso_lv).M2();
     double t = (*beam_lv-*reso_lv).M2();
 
-    /*************************** Transformation to GJ frame ********************************/
-    // boost and rotation to GJ frame
-    // boost
-    TVector3 bv = -reso_lv->BoostVector();
-    pi1_lv->Boost(bv);
-    pi2_lv->Boost(bv);
-    pi3_lv->Boost(bv);
-    beam_lv->Boost(bv);
-    recl_lv->Boost(bv);
-    // to check
-    reso_lv->Boost(bv);
-
-    // rotation beam to z
-    TVector3 oldZ = beam_lv->Vect().Unit();
-    pi1_lv ->RotateZ(-beam_lv->Phi());  pi1_lv ->RotateY(-beam_lv->Theta());
-    pi2_lv ->RotateZ(-beam_lv->Phi());  pi2_lv ->RotateY(-beam_lv->Theta());
-    pi3_lv ->RotateZ(-beam_lv->Phi());  pi3_lv ->RotateY(-beam_lv->Theta());
-    recl_lv->RotateZ(-beam_lv->Phi());  recl_lv->RotateY(-beam_lv->Theta());
-    // to check
-    beam_lv->RotateZ(-beam_lv->Phi());  beam_lv->RotateY(-beam_lv->Theta());
-
-    // rotation xy
-    double phi = M_PI-recl_lv->Phi();  // M_PI is really important to check!!
-    pi1_lv->RotateZ(phi);
-    pi2_lv->RotateZ(phi);
-    pi3_lv->RotateZ(phi);
-    beam_lv->RotateZ(phi);
-    // to check
-    recl_lv->RotateZ(phi);
-    /*****************************************************************************************/
+    MDeck::fromLabToGJ(*pi1_lv, *pi2_lv, *pi3_lv, *beam_lv, trgt_lv);
 
     // calculate amplitude
     cd amp_w0 = 0.;
 
     amp_w0 += MDeck::getAmplitude(pi1_lv->Px(), pi1_lv->Py(), pi1_lv->Pz(),  // pi1-
                                   pi2_lv->Px(), pi2_lv->Py(), pi2_lv->Pz(),  // pi+
-                                  t, mpisq, stot,
-                                  beam_lv->M2(), recl_lv->M2(), recl_lv->M2(),
+                                  t, POW2(PI_MASS), stot,
+                                  beam_lv->M2(), trgt_lv.M2(), recl_lv->M2(),
                                   pi1_lv->M2(), pi2_lv->M2(), pi3_lv->M2());
     cd amp_w1 = amp_w0;
 
     amp_w0 += MDeck::getAmplitude(pi3_lv->Px(), pi3_lv->Py(), pi3_lv->Pz(),  // pi3-
                                   pi2_lv->Px(), pi2_lv->Py(), pi2_lv->Pz(),  // pi+
-                                  t, mpisq, stot,
-                                  beam_lv->M2(), recl_lv->M2(), recl_lv->M2(),
+                                  t, POW2(PI_MASS), stot,
+                                  beam_lv->M2(), trgt_lv.M2(), recl_lv->M2(),
                                   pi1_lv->M2(), pi2_lv->M2(), pi3_lv->M2());
+
+    amp_w0 /= sqrt(2.);
+    //**************************************************************************
+    //* Alternatively one can use direct call **********************************
+    //**************************************************************************
+    //* cd amp_w0 = MDeck::symmetriedFromLab(pi1_lv->Px(), pi1_lv->Py(), pi1_lv->Pz(), pi1_lv->M2(),
+    //*                                      pi2_lv->Px(), pi2_lv->Py(), pi2_lv->Pz(), pi2_lv->M2(),
+    //*                                      pi3_lv->Px(), pi3_lv->Py(), pi3_lv->Pz(), pi3_lv->M2(),
+    //*                                      beam_lv->Px(), beam_lv->Py(), beam_lv->Pz(), beam_lv->M2(),
+    //*                                      trgt_lv.Px(), trgt_lv.Py(), trgt_lv.Pz(), trgt_lv.M2());
+    //* cd amp_w1 = MDeck::nonSymmetriedFromLab(pi1_lv->Px(), pi1_lv->Py(), pi1_lv->Pz(), pi1_lv->M2(),
+    //*                                         pi2_lv->Px(), pi2_lv->Py(), pi2_lv->Pz(), pi2_lv->M2(),
+    //*                                         pi3_lv->Px(), pi3_lv->Py(), pi3_lv->Pz(), pi3_lv->M2(),
+    //*                                         beam_lv->Px(), beam_lv->Py(), beam_lv->Pz(), beam_lv->M2(),
+    //*                                         trgt_lv.Px(), trgt_lv.Py(), trgt_lv.Pz(), trgt_lv.M2());
+    //**************************************************************************
 
     // calculate weight
     w0 = norm(amp_w0);

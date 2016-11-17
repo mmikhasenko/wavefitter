@@ -98,61 +98,117 @@ cd MDeck::getAmplitude(double p1x, double p1y, double p1z,  // pi-
   return amp;
 }
 
-#include "TLorentzVector.h"
-
 // function is not finished
-uint MDeck::fromLabToGJ(double pAx, double pAy, double pAz, double mAsq,
-                        double pBx, double pBy, double pBz, double mBsq,
-                        double p1x, double p1y, double p1z, double m1sq,  // pi-
-                        double p2x, double p2y, double p2z, double m2sq,  // pi+
-                        double p3x, double p3y, double p3z, double m3sq,  // pi-
-                        double mDsq) {
-  // function is not finished
-
-  TLorentzVector pi1_lv, pi2_lv, pi3_lv, beam_lv, trgt_lv;
-  pi1_lv.SetXYZM(p1x, p1y, p1z, sqrt(m1sq));
-  pi2_lv.SetXYZM(p2x, p2y, p2z, sqrt(m2sq));
-  pi3_lv.SetXYZM(p3x, p3y, p3z, sqrt(m3sq));
-  // beam and target
-  beam_lv.SetXYZM(pAx, pAy, pAz, sqrt(mAsq));
-  trgt_lv.SetXYZM(pBx, pBy, pBz, sqrt(mBsq));
-  TLorentzVector reso_lv = pi1_lv + pi2_lv + pi3_lv;
-  TLorentzVector recl_lv = beam_lv + trgt_lv - reso_lv;
-  if (mDsq != 0. && recl_lv.M2() != mDsq) {
-    std::cerr << "Error <MDeck::fromLabToGJ> you provided inconsistent information, recl_lv.M2() != mDsq!";
-    return 0;
-  }
-
+uint MDeck::fromLabToGJ(TLorentzVector &pi1_lv, TLorentzVector &pi2_lv, TLorentzVector &pi3_lv,
+                        TLorentzVector &beam_lv, TLorentzVector &trgt_lv) {
   /*************************** Transformation to GJ frame ********************************/
-  // boost and rotation to GJ frame
   // boost
+  TLorentzVector reso_lv = pi1_lv + pi2_lv + pi3_lv;
+  
   TVector3 bv = -reso_lv.BoostVector();
   pi1_lv.Boost(bv);
   pi2_lv.Boost(bv);
   pi3_lv.Boost(bv);
   beam_lv.Boost(bv);
-  recl_lv.Boost(bv);
+  trgt_lv.Boost(bv);
   // to check
   reso_lv.Boost(bv);
 
   // rotation beam to z
-  TVector3 oldZ = beam_lv.Vect().Unit();
-  pi1_lv .RotateZ(-beam_lv.Phi());  pi1_lv .RotateY(-beam_lv.Theta());
-  pi2_lv .RotateZ(-beam_lv.Phi());  pi2_lv .RotateY(-beam_lv.Theta());
-  pi3_lv .RotateZ(-beam_lv.Phi());  pi3_lv .RotateY(-beam_lv.Theta());
-  recl_lv.RotateZ(-beam_lv.Phi());  recl_lv.RotateY(-beam_lv.Theta());
+  double bphi = beam_lv.Phi();
+  double btheta = beam_lv.Theta();
+  pi1_lv .RotateZ(-bphi);  pi1_lv .RotateY(-btheta);
+  pi2_lv .RotateZ(-bphi);  pi2_lv .RotateY(-btheta);
+  pi3_lv .RotateZ(-bphi);  pi3_lv .RotateY(-btheta);
+  trgt_lv.RotateZ(-bphi);  trgt_lv.RotateY(-btheta);
   // to check
-  beam_lv.RotateZ(-beam_lv.Phi());  beam_lv.RotateY(-beam_lv.Theta());
+  beam_lv.RotateZ(-bphi);  beam_lv.RotateY(-btheta);
 
   // rotation xy
-  double phi = M_PI-recl_lv.Phi();  // M_PI is really important to check!!
+  double phi = M_PI-trgt_lv.Phi();  // M_PI is really important to check!!
   pi1_lv.RotateZ(phi);
   pi2_lv.RotateZ(phi);
   pi3_lv.RotateZ(phi);
   beam_lv.RotateZ(phi);
   // to check
-  recl_lv.RotateZ(phi);
+  trgt_lv.RotateZ(phi);
   /*****************************************************************************************/
-
   return 0;
+}
+
+std::vector<TLorentzVector*> MDeck::fromLabToGJ(double p1x, double p1y, double p1z, double m1sq,  // pi-
+                                                double p2x, double p2y, double p2z, double m2sq,  // pi+
+                                                double p3x, double p3y, double p3z, double m3sq,   // pi-
+                                                double pAx, double pAy, double pAz, double mAsq,
+                                                double pBx, double pBy, double pBz, double mBsq
+                                                ) {
+  std::vector<TLorentzVector*> vect_lv(5);
+  vect_lv[0] = new TLorentzVector(p1x, p1y, p1z, sqrt(m1sq+POW2(p1x)+POW2(p1y)+POW2(p1z)));
+  vect_lv[1] = new TLorentzVector(p2x, p2y, p2z, sqrt(m2sq+POW2(p2x)+POW2(p2y)+POW2(p2z)));
+  vect_lv[2] = new TLorentzVector(p3x, p3y, p3z, sqrt(m3sq+POW2(p3x)+POW2(p3y)+POW2(p3z)));
+  vect_lv[3] = new TLorentzVector(pAx, pAy, pAz, sqrt(mAsq+POW2(pAx)+POW2(pAy)+POW2(pAz)));
+  vect_lv[4] = new TLorentzVector(pBx, pBy, pBz, sqrt(mBsq+POW2(pBx)+POW2(pBy)+POW2(pBz)));
+
+  fromLabToGJ(*vect_lv[0], *vect_lv[1], *vect_lv[2], *vect_lv[3], *vect_lv[4]);
+  return vect_lv;  // do not forget to delete objects later clean memory
+}
+
+cd MDeck::symmetriedFromLab(double p1x, double p1y, double p1z, double m1sq,  // pi-
+                            double p2x, double p2y, double p2z, double m2sq,  // pi+
+                            double p3x, double p3y, double p3z, double m3sq,   // pi-
+                            double pAx, double pAy, double pAz, double mAsq,
+                            double pBx, double pBy, double pBz, double mBsq) {
+  std::vector<TLorentzVector*> vect_lv = fromLabToGJ(p1x, p1y, p1z, m1sq,
+                                                     p2x, p2y, p2z, m2sq,
+                                                     p3x, p3y, p3z, m3sq,
+                                                     pAx, pAy, pAz, mAsq,
+                                                     pBx, pBy, pBz, mBsq);
+
+  double stot = (*vect_lv[3]+*vect_lv[4]).M2();
+
+  TLorentzVector trsf_lv = *vect_lv[3] - (*vect_lv[0]+*vect_lv[1]+*vect_lv[2]);
+  double t = trsf_lv.M2();
+  double mDsq = (trsf_lv+*vect_lv[4]).M2();
+
+  cd val12 = getAmplitude(vect_lv[0]->Px(), vect_lv[0]->Py(), vect_lv[0]->Pz(),  // pi-
+                          vect_lv[1]->Px(), vect_lv[1]->Py(), vect_lv[1]->Pz(),  // pi+
+                          t, POW2(PI_MASS), stot,
+                          vect_lv[3]->M2(), vect_lv[4]->M2(), mDsq,
+                          vect_lv[0]->M2(), vect_lv[1]->M2(), vect_lv[2]->M2());
+
+  cd val23 = getAmplitude(vect_lv[2]->Px(), vect_lv[2]->Py(), vect_lv[2]->Pz(),  // pi-
+                          vect_lv[1]->Px(), vect_lv[1]->Py(), vect_lv[1]->Pz(),  // pi+
+                          t, POW2(PI_MASS), stot,
+                          vect_lv[3]->M2(), vect_lv[4]->M2(), mDsq,
+                          vect_lv[2]->M2(), vect_lv[1]->M2(), vect_lv[0]->M2());
+
+  for (auto i : vect_lv) delete i;
+  return (val12+val23)/sqrt(2.);
+}
+
+
+cd MDeck::nonSymmetriedFromLab(double p1x, double p1y, double p1z, double m1sq,  // pi-
+                               double p2x, double p2y, double p2z, double m2sq,  // pi+
+                               double p3x, double p3y, double p3z, double m3sq,   // pi-
+                               double pAx, double pAy, double pAz, double mAsq,
+                               double pBx, double pBy, double pBz, double mBsq) {
+  std::vector<TLorentzVector*> vect_lv = fromLabToGJ(p1x, p1y, p1z, m1sq,
+                                                     p2x, p2y, p2z, m2sq,
+                                                     p3x, p3y, p3z, m3sq,
+                                                     pAx, pAy, pAz, mAsq,
+                                                     pBx, pBy, pBz, mBsq);
+
+  double stot = (*vect_lv[3]+*vect_lv[4]).M2();
+
+  TLorentzVector trsf_lv = *vect_lv[3] - (*vect_lv[0]+*vect_lv[1]+*vect_lv[2]);
+  double t = trsf_lv.M2();
+  double mDsq = (trsf_lv+*vect_lv[4]).M2();
+
+  cd val = MDeck::getAmplitude(vect_lv[0]->Px(), vect_lv[0]->Py(), vect_lv[0]->Pz(),  // pi-
+                               vect_lv[1]->Px(), vect_lv[1]->Py(), vect_lv[1]->Pz(),  // pi+
+                               t, POW2(PI_MASS), stot,
+                               vect_lv[3]->M2(), vect_lv[4]->M2(), mDsq,
+                               vect_lv[0]->M2(), vect_lv[1]->M2(), vect_lv[2]->M2());
+  for (auto i : vect_lv) delete i;
+  return val;
 }

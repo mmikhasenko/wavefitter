@@ -8,7 +8,7 @@
 #include "Math/SpecFuncMathMore.h"
 
 #include "MIsobar.h"
-#include "MDeck.h"
+#include "MHelicityDeck.h"
 #include "MmatrixK.h"
 #include "MProductionPhysics.h"
 #include "MParKeeper.h"
@@ -17,7 +17,7 @@
 #include "deflib.h"
 
 std::vector<std::pair<double, double> >
-makeLookupTable(const MDeck &b, const MIsobar &iso, double from, double to, uint Npoints);
+makeLookupTable(const MHelicityDeck &b, const MIsobar &iso, double from, double to, uint Npoints);
 
 
 int main(int argc, char *argv[]) {
