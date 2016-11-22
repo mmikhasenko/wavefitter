@@ -310,7 +310,7 @@ int main(int argc, char *argv[]) {
                              double rhc = MParKeeper::gI()->get(irhc);
                              double slope = MParKeeper::gI()->get(islope);
                              cd r = (s-rhc)/slope;
-                             return (1.-sqrt(r)) / (1.-sqrt(r)); });
+                             return (1.-sqrt(r)) / (1.+sqrt(r)); });
 
         } else if (type == "polinomial") {
           // loop over powers
