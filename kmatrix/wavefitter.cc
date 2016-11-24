@@ -907,6 +907,22 @@ int main(int argc, char *argv[]) {
       double pars_mirrow[MParKeeper::gI()->nPars()];
       for (uint i=0; i < MParKeeper::gI()->nPars(); i++)
         tout.Branch(MParKeeper::gI()->getName(i).c_str(), &pars_mirrow[i]);
+
+      // length of chi2 relations arrays
+      uint bins_in_relation[Nrels];
+      tout.Branch("bins_in_relation", &bins_in_relation,
+                  TString::Format("bins_in_relations[%d]/i", Nrels));
+      // creare a branch for every relation
+      double *chi2_relation[Nrels];
+      for (uint i=0; i < Nrels; i++) {
+        if (MRelationHolder::gI()->relationStatus(i)) {
+          uint sizeR = MRelationHolder::gI()->ExtractChi2Array(i);
+          std::cout << "1) sizeR = " << sizeR << std::endl;
+          chi2_relation[i] = new double[sizeR+1];
+          tout.Branch(TString::Format("chi2_relation_%d", i), chi2_relation[i],
+                      TString::Format("chi2_relation_%d[%d]/D", i, sizeR+1));
+        }
+      }
       // to copy to array from where it is copied to tree
       for (eAtt = 0; eAtt < nAttempts; eAtt++) {
         std::cout << "---------- Attempt " << eAtt << " -----------" << std::endl;
@@ -1042,6 +1058,21 @@ int main(int argc, char *argv[]) {
                  MParKeeper::gI()->get().data(),
                  sizeof(double)*MParKeeper::gI()->nPars());
           chi2 = MRelationHolder::gI()->CalculateChi2();
+          // Fill relation blocks
+           for (uint i=0; i < Nrels; i++) {
+             if (MRelationHolder::gI()->relationStatus(i)) {
+               uint sizeR = MRelationHolder::gI()->ExtractChi2Array(i, &chi2_relation[i][1]);
+               // std::cout << "2) sizeR = " << sizeR << std::endl;
+               chi2_relation[i][0] = 0.;
+               for (uint p = 1; p <= sizeR; p++) chi2_relation[i][0] += chi2_relation[i][p];
+               bins_in_relation[i] = sizeR;
+             } else {
+               uint sizeR = MRelationHolder::gI()->ExtractChi2Array(i);
+               // std::cout << "3) sizeR = " << sizeR << std::endl;
+               for (uint p = 0; p <= sizeR; p++) chi2_relation[i][p] = 0;
+               bins_in_relation[i] = 0;
+             }
+           }
           tout.Fill();
         }
         delete min;
@@ -1049,6 +1080,7 @@ int main(int argc, char *argv[]) {
 
       tout.Write();
       fout->Close();
+      for (uint i=0; i < Nrels; i++) delete [] chi2_relation[i];
       delete canva;
     }
   }
@@ -1167,7 +1199,7 @@ int main(int argc, char *argv[]) {
       habs .SetStats(kFALSE); habs .Draw("colz"); habs .Draw("cont3 same"); canva_sheets.Print(TString::Format("%s(", fplot_name.c_str()), "pdf");
       hreal.SetStats(kFALSE); hreal.Draw("colz"); hreal.Draw("cont3 same"); canva_sheets.Print(TString::Format("%s" , fplot_name.c_str()), "pdf");
       himag.SetStats(kFALSE); himag.Draw("colz"); himag.Draw("cont3 same"); canva_sheets.Print(TString::Format("%s)", fplot_name.c_str()), "pdf");
-      TFile fout(TString::Format("%s.root",fplot_name.c_str()), "recreate");
+      TFile fout(TString::Format("%s.root", fplot_name.c_str()), "recreate");
       habs .Write();
       hreal.Write();
       himag.Write();
