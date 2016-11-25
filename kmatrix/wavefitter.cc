@@ -917,7 +917,6 @@ int main(int argc, char *argv[]) {
       for (uint i=0; i < Nrels; i++) {
         if (MRelationHolder::gI()->relationStatus(i)) {
           uint sizeR = MRelationHolder::gI()->ExtractChi2Array(i);
-          std::cout << "1) sizeR = " << sizeR << std::endl;
           chi2_relation[i] = new double[sizeR+1];
           tout.Branch(TString::Format("chi2_relation_%d", i), chi2_relation[i],
                       TString::Format("chi2_relation_%d[%d]/D", i, sizeR+1));
@@ -1062,13 +1061,11 @@ int main(int argc, char *argv[]) {
            for (uint i=0; i < Nrels; i++) {
              if (MRelationHolder::gI()->relationStatus(i)) {
                uint sizeR = MRelationHolder::gI()->ExtractChi2Array(i, &chi2_relation[i][1]);
-               // std::cout << "2) sizeR = " << sizeR << std::endl;
                chi2_relation[i][0] = 0.;
                for (uint p = 1; p <= sizeR; p++) chi2_relation[i][0] += chi2_relation[i][p];
                bins_in_relation[i] = sizeR;
              } else {
                uint sizeR = MRelationHolder::gI()->ExtractChi2Array(i);
-               // std::cout << "3) sizeR = " << sizeR << std::endl;
                for (uint p = 0; p <= sizeR; p++) chi2_relation[i][p] = 0;
                bins_in_relation[i] = 0;
              }
