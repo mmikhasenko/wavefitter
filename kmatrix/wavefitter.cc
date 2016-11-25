@@ -380,7 +380,7 @@ int main(int argc, char *argv[]) {
               double m1sq = POW2(PI_MASS);  // bachelor is pion
               double value_deck_AJ =
                 MAscoli::getProjectedReducedDeck(Jsector, M, ich->GetL(),
-                                                 m23, iso.GetL(), R,
+                                                 m23*m23, iso.GetL(), R,
                                                  wsq, tP,
                                                  POW2(PI_MASS),
                                                  2*PI_MASS*E_BEAM_LAB,
