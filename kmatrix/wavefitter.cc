@@ -383,7 +383,7 @@ int main(int argc, char *argv[]) {
                                                  m23*m23, iso.GetL(), R,
                                                  wsq, tP,
                                                  POW2(PI_MASS),
-                                                 2*PI_MASS*E_BEAM_LAB,
+                                                 2*PROT_MASS*E_BEAM_LAB,
                                                  mAsq, mBsq, mDsq, m1sq);
               long_range_lookup_values[i][imodelA][t] = std::make_pair(wsq, value_deck_AJ);
             }
