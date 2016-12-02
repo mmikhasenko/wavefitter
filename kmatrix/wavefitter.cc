@@ -902,6 +902,7 @@ int main(int argc, char *argv[]) {
       double chi2 = 0; tout.Branch("chi2", &chi2);
       uint iStep = 0; tout.Branch("fit_step", &iStep);
       double status = 0; tout.Branch("status", &status);
+      double edm = 0; tout.Branch("edm", &edm);
       uint eAtt; tout.Branch("eAtt", &eAtt);
       tout.Branch("pid", &pid);
       double pars_mirrow[MParKeeper::gI()->nPars()];
@@ -1025,6 +1026,7 @@ int main(int argc, char *argv[]) {
           // minimize
           min->Minimize();
           status = min->Status();
+          edm = min->Edm();
 
           if (fit_settings.exists("save_preview")) {
             // Plot all
