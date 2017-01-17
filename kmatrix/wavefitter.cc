@@ -301,10 +301,9 @@ int main(int argc, char *argv[]) {
           std::cout << "READ: powers are ";
           for (uint i = 0; i < count; i++) {
             std::string name = orders[i];
-            std::cout << name;
+            std::cout << name << ((i < count-1) ? ", " : "\n");
             powers.push_back(name);
           }
-          std::cout << "\n";
           pr.addShortRange(powers,
                            [&, irhc, islope](double s)->cd{
                              double rhc = MParKeeper::gI()->get(irhc);
@@ -317,18 +316,24 @@ int main(int argc, char *argv[]) {
           std::vector<std::string> powers;
           const libconfig::Setting &orders = short_range["powers"];
           const uint count = orders.getLength();
+          std::cout << "READ: powers are ";
           for (uint i = 0; i < count; i++) {
             std::string name = orders[i];
             powers.push_back(name);
-            std::cout << "READ: powers are " << name;
+            std::cout << name << ((i < count-1) ? ", " : "\n");
           }
-          std::cout << "\n";
           pr.addShortRange(powers, [](double s)->cd{return s;});
 
         } else {
           std::cerr<< "Warning<addShortRange()>: started without arguments. "
                    << "Do you know what happens then?" << std::endl;
           pr.addShortRange();  /* to be improved */
+        }
+        if (short_range.exists("phase_lock")) {
+          pr.lockShortRangePhase();
+          std::cout << "PHASE IS LOCKED: Phase of short range production term will be locked. "
+                    << "For every channel, imaginary part of the first term in the expansion "
+                    << " determines now imaginary part of all futher terms.\n";
         }
       }
 
@@ -950,38 +955,38 @@ int main(int argc, char *argv[]) {
         min->SetFunction(functor);
 
         // set starting parameters
-	// if possible then from the file
-	if (fit_settings.exists("path_to_starting_value") &&
-	    fit_settings.exists("entry")) {
-	  const std::string spar_path = fit_settings["path_to_starting_value"];
-	  const uint entry = fit_settings["entry"];
-	  TFile *fres = TFile::Open(spar_path.c_str());
-	  if (!fres) {
-	    std::cerr << "File with results specified but not found!\n";
-	    return EXIT_FAILURE;
-	  }
-	  std::cout << "File with parameter values successfully opened!\n";
-	  TTree *tres; gDirectory->GetObject("tout", tres);
-	  if (!tres) {
-	    std::cerr << "Tree with starting values not found by name 'tout'!\n";
-	    return EXIT_FAILURE;
-	  }
-	  const uint Npars = MParKeeper::gI()->nPars();
-	  double pars[Npars];
-	  for (uint i = 0; i < Npars; i++) {
-	    const std::string & name = MParKeeper::gI()->getName(i);
-	    // check if it is at list of branches
-	    tres->SetBranchAddress(name.c_str(), &pars[i]);
-	  }
-	  // set values from tree and set to keeper
-	  tres->GetEntry(entry);
-	  for (uint i = 0; i < Npars; i++) MParKeeper::gI()->set(i, pars[i]);
-	  fres->Close(); fout->cd();
-	} else {
-	  // otherwise from random
-	  MParKeeper::gI()->randomizePool();
-	}
-	MParKeeper::gI()->printAll();
+        // if possible then from the file
+        if (fit_settings.exists("path_to_starting_value") &&
+            fit_settings.exists("entry")) {
+          const std::string spar_path = fit_settings["path_to_starting_value"];
+          const uint entry = fit_settings["entry"];
+          TFile *fres = TFile::Open(spar_path.c_str());
+          if (!fres) {
+            std::cerr << "File with results specified but not found!\n";
+            return EXIT_FAILURE;
+          }
+          std::cout << "File with parameter values successfully opened!\n";
+          TTree *tres; gDirectory->GetObject("tout", tres);
+          if (!tres) {
+            std::cerr << "Tree with starting values not found by name 'tout'!\n";
+            return EXIT_FAILURE;
+          }
+          const uint Npars = MParKeeper::gI()->nPars();
+          double pars[Npars];
+          for (uint i = 0; i < Npars; i++) {
+            const std::string & name = MParKeeper::gI()->getName(i);
+            // check if it is at list of branches
+            tres->SetBranchAddress(name.c_str(), &pars[i]);
+          }
+          // set values from tree and set to keeper
+          tres->GetEntry(entry);
+          for (uint i = 0; i < Npars; i++) MParKeeper::gI()->set(i, pars[i]);
+          fres->Close(); fout->cd();
+        } else {
+          // otherwise from random
+          MParKeeper::gI()->randomizePool();
+        }
+        MParKeeper::gI()->printAll();
         for (uint i=0; i < pnPars; i++) min->SetVariable(i,
                                                          MParKeeper::gI()->pgetName(i),
                                                          MParKeeper::gI()->pget(i),
