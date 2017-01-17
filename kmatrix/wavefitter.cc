@@ -368,7 +368,7 @@ int main(int argc, char *argv[]) {
 
             double from = POW2(3*PI_MASS);
             double to = POW2(2.5);
-            uint Npoints = 50;
+            uint Npoints = 100;
             long_range_lookup_values[i][imodelA].resize(Npoints);
             for (uint t = 0; t < Npoints; t++) {
               double wsq = from + (to-from)/(Npoints-1)*t;
@@ -388,7 +388,7 @@ int main(int argc, char *argv[]) {
               long_range_lookup_values[i][imodelA][t] = std::make_pair(wsq, value_deck_AJ);
             }
             const std::vector<std::pair<double, double> > *ltable = &(long_range_lookup_values[i][imodelA]);
-            getB[i] = [&, ltable](double s)->cd {
+            getB[i] = [&, ltable, mR, Jsector](double s)->cd {
               auto it = --(ltable->end());
               // std::cout << it->first << "\n"; 
               if (s >= it->first) return it->second * it->first / s;

@@ -9,7 +9,7 @@
 #include "deflib.h"
 
 MProductionPhysics::MProductionPhysics(const std::vector<MChannel*> &channels) :
-  MChannelPhysics<b::vector<cd> > (channels), _fC(0), _ubLookup(0) {
+  MChannelPhysics<b::vector<cd> > (channels), _fC(0), _fCloc(false), _ubLookup(0) {
   std::cout << "------------------------------------\n";
   std::cout << "MProductionPhysics instance is created!" << std::endl;
 }
@@ -62,6 +62,10 @@ void MProductionPhysics::addShortRange(const std::vector<std::string> powers,
     }
     _fC.push_back(vtmp);
   }
+}
+
+void MProductionPhysics::lockShortRangePhase() {
+  _fCloc = true;
 }
 
 /* calculate unitarisation term and put it to a lookup table */
@@ -124,10 +128,17 @@ void MProductionPhysics::calculate(double s) {
   if (_fC.size()) {
     b::vector<cd> cvect(_Nch, 0);
     for (uint w = 0; w < _fC.size(); w++) {
-      for (uint i = 0; i < _Nch; i++)
+      for (uint i = 0; i < _Nch; i++) {
+        // work around !!!!!!
+        if (_fCloc) MParKeeper::gI()->set(_fC[w][i].second,
+                                          MParKeeper::gI()->get(_fC[w][i].first) *
+                                          MParKeeper::gI()->get(_fC[0][i].second) /
+                                          MParKeeper::gI()->get(_fC[0][i].first) );
+        // work around !!!!!!
         cvect[i] += cd(MParKeeper::gI()->get(_fC[w][i].first),
                        MParKeeper::gI()->get(_fC[w][i].second)) *
           ((w==0) ? 1 : ((w==1) ?  _smap(s) : pow(_smap(s), w)));
+      }
     }
     _value += prod(CThat, cvect);
   }

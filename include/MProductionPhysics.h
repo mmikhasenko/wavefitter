@@ -32,6 +32,7 @@ class MProductionPhysics : public MChannelPhysics<b::vector<cd> >  {
  private:
   std::pair<uint, uint> _fB;
   std::vector<std::vector<std::pair<uint, uint> > > _fC;
+  bool _fCloc;
 
  private:
   
@@ -48,6 +49,7 @@ class MProductionPhysics : public MChannelPhysics<b::vector<cd> >  {
   void addShortRange(std::string par_name = "c");
   void unitarize(double to = POW2(3.0), uint Npoints = 200);
   void addScattering(std::function<b::matrix<cd>(double)> getT);
+  void lockShortRangePhase();
 };
 
 #endif  // __MPRODUCTIONPHYSICS_H__

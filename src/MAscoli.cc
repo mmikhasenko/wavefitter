@@ -72,12 +72,12 @@ double MAscoli::getProjectedReducedDeck(uint J, int M, uint L,
           // reduced Deck where integral over M has been performed
           phiIntegrFactor *
           getReducedDeck(z, phiIntArg,
-                  mS1sq, S1, lamS, RS1,
-                  wsq, t,
-                  mtRsq,
-                  stot,
-                  mAsq, mBsq, mDsq,
-                  m1sq) *
+                         mS1sq, S1, lamS, RS1,
+                         wsq, t,
+                         mtRsq,
+                         stot,
+                         mAsq, mBsq, mDsq,
+                         m1sq) *
           // projecting D-function
           sqrt((2.*J+1.)/(4.*M_PI)) *
           Math::WignerD(2*J, 2*M, 2*lamS, acos(z));
