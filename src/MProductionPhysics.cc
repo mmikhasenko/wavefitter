@@ -132,11 +132,11 @@ void MProductionPhysics::calculate(double s) {
         // work around !!!!!!
 	double imag0 = MParKeeper::gI()->get(_fC[0][i].second);
 	double real0 = MParKeeper::gI()->get(_fC[0][i].first);
-        if (_fCloc && w != 0 && imag0 != 0.0) {
-	  MParKeeper::gI()->set(_fC[w][i].second,
-				MParKeeper::gI()->get(_fC[w][i].first) *
-				imag0 / real0 );
-	}
+        if (_fCloc && w != 0 && real0 != 0.0) {
+          MParKeeper::gI()->set(_fC[w][i].second,
+        			MParKeeper::gI()->get(_fC[w][i].first) *
+        			imag0 / real0 );
+        }
         // work around !!!!!!
         cvect[i] += cd(MParKeeper::gI()->get(_fC[w][i].first),
                        MParKeeper::gI()->get(_fC[w][i].second)) *
