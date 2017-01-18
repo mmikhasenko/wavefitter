@@ -682,7 +682,12 @@ int main(int argc, char *argv[]) {
             for (uint i = 0; i < Npars; i++) {
               const std::string & name = MParKeeper::gI()->getName(i);
               // check if it is at list of branches
-              tres->SetBranchAddress(name.c_str(), &pars[i]);
+	      if (tres->GetListOfBranches()->FindObject(name.c_str())) {
+		// std::cout << "FOUND brahch with name " << name << "\n";
+		tres->SetBranchAddress(name.c_str(), &pars[i]);
+	      } else {
+		std::cout << "NOT FOUND brahch with name " << name << "\n";
+	      }
             }
             // set values from tree and set to keeper
             tres->GetEntry(entry);
@@ -976,8 +981,13 @@ int main(int argc, char *argv[]) {
           for (uint i = 0; i < Npars; i++) {
             const std::string & name = MParKeeper::gI()->getName(i);
             // check if it is at list of branches
-            tres->SetBranchAddress(name.c_str(), &pars[i]);
-          }
+	    if (tres->GetListOfBranches()->FindObject(name.c_str())) {
+	      // std::cout << "FOUND brahch with name " << name << "\n";
+	      tres->SetBranchAddress(name.c_str(), &pars[i]);
+	    } else {
+	      std::cout << "NOT FOUND brahch with name " << name << "\n";
+	    }
+	  }
           // set values from tree and set to keeper
           tres->GetEntry(entry);
           for (uint i = 0; i < Npars; i++) MParKeeper::gI()->set(i, pars[i]);
