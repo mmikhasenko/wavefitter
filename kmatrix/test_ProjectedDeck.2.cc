@@ -32,7 +32,7 @@ int main() {
   double mDsq = POW2(PROT_MASS);
   double m1sq = POW2(PI_MASS);
   double mtRsq = POW2(PI_MASS);
-  double tP = -0.1;
+  double tP = -0.01;
 
   // isobar
   MIsobar f2_iso(F2_MASS, F2_WIDTH,  PI_MASS, PI_MASS, S, RI);
@@ -43,7 +43,7 @@ int main() {
   // Deck table
   uint Ninterp = 100;
   std::vector<std::pair<double, double> > ltable(Ninterp);
-  std::pair<double, double> ranges(sth, 10.1);
+  std::pair<double, double> ranges(5, 6.1);
   for (uint t=0; t < Ninterp; t++) {
     double e = ranges.first + (ranges.second-ranges.first)/(Ninterp-1)*t;  /* triky */
     double s = e*e;
@@ -55,11 +55,11 @@ int main() {
                                                   2*PROT_MASS*E_BEAM_LAB,
                                                   mAsq, mBsq, mDsq,
                                                   m1sq);
-    ltable[t] = std::make_pair(s, val);
+    ltable[t] = std::make_pair(e, val);
     std::cout << ltable[t].first << ", " << ltable[t].second << "\n";
   }
 
-  TGraph gr0(Ninterp);
+  TGraph gr0(Ninterp); gr0.SetTitle("Deck projection. Border of the physical region; M_{3\pi}, GeV");
   for (uint t=0; t < Ninterp; t++) {
     gr0.GetX()[t] = ltable[t].first;
     gr0.GetY()[t] = ltable[t].second;
