@@ -123,6 +123,10 @@ double MAscoli::sPionProton(double costheta, double phi,
                            double stot,
                            double mAsq, double mBsq, double mDsq,
                            double m1sq) {
+  if (sqrt(wsq) > sqrt(stot)-sqrt(mDsq)) {
+    std::cerr << "Error<MAscoli::sPionProton>: requested values are outside of the physical region."
+              << "pd is imaginary.\n";
+  }
   double pa = sqrt(LAMBDA(wsq, mAsq, t)/(4*wsq));  // GJ
   double pd = sqrt(LAMBDA(wsq, mDsq, stot)/(4*wsq));  // GJ
   double u = mAsq + wsq + mBsq + mDsq - stot - t;     // GJ
@@ -132,6 +136,10 @@ double MAscoli::sPionProton(double costheta, double phi,
   double e1 = sqrt(p1*p1 + m1sq);  // E_{pion1} at GJ
   // pion-proton vertex
   double cos_epsilon = (pb*pb - pd*pd - pa*pa)/(2.*pd*pa);  // some epsilon angle for pion-proton vertex
+  if (fabs(cos_epsilon) > 1) {
+    std::cerr << "Error<MAscoli::sPionProton>: |cos_epsilon(" << cos_epsilon << ")|>1\n";
+    return 0.0;
+  }
   // Warning: the expression has not been checked!
   double epsilon = acos(cos_epsilon);  // angle in triagle
   double spip_int_phi = m1sq + mDsq + 2.*ed*e1 - 2.*pd*p1*
