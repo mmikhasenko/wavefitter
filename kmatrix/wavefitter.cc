@@ -1210,9 +1210,9 @@ int main(int argc, char *argv[]) {
       gStyle->SetNumberContours(NCont);
 
       // save multipage pdf;
-      habs .SetStats(kFALSE); habs .Draw("colz"); habs .Draw("cont3 same"); canva_sheets.Print(TString::Format("%s(", fplot_name.c_str()), "pdf");
-      hreal.SetStats(kFALSE); hreal.Draw("colz"); hreal.Draw("cont3 same"); canva_sheets.Print(TString::Format("%s" , fplot_name.c_str()), "pdf");
-      himag.SetStats(kFALSE); himag.Draw("colz"); himag.Draw("cont3 same"); canva_sheets.Print(TString::Format("%s)", fplot_name.c_str()), "pdf");
+      habs .SetStats(kFALSE); habs .Draw("col"); habs .Draw("cont3 same"); canva_sheets.Print(TString::Format("%s", fplot_name.c_str()), "pdf");
+      // hreal.SetStats(kFALSE); hreal.Draw("colz"); hreal.Draw("cont3 same"); canva_sheets.Print(TString::Format("%s" , fplot_name.c_str()), "pdf");
+      // himag.SetStats(kFALSE); himag.Draw("colz"); himag.Draw("cont3 same"); canva_sheets.Print(TString::Format("%s)", fplot_name.c_str()), "pdf");
       TFile fout(TString::Format("%s.root", fplot_name.c_str()), "recreate");
       habs .Write();
       hreal.Write();
