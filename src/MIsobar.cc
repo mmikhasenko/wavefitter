@@ -10,11 +10,11 @@ MIsobar::MIsobar(double Mi, double G0i,
                  uint Li, double Ri):
   M(Mi), G0(G0i), m1(m1i), m2(m2i), L(Li), R(Ri) {
   // calculate isobar shape integral
-  intU = -1.;
+  intU = 1.0;
 }
 
 MIsobar * const MIsobar::setIntU() {
-  if (intU >= 0) return this;
+  if (intU != 1.0) return this;
   intU = integrate([&](double u)->double{
     return U(1./u)*1./(u*u)/(2*M_PI);
   }, 0, 1./sth());
@@ -23,9 +23,9 @@ MIsobar * const MIsobar::setIntU() {
 }
 
 double MIsobar::IntU() const {
-  if (intU >= 0) return intU;
-  std::cerr << "Error<> : integral over isobar shape has not been calculated yet, use MIsobar::setIntU()\n";
-  return 0.0;
+  if (intU == 1.0)
+    std::cerr << "Error<> : integral over isobar shape has not been calculated yet, use MIsobar::setIntU()\n";
+  return intU;
 }
 
 double MIsobar::U(double s) const {
@@ -34,7 +34,7 @@ double MIsobar::U(double s) const {
   const double p_2 = LAMBDA(s, m1*m1, m2*m2)/(4.*s);
   const double p0_2 = LAMBDA(M*M, m1*m1, m2*m2)/(4.*M*M);
   G *=  pow(p_2/p0_2 * (1.+R*R*p0_2)/(1.+R*R*p_2), L);
-  return 2.0*M*G/(POW2(M*M-s)+POW2(M*G));
+  return 2.0*M*G/(POW2(M*M-s)+POW2(M*G)) / intU;
 }
 
 cd MIsobar::U(cd s) const {
@@ -44,7 +44,7 @@ cd MIsobar::U(cd s) const {
   G *=  pow(p_2/p0_2 * (1.+R*R*p0_2)/(1.+R*R*p_2), L);
   // return -2.0*imag( 1./(M*M-s+cd(0, M)*G) );
   // return 2.*imag( 1./(M*M-s-cd(0, M)*G) );
-  return 2.0*M*G/(POW2(M*M-s)+POW2(M*G));
+  return 2.0*M*G/(POW2(M*M-s)+POW2(M*G)) / intU;
 }
 
 cd     MIsobar::T(cd     s) const {
@@ -53,7 +53,7 @@ cd     MIsobar::T(cd     s) const {
   const double p0_2 = LAMBDA(M*M, m1*m1, m2*m2)/(4.*M*M);
   G *=  pow(p_2/p0_2 * (1.+R*R*p0_2)/(1.+R*R*p_2), L);
   double gsq = 2*M*G0/RHO(M*M, m1*m1, m2*m2);
-  return gsq/(M*M-s-cd(0., M)*G);
+  return gsq/(M*M-s-cd(0., M)*G) / intU;
 }
 
 cd     MIsobar::T(double s) const {
@@ -62,5 +62,5 @@ cd     MIsobar::T(double s) const {
   const double p0_2 = LAMBDA(M*M, m1*m1, m2*m2)/(4.*M*M);
   G *=  pow(p_2/p0_2 * (1.+R*R*p0_2)/(1.+R*R*p_2), L);
   double gsq = 2*M*G0/RHO(M*M, m1*m1, m2*m2);
-  return gsq/(M*M-s-cd(0., M)*G);
+  return gsq/(M*M-s-cd(0., M)*G) / intU;
 }

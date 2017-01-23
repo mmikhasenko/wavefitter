@@ -62,6 +62,6 @@ cd MIsobarChannel::CalculateQuasiTwoBodyEdge(cd s) const {
 
 double MIsobarChannel::InterpolateQuasiTwoBody(double s) const {
   if (!ltable.size()) return -1;
-  if (s >= ltable[ltable.size()-1].first) return _iso.IntU()*RHO(s, POW2(_iso.GetM()), _m3*_m3);
+  if (s >= ltable[ltable.size()-1].first) return RHO(s, POW2(_iso.GetM()), _m3*_m3);  // _iso.IntU()*
   return getvalue(s, ltable);
 }
