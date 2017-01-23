@@ -1158,9 +1158,9 @@ int main(int argc, char *argv[]) {
                                                   << "is expected in the form [Nbins, left_value, right_value]\n"; return EXIT_FAILURE; }
       const uint Nbx = real_range[0]; double lrx = real_range[1]; double rrx = real_range[2];
       const uint Nby = imag_range[0]; double lry = imag_range[1]; double rry = imag_range[2];
-      TH2D hreal("realTm1","Real part of det[T_{I,II}^{-1}K];Re@w^{2};Im@w^{2}", Nbx, lrx, rrx, Nby, lry, rry);
-      TH2D himag("imagTm1","Imag part of det[T_{I,II}^{-1}K];Re@w^{2};Im@w^{2}", Nbx, lrx, rrx, Nby, lry, rry);
-      TH2D habs ( "absTm1", "Ln@Abs part of det[T_{I,II}^{-1}K];Re@w^{2};Im@w^{2}", Nbx, lrx, rrx, Nby, lry, rry);
+      TH2D hreal("realTm1","Real part of det[T_{I,II}^{-1}K];M=Re[#sqrt{s}];#Gamma=2Im[#sqrt{s}]", Nbx, lrx, rrx, Nby, lry, rry);
+      TH2D himag("imagTm1","Imag part of det[T_{I,II}^{-1}K];M=Re[#sqrt{s}];#Gamma=2Im[#sqrt{s}]", Nbx, lrx, rrx, Nby, lry, rry);
+      TH2D habs ( "absTm1", "Ln@Abs part of det[T_{I,II}^{-1}K];M=Re[#sqrt{s}];#Gamma=2Im[#sqrt{s}]", Nbx, lrx, rrx, Nby, lry, rry);
 
       // decide what to plot
       const std::string what_to_plot = continuation_settings["what_to_plot"];
@@ -1176,9 +1176,8 @@ int main(int argc, char *argv[]) {
       std::cout << "\nCalculations for " << Nbx*Nby << "points started:\n";
       for (uint ix = 0; ix < Nbx; ix++) {
         for (uint iy = 0; iy < Nbx; iy++) {
-          // if((ix*Nbx+iy) % 50 == 0) std::cout << std::setprecision(3) << 100.*(ix*Nbx+iy)/(Nbx*Nby) << "%\n";
-          cd s(habs.GetXaxis()->GetBinCenter(ix+1),
-               habs.GetYaxis()->GetBinCenter(iy+1));
+          cd s(habs.GetXaxis()->GetBinCenter(ix+1), // s = (M+iG/2)^2;
+	       habs.GetYaxis()->GetBinCenter(iy+1)/2.); s = s*s;
           cd Tm1 = 0;
 	  if (sheet == 1)  Tm1 = 1./det_fast(km->getFSdenominator(s));
 	  if (sheet == 2)  Tm1 = 1./det_fast(km->getSSdenominator(s));
