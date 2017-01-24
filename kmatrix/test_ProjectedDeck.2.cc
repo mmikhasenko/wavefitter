@@ -59,7 +59,7 @@ int main() {
     std::cout << ltable[t].first << ", " << ltable[t].second << "\n";
   }
 
-  TGraph gr0(Ninterp); gr0.SetTitle("Deck projection. Border of the physical region; M_{3\pi}, GeV");
+  TGraph gr0(Ninterp); gr0.SetTitle("Deck projection. Border of the physical region; M_{3#pi}, GeV");
   for (uint t=0; t < Ninterp; t++) {
     gr0.GetX()[t] = ltable[t].first;
     gr0.GetY()[t] = ltable[t].second;
