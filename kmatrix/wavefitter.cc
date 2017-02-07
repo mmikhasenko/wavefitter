@@ -13,6 +13,7 @@
 #include "MIsobar.h"
 #include "MIsobarPiPiS.h"
 #include "MIsobarChannel.h"
+#include "MTwoBodyChannel.h"
 #include "MParKeeper.h"
 #include "MmatrixK.h"
 #include "MProductionPhysics.h"
@@ -183,8 +184,6 @@ int main(int argc, char *argv[]) {
       std::string type = "?";
       int L = 0;
       double R = 3.0;
-      const libconfig::Setting &spart = channel["particles"];
-      std::string particles[2] = {spart[0], spart[1]};
 
       if (  !(channel.lookupValue("type", type) &&
               channel.lookupValue("L", L) &&
@@ -192,28 +191,57 @@ int main(int argc, char *argv[]) {
         continue;
 
       std::cout << "READ: " << std::left << type << ": "
-                << particles[0] << " " << particles[1] << " "
-                << (std::vector<char>{'S', 'P', 'D', 'F', 'G', 'H'})[L] << "-wave"
-                << std::endl;
+                << (std::vector<char>{'S', 'P', 'D', 'F', 'G', 'H'})[L] << "-wave\n";
 
-      if (type != "quasi-two-body") {
-        std::cerr << "Error: type of model channel can be only quasi-two-body";
-        return EXIT_FAILURE;
-      }
-      if (particles[0] == "rho") {
-        MIsobarChannel *mCh = new MIsobarChannel(rho_iso, PI_MASS, L);
-        mCh->makeLookupTable(mCh->sth(), 10., 100);
-        iset.push_back(mCh);
-      } else if (particles[0] == "f2") {
-        MIsobarChannel *mCh = new MIsobarChannel(f2_iso, PI_MASS, L);
-        mCh->makeLookupTable(mCh->sth(), 10., 100);
-        iset.push_back(mCh);
-      } else if (particles[0] == "pipiS") {
-        MIsobarChannel *mCh = new MIsobarChannel(pipiS_iso, PI_MASS, L);
-        mCh->makeLookupTable(mCh->sth(), 10., 100);
+      const libconfig::Setting &spart = channel["particles"];
+
+      if (type == "quasi-two-body") {
+        // for sure, it should be strings
+        std::string particles[2] = {spart[0], spart[1]};
+        std::cout << "READ: particle species (" << particles[0] << ", " << particles[1] <<  ")\n";
+
+        if (particles[0] == "rho") {
+          MIsobarChannel *mCh = new MIsobarChannel(rho_iso, PI_MASS, L);
+          mCh->makeLookupTable(mCh->sth(), 10., 100);
+          iset.push_back(mCh);
+        } else if (particles[0] == "f2") {
+          MIsobarChannel *mCh = new MIsobarChannel(f2_iso, PI_MASS, L);
+          mCh->makeLookupTable(mCh->sth(), 10., 100);
+          iset.push_back(mCh);
+        } else if (particles[0] == "pipiS") {
+          MIsobarChannel *mCh = new MIsobarChannel(pipiS_iso, PI_MASS, L);
+          mCh->makeLookupTable(mCh->sth(), 10., 100);
+          iset.push_back(mCh);
+        } else {
+          std::cerr << "Error: isobar is not rho/f2/pipiS. Only them are available.";
+          return EXIT_FAILURE;
+        }
+      } else if (type == "two-body") {
+        double fpartmass[2] = {PI_MASS, PI_MASS};
+        if (spart.getLength() != 2) {
+          std::cerr << "Error<particle description>: there should be exactly 2 particles specified!\n";
+          return EXIT_FAILURE;
+        }
+        for (int ps = 0; ps < spart.getLength(); ps++) {
+          if (spart[ps].getType() == libconfig::Setting::TypeFloat) {
+            fpartmass[ps] = spart[ps];
+          } else if (spart[ps].getType() == libconfig::Setting::TypeString) {
+            std::string pname = spart[ps];
+            if (pname == "pi") {           fpartmass[ps] = PI_MASS;
+            } else if (pname == "rho") {   fpartmass[ps] = RHO_MASS;
+            } else if (pname == "f2") {    fpartmass[ps] = F2_MASS;
+            } else if (pname == "pipiS") { fpartmass[ps] = PIPIS_MASS;
+            } else {  std::cerr << "Error<particle description>: particle must be mass or name (" << pname << ")\n"; return EXIT_FAILURE; }
+          } else {
+            std::cerr << "Error: isobar is not pi/rho/f2/pipiS. Only them are available.";
+            return EXIT_FAILURE;
+          }
+        }
+        std::cout << "READ: particle masses (" << fpartmass[0] << ", " << fpartmass[1] <<  ")\n";
+        MTwoBodyChannel *mCh = new MTwoBodyChannel(fpartmass[0], fpartmass[1], L);
         iset.push_back(mCh);
       } else {
-        std::cerr << "Error: isobar is not rho/f2/pipiS. Only them are available.";
+        std::cerr << "Error: type of model channel can be only two-body of quasi-two-body";
         return EXIT_FAILURE;
       }
     }
@@ -1209,7 +1237,11 @@ int main(int argc, char *argv[]) {
       gStyle->SetNumberContours(NCont);
 
       // save multipage pdf;
-      habs .SetStats(kFALSE); habs .Draw("col"); habs .Draw("cont3 same"); canva_sheets.Print(TString::Format("%s", fplot_name.c_str()), "pdf");
+      habs .SetStats(kFALSE); habs .Draw("col");
+      TH2D *habs_less_contours = static_cast<TH2D*>(habs.Clone("absTm1_clone_less_contours"));
+      habs_less_contours->SetContour(10); habs_less_contours->Draw("cont3 same");
+      canva_sheets.Print(TString::Format("%s", fplot_name.c_str()), "pdf");
+      delete habs_less_contours;
       // hreal.SetStats(kFALSE); hreal.Draw("colz"); hreal.Draw("cont3 same"); canva_sheets.Print(TString::Format("%s" , fplot_name.c_str()), "pdf");
       // himag.SetStats(kFALSE); himag.Draw("colz"); himag.Draw("cont3 same"); canva_sheets.Print(TString::Format("%s)", fplot_name.c_str()), "pdf");
       TFile fout(TString::Format("%s.root", fplot_name.c_str()), "recreate");
