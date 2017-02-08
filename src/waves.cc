@@ -1,5 +1,30 @@
 // Copyright [2016] Misha Mikhasenko
 
+// Coded from the paper
+/*************************************************************************************/
+/* @article{GarciaMartin:2011cn,                                                     */
+/*       author         = "Garcia-Martin, R. and Kaminski, R. and Pelaez, J. R. and  */
+/*                         Ruiz de Elvira, J. and Yndurain, F. J.",                  */
+/*       title          = "{The Pion-pion scattering amplitude. IV: Improved         */
+/*                         analysis with once subtracted Roy-like equations up to    */
+/*                         1100 MeV}",                                               */
+/*       journal        = "Phys. Rev.",                                              */
+/*       volume         = "D83",                                                     */
+/*       year           = "2011",                                                    */
+/*       pages          = "074004",                                                  */
+/*       doi            = "10.1103/PhysRevD.83.074004",                              */
+/*       eprint         = "1102.2183",                                               */
+/*       archivePrefix  = "arXiv",                                                   */
+/*       primaryClass   = "hep-ph",                                                  */
+/*       SLACcitation   = "%%CITATION = ARXIV:1102.2183;%%"                          */
+/* }                                                                                 */
+/*************************************************************************************/
+
+// In addition,
+// the amplitude above 1.4 GeV are exponentially smeared to 0
+// see phi4 function.
+
+
 #include <iostream>
 #define _USE_MATH_DEFINES
 #include <cmath>
@@ -34,6 +59,7 @@ namespace waves {
 
   // functions
   std::complex<double> GKPY::T(double s) {
+    if (s <= uPOW2(2*pi_mass)) return 0;
     double delta = phi(s)/180.*M_PI;
     return 16*M_PI /sqrt(1.-uPOW2(2*pi_mass)/s) * sin(delta)*exp(std::complex<double>(0., delta));
   }
