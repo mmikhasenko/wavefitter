@@ -183,7 +183,7 @@ int main(int argc, char *argv[]) {
 
       std::string type = "?";
       int L = 0;
-      double R = 3.0;
+      double R = 5.0;
 
       if (  !(channel.lookupValue("type", type) &&
               channel.lookupValue("L", L) &&
@@ -201,15 +201,15 @@ int main(int argc, char *argv[]) {
         std::cout << "READ: particle species (" << particles[0] << ", " << particles[1] <<  ")\n";
 
         if (particles[0] == "rho") {
-          MIsobarChannel *mCh = new MIsobarChannel(rho_iso, PI_MASS, L);
+          MIsobarChannel *mCh = new MIsobarChannel(rho_iso, PI_MASS, L, R);
           mCh->makeLookupTable(mCh->sth(), 10., 100);
           iset.push_back(mCh);
         } else if (particles[0] == "f2") {
-          MIsobarChannel *mCh = new MIsobarChannel(f2_iso, PI_MASS, L);
+          MIsobarChannel *mCh = new MIsobarChannel(f2_iso, PI_MASS, L, R);
           mCh->makeLookupTable(mCh->sth(), 10., 100);
           iset.push_back(mCh);
         } else if (particles[0] == "pipiS") {
-          MIsobarChannel *mCh = new MIsobarChannel(pipiS_iso, PI_MASS, L);
+          MIsobarChannel *mCh = new MIsobarChannel(pipiS_iso, PI_MASS, L, R);
           mCh->makeLookupTable(mCh->sth(), 10., 100);
           iset.push_back(mCh);
         } else {
@@ -238,7 +238,7 @@ int main(int argc, char *argv[]) {
           }
         }
         std::cout << "READ: particle masses (" << fpartmass[0] << ", " << fpartmass[1] <<  ")\n";
-        MTwoBodyChannel *mCh = new MTwoBodyChannel(fpartmass[0], fpartmass[1], L);
+        MTwoBodyChannel *mCh = new MTwoBodyChannel(fpartmass[0], fpartmass[1], L, R);
         iset.push_back(mCh);
       } else {
         std::cerr << "Error: type of model channel can be only two-body of quasi-two-body";
@@ -1176,6 +1176,43 @@ int main(int argc, char *argv[]) {
         }
       }
 
+      if (continuation_settings.exists("set_to_value")) {
+	const libconfig::Setting &setv = continuation_settings["set_to_value"];
+	const uint Nv = setv.getLength();
+	for (uint i = 0; i < Nv; i++) {
+	  std::string pname;
+	  double value = 0.0;
+	  if (setv[i].getType() == libconfig::Setting::TypeString) {
+	    const std::string pname0 = setv[i];
+	    pname = pname0;
+	    continue;
+	  } else if (setv[i].getType() == libconfig::Setting::TypeList) {
+	    if (setv[i].getLength() == 2) {
+	      const std::string pname0 = setv[i][0]; pname = pname0;
+	      value = setv[i][1];
+	      continue;
+	    } else if (setv[i].getLength() == 3) {
+	      const std::string pname0 = setv[i][0]; pname = pname0;
+	      const std::string rname = setv[i][2];
+	      value = setv[i][1];
+	      value *= MParKeeper::gI()->get(rname);
+	    } else {
+	      std::cerr << "Error<continue settings>: set_to_value arguments can be only in format\n"
+			<< "    (\"name\",value) - should be clear"
+			<< "    (\"name1\",value,\"name2\") - to set value*get(\"name2\") to par \"name1\"\n\n";
+	    }
+	  } else {
+	    std::cerr << "Error<continue settings>: set_to_value requires can be list of names or list of lists\n";
+	    return EXIT_FAILURE;
+	  }
+	  MParKeeper::gI()->set(pname, value);
+	  std::cout << "-------> set_to_value: \"" << pname << "\" is set to " << value << "\n";
+	}
+      }
+      MParKeeper::gI()->printAll();
+
+
+      
       TCanvas canva_sheets("sheets");
       const libconfig::Setting &ranges = continuation_settings["plot_range"];
       const libconfig::Setting &real_range = ranges["real_range"];
@@ -1239,7 +1276,13 @@ int main(int argc, char *argv[]) {
       // save multipage pdf;
       habs .SetStats(kFALSE); habs .Draw("col");
       TH2D *habs_less_contours = static_cast<TH2D*>(habs.Clone("absTm1_clone_less_contours"));
-      habs_less_contours->SetContour(10); habs_less_contours->Draw("cont3 same");
+      if (continuation_settings.exists("ncontours")) {
+	uint ncont = continuation_settings["ncontours"];
+	habs_less_contours->SetContour(ncont  );
+      }
+      habs_less_contours->SetLineWidth(0.5);
+      habs_less_contours->SetLineColor(kBlack);
+      habs_less_contours->Draw("cont3 same");
       canva_sheets.Print(TString::Format("%s", fplot_name.c_str()), "pdf");
       delete habs_less_contours;
       // hreal.SetStats(kFALSE); hreal.Draw("colz"); hreal.Draw("cont3 same"); canva_sheets.Print(TString::Format("%s" , fplot_name.c_str()), "pdf");
