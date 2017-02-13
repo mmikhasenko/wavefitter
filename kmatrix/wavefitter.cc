@@ -852,6 +852,8 @@ int main(int argc, char *argv[]) {
                   MParKeeper::gI()->set(parsBackUp[p].first, parsBackUp[p].second);
               }
             }
+          } else {
+            std::cerr << "Error<main,plot>: \"what_to_plot\" have to be specified for the model!\n";
           }
         }
 
@@ -1274,13 +1276,13 @@ int main(int argc, char *argv[]) {
       gStyle->SetNumberContours(NCont);
 
       // save multipage pdf;
-      habs .SetStats(kFALSE); habs .Draw("col");
+      habs .SetStats(kFALSE); habs .Draw("col"); // habs.Draw("cont3 same");
       TH2D *habs_less_contours = static_cast<TH2D*>(habs.Clone("absTm1_clone_less_contours"));
       if (continuation_settings.exists("ncontours")) {
-	uint ncont = continuation_settings["ncontours"];
-	habs_less_contours->SetContour(ncont  );
+        uint ncont = continuation_settings["ncontours"];
+        habs_less_contours->SetContour(ncont);
       }
-      habs_less_contours->SetLineWidth(0.5);
+      habs_less_contours->SetLineWidth(1);
       habs_less_contours->SetLineColor(kBlack);
       habs_less_contours->Draw("cont3 same");
       canva_sheets.Print(TString::Format("%s", fplot_name.c_str()), "pdf");
