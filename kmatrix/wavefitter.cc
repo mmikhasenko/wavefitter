@@ -58,15 +58,6 @@ int main(int argc, char *argv[]) {
     return(EXIT_FAILURE);
   }
 
-  // Get the store name.
-  try {
-    std::string name = cfg.lookup("name");
-    std::cout << "Store name: " << name << std::endl << std::endl;
-  }
-  catch(const libconfig::SettingNotFoundException &nfex) {
-    std::cerr << "No 'name' setting in configuration file." << std::endl;
-  }
-
   const libconfig::Setting& root = cfg.getRoot();
 
   ///////////////////////////////////////////////////////////////////////////////////////
@@ -76,7 +67,7 @@ int main(int argc, char *argv[]) {
 
   std::vector<DP> whole_data;
   // Get data fiels
-  try {
+  if (root.exists("data")) {
     const libconfig::Setting &data = root["data"];
 
     std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++++++++\n";
@@ -86,7 +77,12 @@ int main(int argc, char *argv[]) {
     data.lookupValue("path", path);
     std::cout << path << "\n";
 
-    const libconfig::Setting &dfiles = root["data"]["points"];
+    if (!data.exists("points")) {
+      std::cerr << "Error <data>: no points section found! It does not make sence "
+                << " that data section exists while no data files are provided, does it?\n";
+      return EXIT_FAILURE;
+    }
+    const libconfig::Setting &dfiles = data["points"];
     const uint count = dfiles.getLength();
 
     whole_data.resize(count);
@@ -135,10 +131,8 @@ int main(int argc, char *argv[]) {
 
       delete g;
     }
-  }
-  catch(const libconfig::SettingNotFoundException &nfex) {
-    std::cerr << "Error <> libconfig::SettingNotFoundException in \"data\" section!" << std::endl;
-    return EXIT_FAILURE;
+  } else {
+    std::cerr << "\nWarning <main>: \"data\" section has not been found!\n\n";
   }
 
   const uint Nhist = whole_data.size();
@@ -368,12 +362,9 @@ int main(int argc, char *argv[]) {
       if (modelA.exists("long_range")) {
         const libconfig::Setting &long_range = modelA["long_range"];
         std::string type;
-        uint Sp; int M;
-        double R;
-        double tP;
-        
+
         // check if title is specified
-        if ( !long_range.lookupValue("type", type)) {
+        if (!long_range.lookupValue("type", type)) {
           std::cerr << "Error<main,production>: long_range \"type\" is missing!\n";
           return EXIT_FAILURE;
         }
@@ -383,6 +374,7 @@ int main(int argc, char *argv[]) {
           std::cerr << "Error<modelA setting> : DeckJMS is not supported anymore!\n";
           return 1.;
         } else if (type == "DeckAJ") {
+          uint Sp; int M; double tP, R;
           if ( !( long_range.lookupValue("damping_R", R) &&
                   long_range.lookupValue("pomeron_virtuality", tP) &&
                   long_range.lookupValue("pomeron_S", Sp) &&
@@ -510,10 +502,15 @@ int main(int argc, char *argv[]) {
           c3.SaveAs("/tmp/deckTXT.pdf");
 
           // finally add Long Range
-          if (long_range.exists("par_name")) {
-            std::string par_name = long_range["par_name"];
+          std::string par_name = "B";
+          if (long_range.exists("par_name")) long_range.lookupValue("par_name", par_name);
+          if (long_range.exists("separate_couplings_per_channels")) {
+            pr.addLongRangeSeparated(getB, par_name);
+            std::cout << "READ: \"separate_couplings_per_channels\" will be used!";
+          } else {
             pr.addLongRange(getB, par_name);
-          } else pr.addLongRange(getB);
+            std::cout << "DEFAULT: a single coupling for the background will be used!";
+          }
         } else {
           std::cerr << "Error: long range interaction is not 'DeckJMS' neither 'DeckAscoli', but no other options are available!";
           return 0;
@@ -580,7 +577,7 @@ int main(int argc, char *argv[]) {
   /////////////////////////////// r e l a t i o n ///////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////
 
-  try {
+  if (root.exists("adjustment")) {
     const libconfig::Setting &adjustment = root["adjustment"];
 
     std::cout << "\n\n";
@@ -671,10 +668,8 @@ int main(int argc, char *argv[]) {
           });
       }
     }
-  }
-  catch(const libconfig::SettingNotFoundException &nfex) {
-    std::cerr << "Error <> libconfig::SettingNotFoundException in \"relation\" section" << std::endl;
-    return EXIT_FAILURE;
+  } else {
+    std::cerr << "\nWarning <main>: \"adjustment\" section has not been found! No relations are set.\n\n";
   }
 
   const uint Nrels = MRelationHolder::gI()->Nrels();

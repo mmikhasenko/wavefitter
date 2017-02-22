@@ -30,7 +30,7 @@ class MProductionPhysics : public MChannelPhysics<b::vector<cd> >  {
   virtual void calculate(cd s) {;}
 
  private:
-  std::pair<uint, uint> _fB;
+  std::vector<std::pair<uint, uint> > _fB;
   std::vector<std::vector<std::pair<uint, uint> > > _fC;
   bool _fCloc;
 
@@ -45,6 +45,7 @@ class MProductionPhysics : public MChannelPhysics<b::vector<cd> >  {
 
  public:
   void addLongRange(const std::vector<std::function<cd(double)> > &getB, std::string par_name = "B");
+  void addLongRangeSeparated(const std::vector<std::function<cd(double)> > &getB, std::string par_name = "B");
   void addShortRange(const std::vector<std::string> powers, std::function<cd(double)> getC);
   void addShortRange(std::string par_name = "c");
   void unitarize(double to = POW2(3.0), uint Npoints = 200);
