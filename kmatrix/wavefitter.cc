@@ -1066,7 +1066,9 @@ int main(int argc, char *argv[]) {
           // minimize
           min->Minimize();
           status = min->Status();
-          edm = min->Edm();
+	  edm = min->Edm();
+
+	  MParKeeper::gI()->pset(min->X());
 
           if (fit_settings.exists("save_preview")) {
             // Plot all
