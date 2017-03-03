@@ -56,7 +56,7 @@ void MmatrixK::addPole(const std::string &masssq_name, const std::string &par_na
     std::ostringstream gname; gname << par_name << jch;
     _coupling.push_back(MParKeeper::gI()->add(gname.str(), 0.0, -10., 10.));
   }
-  std::cout << "parameters " << masssq_name << " and " << par_name << "0.." << _Nch
+  std::cout << "parameters " << masssq_name << " and " << par_name << "0.." << _Nch-1
             << " are allocated!" << std::endl;
 }
 
@@ -66,7 +66,7 @@ void MmatrixK::addBackground(const std::string &bmasssq_name, const std::string 
     std::ostringstream gname; gname << par_name << jch;
     _bcs.push_back(MParKeeper::gI()->add(gname.str(), 0.0, -10., 10.));
   }
-  std::cout << "parameters " << bmasssq_name << " and " << par_name << "0.." << _Nch
+  std::cout << "parameters " << bmasssq_name << " and " << par_name << "0.." << _Nch-1
             << " are allocated!" << std::endl;
 }
 

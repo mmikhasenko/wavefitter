@@ -34,6 +34,7 @@
 #include "TMultiGraph.h"
 #include "Math/MinimizerOptions.h"
 #include "Math/Minimizer.h"
+#include "Math/GSLMinimizer.h"
 #include "Math/Factory.h"
 #include "Math/Functor.h"
 
@@ -535,10 +536,10 @@ int main(int argc, char *argv[]) {
           if (long_range.exists("par_name")) long_range.lookupValue("par_name", par_name);
           if (long_range.exists("separate_couplings_per_channels")) {
             pr.addLongRangeSeparated(getB, par_name);
-            std::cout << "READ: \"separate_couplings_per_channels\" will be used!";
+            std::cout << "READ: \"separate_couplings_per_channels\" will be used!\n";
           } else {
             pr.addLongRange(getB, par_name);
-            std::cout << "DEFAULT: a single coupling for the background will be used!";
+            std::cout << "DEFAULT: a single coupling for the background will be used!\n";
           }
         } else {
           std::cerr << "Error: long range interaction is not 'DeckJMS' neither 'DeckAscoli', but no other options are available!";
@@ -959,7 +960,9 @@ int main(int argc, char *argv[]) {
       /*********************************** Fit itself *****************************************/
       /****************************************************************************************/
       const int rand_file_id = std::rand()%1000;
-      TFile *fout = new TFile(TString::Format("%s/fit.results.root.pid%d.rand%03d", dout_name.c_str(), pid, rand_file_id), "RECREATE");
+      TString fout_name = TString::Format("%s/fit.results.root.pid%d.rand%03d", dout_name.c_str(), pid, rand_file_id);
+      std::cout << "IMPORTANT: results of the fit are stored in the file " << fout_name.Data() << "\n";
+      TFile *fout = new TFile(fout_name, "RECREATE");
       if (!fout) { std::cerr << "no fout acceptable!\n"; return EXIT_FAILURE; }
       save_config_to_file(iconfig);
       TTree tout("tout", "Results of fit");
@@ -1001,6 +1004,7 @@ int main(int argc, char *argv[]) {
 
         // set tolerance , etc...
         min->SetMaxFunctionCalls(UINT_MAX);
+        min->SetMaxIterations(UINT_MAX);
         min->SetTolerance(0.001);
         min->SetStrategy(1);
         min->SetPrintLevel(3);
