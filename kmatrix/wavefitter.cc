@@ -30,6 +30,7 @@
 #include "TTree.h"
 #include "TColor.h"
 #include "TH2D.h"
+#include "TText.h"
 #include "TMultiGraph.h"
 #include "Math/MinimizerOptions.h"
 #include "Math/Minimizer.h"
@@ -40,11 +41,39 @@
 
 #define E_BEAM_LAB 190
 
+void save_config_to_file(const char *config) {
+  std::ifstream fconf(config);
+  if (!fconf.is_open()) {
+    std::cerr << "Warning<save_config_to_file> : Can not open config file. "
+              << "Check your program, the error is very strange!\n";
+    return;
+  }
+
+  // read text from config file
+  TString TSconf("\n");
+  std::string line;
+  while (!fconf.eof()) {
+    std::getline(fconf, line);
+    TSconf += line;
+    TSconf += "\n";
+  }
+  fconf.close();
+
+  // save text to file
+  gDirectory->mkdir("config");
+  gDirectory->cd("config");
+  TText TTconf(0., 0., TSconf);
+  TTconf.SetName(config);
+  TTconf.Write();
+  gDirectory->cd("../");
+}
+
 int main(int argc, char *argv[]) {
+  const char * iconfig = argv[1];
   libconfig::Config cfg;
   // Read the file. If there is an error, report it and exit.
   try {
-    if (argc > 1) cfg.readFile(argv[1]);
+    if (argc > 1) cfg.readFile(iconfig);
     else
       return EXIT_FAILURE;
   }
@@ -763,6 +792,7 @@ int main(int argc, char *argv[]) {
 
       // open file for canvas 
       TFile fcanvas(TString::Format("%s.root", fplot_name.c_str()), "RECREATE");
+      save_config_to_file(iconfig);
 
       // loop ove pages
       for (uint pg = 0; pg < Npages; pg++) {
@@ -931,6 +961,7 @@ int main(int argc, char *argv[]) {
       const int rand_file_id = std::rand()%1000;
       TFile *fout = new TFile(TString::Format("%s/fit.results.root.pid%d.rand%03d", dout_name.c_str(), pid, rand_file_id), "RECREATE");
       if (!fout) { std::cerr << "no fout acceptable!\n"; return EXIT_FAILURE; }
+      save_config_to_file(iconfig);
       TTree tout("tout", "Results of fit");
       // set branches
       // tout.Branch("can", "TCanvas", &canva);
@@ -1176,37 +1207,37 @@ int main(int argc, char *argv[]) {
       }
 
       if (continuation_settings.exists("set_to_value")) {
-	const libconfig::Setting &setv = continuation_settings["set_to_value"];
-	const uint Nv = setv.getLength();
-	for (uint i = 0; i < Nv; i++) {
-	  std::string pname;
-	  double value = 0.0;
-	  if (setv[i].getType() == libconfig::Setting::TypeString) {
-	    const std::string pname0 = setv[i];
-	    pname = pname0;
-	    continue;
-	  } else if (setv[i].getType() == libconfig::Setting::TypeList) {
-	    if (setv[i].getLength() == 2) {
-	      const std::string pname0 = setv[i][0]; pname = pname0;
-	      value = setv[i][1];
-	      continue;
-	    } else if (setv[i].getLength() == 3) {
-	      const std::string pname0 = setv[i][0]; pname = pname0;
-	      const std::string rname = setv[i][2];
-	      value = setv[i][1];
-	      value *= MParKeeper::gI()->get(rname);
-	    } else {
-	      std::cerr << "Error<continue settings>: set_to_value arguments can be only in format\n"
-			<< "    (\"name\",value) - should be clear"
-			<< "    (\"name1\",value,\"name2\") - to set value*get(\"name2\") to par \"name1\"\n\n";
-	    }
-	  } else {
-	    std::cerr << "Error<continue settings>: set_to_value requires can be list of names or list of lists\n";
-	    return EXIT_FAILURE;
-	  }
-	  MParKeeper::gI()->set(pname, value);
-	  std::cout << "-------> set_to_value: \"" << pname << "\" is set to " << value << "\n";
-	}
+        const libconfig::Setting &setv = continuation_settings["set_to_value"];
+        const uint Nv = setv.getLength();
+        for (uint i = 0; i < Nv; i++) {
+          std::string pname;
+          double value = 0.0;
+          if (setv[i].getType() == libconfig::Setting::TypeString) {
+            const std::string pname0 = setv[i];
+            pname = pname0;
+            continue;
+          } else if (setv[i].getType() == libconfig::Setting::TypeList) {
+            if (setv[i].getLength() == 2) {
+              const std::string pname0 = setv[i][0]; pname = pname0;
+              value = setv[i][1];
+              continue;
+            } else if (setv[i].getLength() == 3) {
+              const std::string pname0 = setv[i][0]; pname = pname0;
+              const std::string rname = setv[i][2];
+              value = setv[i][1];
+              value *= MParKeeper::gI()->get(rname);
+            } else {
+              std::cerr << "Error<continue settings>: set_to_value arguments can be only in format\n"
+                        << "    (\"name\",value) - should be clear"
+                        << "    (\"name1\",value,\"name2\") - to set value*get(\"name2\") to par \"name1\"\n\n";
+            }
+          } else {
+            std::cerr << "Error<continue settings>: set_to_value requires can be list of names or list of lists\n";
+            return EXIT_FAILURE;
+          }
+          MParKeeper::gI()->set(pname, value);
+          std::cout << "-------> set_to_value: \"" << pname << "\" is set to " << value << "\n";
+        }
       }
       MParKeeper::gI()->printAll();
 
@@ -1249,7 +1280,7 @@ int main(int argc, char *argv[]) {
           // if (sheet == 1)  Tm1 = 1./km->getValue(s)(0,0);
           // if (sheet == 2)  Tm1 = 1./km->getSSvalue(s)(0,0);
           // if (sheet == 12) Tm1 = (imag(s) > 0) ? 1./km->getValue(s)(0,0) : 1./km->getSSvalue(s)(0,0);
-          if((ix*Nbx+iy) % 50 == 0) std::cout << std::setprecision(3) << 100.*(ix*Nbx+iy)/(Nbx*Nby) << "%: s = " << s << ", Tm1 = " << Tm1 << "\n";
+          if((ix*Nbx+iy) % 50 == 0) std::cout << std::setprecision(3) << 100.*(ix*Nby+iy)/(Nbx*Nby) << "%: s = " << s << ", Tm1 = " << Tm1 << "\n";
           hreal.SetBinContent(ix+1, iy+1, real(Tm1));
           himag.SetBinContent(ix+1, iy+1, imag(Tm1));
           habs .SetBinContent(ix+1, iy+1, log10(abs(Tm1)));
@@ -1286,7 +1317,8 @@ int main(int argc, char *argv[]) {
       delete habs_less_contours;
       // hreal.SetStats(kFALSE); hreal.Draw("colz"); hreal.Draw("cont3 same"); canva_sheets.Print(TString::Format("%s" , fplot_name.c_str()), "pdf");
       // himag.SetStats(kFALSE); himag.Draw("colz"); himag.Draw("cont3 same"); canva_sheets.Print(TString::Format("%s)", fplot_name.c_str()), "pdf");
-      TFile fout(TString::Format("%s.root", fplot_name.c_str()), "recreate");
+      TFile fout(TString::Format("%s.root", fplot_name.c_str()), "RECREATE");
+      save_config_to_file(iconfig);
       habs .Write();
       hreal.Write();
       himag.Write();
