@@ -7,7 +7,6 @@
 #include <cstdlib>
 #include <vector>
 #include <climits>
-
 #include "libconfig.h++"
 
 #include "MIsobar.h"
