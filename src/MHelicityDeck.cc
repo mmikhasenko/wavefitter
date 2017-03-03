@@ -113,7 +113,7 @@ void MHelicityDeck::makeLookupTable(const MIsobar &iso, double m3,
 double MHelicityDeck::getPrecalculated(double s) const {
   if (!_ltable.size()) { std::cerr << "Warning<MHelicityDeck::getPrecalculated> TABLE is empty\n"; return 0; }
   if (s < _ltable[0].first) { std::cerr << "Warning<MHelicityDeck::getPrecalculated> s < FIRST\n"; return 0; }
-  if (s < _ltable[_ltable.size()-1].first) return getvalue(s, _ltable);
+  if (s < _ltable[_ltable.size()-1].first) return getvalue(s, _ltable.data(), _ltable.size());
   return (_ltable[_ltable.size()-1].second * pow(_ltable[_ltable.size()-1].first, 1+abs(_lamP))) / pow(s, 1+abs(_lamP));
 }
 

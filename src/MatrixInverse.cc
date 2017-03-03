@@ -34,16 +34,14 @@ bool InvertMatrix(const M& input,
 {
     using namespace boost::numeric::ublas;
 
-    typedef permutation_matrix<std::size_t> pmatrix;
-
     // create a working copy of the input
     M A(input);
     // create a permutation matrix for the LU-factorization
-    pmatrix pm(A.size1());
+    permutation_matrix<std::size_t> pm(A.size1());
 
     // perform LU-factorization
-    int res = lu_factorize(A,pm);
-    if( res != 0 ) return false;
+    int res = lu_factorize(A, pm);
+    if( res != 0 ) return true;
 
     // create identity matrix of "inverse"
     inverse.assign(identity_matrix<typename M::value_type>(A.size1()));
@@ -51,7 +49,7 @@ bool InvertMatrix(const M& input,
     // backsubstitute to get the inverse
     lu_substitute(A, pm, inverse);
 
-    return true;
+    return false;
 }
 
 

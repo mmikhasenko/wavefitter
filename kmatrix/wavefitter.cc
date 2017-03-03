@@ -446,7 +446,7 @@ int main(int argc, char *argv[]) {
               auto it = --(ltable->end());
               // std::cout << it->first << "\n"; 
               if (s >= it->first) return it->second * it->first / s;
-              return getvalue(s, *ltable);
+              return getvalue(s, ltable->data(), ltable->size());
             };
             c3.cd(i+1);
             draw([&, i](double s)->double{return real(getB[i](s));}, 1.0, POW2(4.2))->Draw("al");
@@ -522,7 +522,7 @@ int main(int argc, char *argv[]) {
               auto it = --(ltable->end());
               // std::cout << it->first << "\n"; 
               if (s >= it->first) return it->second * it->first / s;
-              return getvalue(s, *ltable);
+              return getvalue(s, ltable->data(), ltable->size());
             };
             c3.cd(i+1);
             draw([&, i](double s)->double{return real(getB[i](s));}, 1.0, POW2(4.2))->Draw("al");

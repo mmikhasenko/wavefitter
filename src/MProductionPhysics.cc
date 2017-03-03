@@ -173,7 +173,7 @@ void MProductionPhysics::calculate(double s) {
   // unitarisation
   if (_ubLookup.size()) {
     b::vector<cd> UB(_Nch);
-    for (uint i = 0; i < _Nch; i++) UB(i) = getvalue(s, _ubLookup[i]);
+    for (uint i = 0; i < _Nch; i++) UB(i) = getvalue(s, _ubLookup[i].data(), _ubLookup[i].size());
     b::vector<cd> CThatUB = prod(CThat, UB);
     // add to value
     for (uint j = 0; j < _Nch; j++) _value(j) += CThatUB(j) * fB(j);

@@ -37,5 +37,5 @@ cd MChannel::DisperceRhoLtilda(cd s) const {
 cd MChannel::InterpolateRhoLtilda(double s) const {
   if (!dtable.size()) return -1.;
   if (s >= dtable[dtable.size()-1].first || s <= dtable[0].first) return 0.0;
-  return getvalue(s, dtable);
+  return getvalue(s, dtable.data(), dtable.size());
 }
