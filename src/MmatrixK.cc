@@ -125,9 +125,10 @@ b::matrix<cd> MmatrixK::getSSvalue(cd s) {
   // rho
   b::symmetric_matrix<cd, b::upper> mrho(_Nch);
   for (uint i = 0; i < _Nch; i++)
-    for (uint j = 0; j < _Nch; j++)
-      mrho(i, j) = (i == j) ? _iso[i]->rho(s)*_iso[i]->DumpC(s) : 0.0;
-
+    for (uint j = 0; j < _Nch; j++) {
+      cd DCs = _iso[i]->DumpC(s);
+      mrho(i, j) = (i == j) ? _iso[i]->rho(s)*DCs*DCs : 0.0;
+    }
   b::matrix<cd> i2rhoTI = cd(0., 1)*prod(mrho, TI);
   b::matrix<cd> din = b::identity_matrix<cd>(_Nch) + i2rhoTI;
 
@@ -149,9 +150,10 @@ b::matrix<cd> MmatrixK::getSSdenominator(cd s) {
   // ph.sp.matrix
   b::symmetric_matrix<cd, b::upper> mrho(_Nch);
   for (uint i = 0; i < _Nch; i++)
-    for (uint j = 0; j < _Nch; j++)
-      mrho(i, j) = (i == j) ? _iso[i]->rho(s)*_iso[i]->DumpC(s) : 0.0;
-
+    for (uint j = 0; j < _Nch; j++) {
+      cd DCs = _iso[i]->DumpC(s);
+      mrho(i, j) = (i == j) ? _iso[i]->rho(s)*DCs*DCs : 0.0;
+    }
   b::matrix<cd> K = getK(s);
   b::matrix<cd> i2rhoK = cd(0, 1)*prod(mrho, K);
   b::matrix<cd> DII = DI + i2rhoK;
