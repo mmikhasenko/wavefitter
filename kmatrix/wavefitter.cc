@@ -1045,6 +1045,7 @@ int main(int argc, char *argv[]) {
 	      tres->SetBranchAddress(name.c_str(), &pars[i]);
 	    } else {
 	      std::cout << "NOT FOUND brahch with name " << name << "\n";
+	      pars[i] = MParKeeper::gI()->get(i);
 	    }
 	  }
           // set values from tree and set to keeper
@@ -1056,11 +1057,13 @@ int main(int argc, char *argv[]) {
           MParKeeper::gI()->randomizePool();
         }
         MParKeeper::gI()->printAll();
-        for (uint i=0; i < pnPars; i++) min->SetVariable(i,
-                                                         MParKeeper::gI()->pgetName(i),
-                                                         MParKeeper::gI()->pget(i),
-                                                         0.1);
-
+        for (uint i=0; i < pnPars; i++) {
+	  min->SetVariable(i,
+			   MParKeeper::gI()->pgetName(i),
+			   MParKeeper::gI()->pget(i),
+			   0.1);
+	  std::cout << "-----> " << MParKeeper::gI()->pgetName(i) << ": " << MParKeeper::gI()->pget(i) << "\n";
+	}
 
         /*ooooooooooooooooooooooooooooooooooooooo Fit itself ooooooooooooooooooooooooooooooooooo*/
         // step fit
