@@ -1082,9 +1082,21 @@ int main(int argc, char *argv[]) {
             for (uint i = 0; i < Nv; i++) {
               const std::string pname = setv[i][0];
               const double value = setv[i][1];
-              // MParKeeper::gI()->set(pname, value);
+              MParKeeper::gI()->set(pname, value);
               min->SetVariableValue(min->VariableIndex(pname), value);
               std::cout << "-------> set_to_value: \"" << pname << "\" is set to " << value << "\n";
+            }
+          }
+          if (fit_step.exists("randomize")) {
+            const libconfig::Setting &setv = fit_step["randomize"];
+            const uint Nv = setv.getLength();
+            for (uint i = 0; i < Nv; i++) {
+              const std::string pname = setv[i];
+	      uint ind = MParKeeper::gI()->getIndex(pname);
+              MParKeeper::gI()->setRandom(ind);
+	      double value = MParKeeper::gI()->get(ind);
+              min->SetVariableValue(min->VariableIndex(pname), value);
+              std::cout << "-------> randomize: \"" << pname << "\" is set to " << value << "\n";
             }
           }
           MParKeeper::gI()->printAll();
