@@ -1,0 +1,37 @@
+#!/bin/bash
+
+if [ -z $1 ];
+then
+    echo "Error: arg \${1} is missing"
+    echo "Usage: ./continue.script FILE ENTRY"
+    exit
+fi
+
+if [ -z $2 ];
+then
+    echo "Error: arg \${2} is missing"
+    echo "Usage: ./continue.script FILE ENTRY"
+    exit
+fi
+
+ENTRY=${2}
+FNAME="$(readlink -m ${1})"
+NAME="${FNAME##*/}"
+OPATH="${FNAME%/*}"
+APPEND="${NAME#fit.results.root}"
+APPEND=".ent${ENTRY}${APPEND}"
+CONFIG="${OPATH}/continue${APPEND}.cfg"
+
+FNAME=${FNAME} APPEND=${APPEND} ENTRY=${ENTRY} OPATH=${OPATH} envsubst < model/app.continue.cfg > ${CONFIG}
+
+## below is just output
+echo "------------------------------------"
+echo "Ok, just check:"
+echo "  entry #${ENTRY} from the file ${FNAME}"
+echo "  will be plotted to ${OPATH}"
+echo "  with appendix \"${APPEND}\""
+echo "less ${CONFIG}"
+echo "------------------------------------"
+
+echo "run with"
+echo "  ~/Tools/wavesfitter/build/kmatrix/wavefitter ${CONFIG##$(pwd)/}"
