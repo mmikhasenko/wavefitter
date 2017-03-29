@@ -41,10 +41,10 @@ void plot_pietarinen(TTree *tin, int entry) {
   }
   if (links[0].size() == 0) std::cout << "Warning<>: nothing is found, check branch names.\n";
 
-  // slope and rhc
-  double slope, rhc;
+  // slope and lhc
+  double slope, lhc;
   tin->SetBranchAddress("slope", &slope);
-  tin->SetBranchAddress("rhc", &rhc);
+  tin->SetBranchAddress("lhc", &lhc);
 
   tin->GetEntry(entry);
   for (uint ch = 0; ch < Nch; ch++) {
@@ -54,10 +54,10 @@ void plot_pietarinen(TTree *tin, int entry) {
                 << p.second.second << " " << pars[p.second.first] << "\n";
     }
   }
-  std::cout << "Map adjustment: slope = " << slope << ", lhc = " << rhc << "\n";
+  std::cout << "Map adjustment: slope = " << slope << ", lhc = " << lhc << "\n";
   // define functions
-  std::function<double(double)> omega = [slope, rhc](double s)->double{
-    double r = (s-rhc)/slope;
+  std::function<double(double)> omega = [slope, lhc](double s)->double{
+    double r = (s-lhc)/slope;
     return (1.-sqrt(r))/(1.+sqrt(r));
   };
   std::vector<std::function<cd(double)> > piet(Nch);
