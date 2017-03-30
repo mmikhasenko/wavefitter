@@ -1,0 +1,36 @@
+#include "TFile.h"
+#include "TDirectory.h"
+#include "TCanvas.h"
+#include "TH1F.h"
+#include "THStack.h"
+#include <iostream>
+#include <vector>
+
+void compare_deck_projections() {
+
+  TFile *_file0 = TFile::Open("~/cernbox/tmp/linal_hfit_0.100000-0.112853.root");
+  if (!_file0) { std::cerr << "no file0\n"; return; }
+  TFile *_file1 = TFile::Open("~/cernbox/tmp/pwa_hfit_0.100000-0.112853.root");
+  if (!_file1) { std::cerr << "no file1\n"; return; }
+  std::vector<uint> num = {2,8,21,26,33};
+  TCanvas *c1 = new TCanvas("c1","c1",1000,1000);
+  c1->DivideSquare(num.size());
+  std::cout << "cc " << num.size() << ", " << num[2] << "\n";
+  for(uint i = 0; i < num.size(); i++) {
+    THStack *hs = new THStack(TString::Format("hs%d",num[i]),"");
+    _file0->cd();
+    c1->cd(i+1);
+    TH1F *h0 = (TH1F*)gDirectory->Get(TString::Format("h%d",num[i]));
+    if (!h0) { std::cerr << "no h0\n"; return; }
+    h0->Scale(1e6);
+    hs->Add(h0);
+
+   _file1->cd();
+   c1->cd(i+1);
+   TH1F *h1 = (TH1F*)gDirectory->Get(TString::Format("h%d",num[i]));
+   if (!h1) { std::cerr << "no h1\n"; return; }
+   hs->Add(h1);
+   hs->SetTitle(h0->GetTitle());
+   hs->Draw("nostack");
+  }
+}
