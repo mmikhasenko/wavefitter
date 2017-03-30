@@ -19,7 +19,7 @@ FNAME="$(readlink -m ${1})"
 NAME="${FNAME##*/}"
 OPATH="${FNAME%/*}"
 APPEND="${NAME#fit.results.root}"
-APPEND=".ent${ENTRY}${APPEND}"
+# APPEND=".ent${ENTRY}${APPEND}"
 CONFIG="${OPATH}/continue${APPEND}.cfg"
 
 FNAME=${FNAME} APPEND=${APPEND} ENTRY=${ENTRY} OPATH=${OPATH} envsubst < model/app.continue.cfg > ${CONFIG}

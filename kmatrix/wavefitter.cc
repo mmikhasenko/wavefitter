@@ -801,7 +801,14 @@ int main(int argc, char *argv[]) {
         canva->Clear();
 
         /**************  TEMPERARY FIX ******************/
-        canva->DivideSquare(NrelsToPlot);
+	uint npX = 1, npY = 1;
+	if(!plot_settings.lookupValue("nplotsX", npX) ||
+	   !plot_settings.lookupValue("nplotsY", npY)) {
+	  canva->DivideSquare(NrelsToPlot);	  
+	} else {
+	  std::cout << "READ: canva for plotting will be divided " << npX << " x " << npY << "\n";
+	  canva->Divide(npX, npY);
+	}
         std::vector<TMultiGraph*> mgr(NrelsToPlot);
         // add data in order by mapping
         for (uint i=0; i < NrelsToPlot; i++) {
