@@ -556,53 +556,6 @@ int main(int argc, char *argv[]) {
 
   ///////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////// p a r a m e t e r s ///////////////////////////////////
-  ///////////////////////////////////////////////////////////////////////////////////////
-
-  try {
-    const libconfig::Setting &list_of_parameters = root["parameters"];
-
-    std::cout << "\n\n";
-    std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++++++++\n";
-    std::cout << "/////////////// Parameters business: /////////////////\n";
-
-    const libconfig::Setting &starting_values = list_of_parameters["start_value"];
-    const uint count = starting_values.getLength();
-
-    if (count != MParKeeper::gI()->nPars()) {
-      std::cerr << "Warning: number of the specified parameters does not much to number of expected parameters!\n";
-      // return EXIT_FAILURE;
-    }
-    std::vector<std::string> pars_names(count);
-    std::vector<double> pars_values(count);
-    std::vector<std::pair<double, double> > pars_ranges(count);
-    for (uint i = 0; i < count; i++) {
-      const libconfig::Setting &iPar = starting_values[i];
-      const char* name = iPar[0];
-      pars_names[i] = std::string(name);
-      pars_values[i] = iPar[1];
-      pars_ranges[i].first = iPar[2];
-      pars_ranges[i].second = iPar[3];
-      std::cout << "READ: " << name << ": " << pars_values[i] << " in ("
-                << pars_ranges[i].first << ", " << pars_ranges[i].second << ")\n";
-    }
-    // create pool
-    MParKeeper::gI()->makePool(pars_names);
-    MParKeeper::gI()->pset(pars_values.data());
-    for (uint j=0; j < MParKeeper::gI()->pnPars(); j++)
-      MParKeeper::gI()->psetRange(j,
-                                  pars_ranges[j].first,
-                                  pars_ranges[j].second);
-  }
-  catch(const libconfig::SettingNotFoundException &nfex) {
-    std::cerr << "Error <> libconfig::SettingNotFoundException in the \"parameters\" section" << std::endl;
-    return EXIT_FAILURE;
-  }
-
-  const uint pnPars = MParKeeper::gI()->pnPars();
-
-  ///////////////////////////////////////////////////////////////////////////////////////
-  ///////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////// r e l a t i o n ///////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////
 
@@ -625,13 +578,39 @@ int main(int argc, char *argv[]) {
       if (type == "I@") {
         uint iModel = iRel[2][0];
         uint iCh = iRel[2][1];
-        double cbFactor = (iRel.getLength() <= 3) ? 1. : iRel[3];
         MProductionPhysics *pr = vpr[iModel];
         MChannel *ciso = iset[iCh];
-        MRelationHolder::gI()->AddRelation(whole_data[jData], [&, iCh, ciso, pr, cbFactor](double e)->double{
+        std::function<double(double)> int_lambda_function;
+        if (iRel.getLength() <= 3) {
+          int_lambda_function = [&, iCh, ciso, pr](double e)->double{
             auto v = pr->getValue(e*e);
-            return cbFactor*norm(v(iCh))*ciso->rho(e*e);
-          });
+            return norm(v(iCh))*ciso->rho(e*e);
+          };
+        } else {
+          std::cout << "READ: fourth parameter to scale intensity: ";
+          if (iRel[3].getType() == libconfig::Setting::TypeFloat) {
+            double cbFactor = iRel[3];
+            std::cout << "cbFactor = " << cbFactor << "\n";
+            int_lambda_function = [&, iCh, ciso, pr, cbFactor](double e)->double{
+              auto v = pr->getValue(e*e);
+              return cbFactor*norm(v(iCh))*ciso->rho(e*e);
+            };
+          } else if (iRel[3].getType() == libconfig::Setting::TypeString) {
+            const std::string cbFactor_str = iRel[3];
+            uint cbFactor_index = MParKeeper::gI()->add(cbFactor_str);
+            std::cout << "cbFactor named as \"" << cbFactor_str << "\"("<< cbFactor_index << ")\n";
+            int_lambda_function = [&, iCh, ciso, pr, cbFactor_index](double e)->double{
+              auto v = pr->getValue(e*e);
+              double cbFactor = MParKeeper::gI()->get(cbFactor_index);
+              return cbFactor*norm(v(iCh))*ciso->rho(e*e);
+            };            
+          } else {
+            std::cerr << "Error<main,relations>: fourth argument have to be float of string!\n";
+            return 1;
+          }
+        }
+        MRelationHolder::gI()->AddRelation(whole_data[jData], int_lambda_function);
+
       } else if (type == "Re@") {
         uint iModel = iRel[2][0];
         uint iCh = iRel[2][1];
@@ -639,7 +618,7 @@ int main(int argc, char *argv[]) {
         MChannel *ciso = iset[iCh];
         MRelationHolder::gI()->AddRelation(whole_data[jData], [&, iCh, ciso, pr](double e)->double{
             auto v = pr->getValue(e*e);
-            return real(v(iCh))*ciso->rho(e*e);
+            return real(v(iCh));
           });
       } else if (type == "Im@") {
         uint iModel = iRel[2][0];
@@ -648,7 +627,7 @@ int main(int argc, char *argv[]) {
         MChannel *ciso = iset[iCh];
         MRelationHolder::gI()->AddRelation(whole_data[jData], [&, iCh, ciso, pr](double e)->double{
             auto v = pr->getValue(e*e);
-            return imag(v(iCh))*ciso->rho(e*e);
+            return imag(v(iCh));
           });
       } else if (type == "Phi@") {
         uint iModel0 = iRel[2][0][0]; uint iCh0 = iRel[2][0][1];
@@ -703,6 +682,53 @@ int main(int argc, char *argv[]) {
 
   const uint Nrels = MRelationHolder::gI()->Nrels();
   MRelationHolder::gI()->Print();
+
+  ///////////////////////////////////////////////////////////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////// p a r a m e t e r s ///////////////////////////////////
+  ///////////////////////////////////////////////////////////////////////////////////////
+
+  try {
+    const libconfig::Setting &list_of_parameters = root["parameters"];
+
+    std::cout << "\n\n";
+    std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++++++++\n";
+    std::cout << "/////////////// Parameters business: /////////////////\n";
+
+    const libconfig::Setting &starting_values = list_of_parameters["start_value"];
+    const uint count = starting_values.getLength();
+
+    if (count != MParKeeper::gI()->nPars()) {
+      std::cerr << "Warning: number of the specified parameters does not much to number of expected parameters!\n";
+      // return EXIT_FAILURE;
+    }
+    std::vector<std::string> pars_names(count);
+    std::vector<double> pars_values(count);
+    std::vector<std::pair<double, double> > pars_ranges(count);
+    for (uint i = 0; i < count; i++) {
+      const libconfig::Setting &iPar = starting_values[i];
+      const char* name = iPar[0];
+      pars_names[i] = std::string(name);
+      pars_values[i] = iPar[1];
+      pars_ranges[i].first = iPar[2];
+      pars_ranges[i].second = iPar[3];
+      std::cout << "READ: " << name << ": " << pars_values[i] << " in ("
+                << pars_ranges[i].first << ", " << pars_ranges[i].second << ")\n";
+    }
+    // create pool
+    MParKeeper::gI()->makePool(pars_names);
+    MParKeeper::gI()->pset(pars_values.data());
+    for (uint j=0; j < MParKeeper::gI()->pnPars(); j++)
+      MParKeeper::gI()->psetRange(j,
+                                  pars_ranges[j].first,
+                                  pars_ranges[j].second);
+  }
+  catch(const libconfig::SettingNotFoundException &nfex) {
+    std::cerr << "Error <> libconfig::SettingNotFoundException in the \"parameters\" section" << std::endl;
+    return EXIT_FAILURE;
+  }
+
+  const uint pnPars = MParKeeper::gI()->pnPars();
 
   ///////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////
@@ -820,62 +846,88 @@ int main(int argc, char *argv[]) {
             const uint Ncurves = what_to_plot.getLength();
             std::cout << "--> " << Ncurves << " model settings are found to be plotted.\n";
             for (uint j = 0; j < Ncurves; j++) {
-              std::string title; uint color;
-              if (what_to_plot[j].lookupValue("title", title) &&
-                  what_to_plot[j].lookupValue("color", color) &&
-                  what_to_plot[j].exists("set_to_zero")) {
-                const libconfig::Setting &set_to_zero = what_to_plot[j]["set_to_zero"];
-                const uint NparsToZero = set_to_zero.getLength();
-                // set to zero
-                std::vector<std::pair<uint, double> > parsBackUp;
-                for (uint p = 0; p < NparsToZero; p++) {
-                  const char *pname = set_to_zero[p];
+              std::string title = "Default"; if (what_to_plot[j].exists("title")) what_to_plot[j].lookupValue("title", title);
+              uint color = 0;  if (what_to_plot[j].exists("color")) what_to_plot[j].lookupValue("color", color);
+              std::vector<std::pair<uint, double> > parsBackUp;
+              if (what_to_plot[j].exists("set_to_value")) {
+                const libconfig::Setting &setv = what_to_plot[j]["set_to_value"];
+                const uint Nv = setv.getLength();
+                for (uint i = 0; i < Nv; i++) {
+                  std::string pname;
+                  double value = 0.0;
+                  if (setv[i].getType() == libconfig::Setting::TypeString) {
+                    const std::string pname0 = setv[i];
+                    pname = pname0;
+                  } else if (setv[i].getType() == libconfig::Setting::TypeList) {
+                    if (setv[i].getLength() == 2) {
+                      const std::string pname0 = setv[i][0]; pname = pname0;
+                      value = setv[i][1];
+                    } else if (setv[i].getLength() == 3) {
+                      const std::string pname0 = setv[i][0]; pname = pname0;
+                      const std::string rname = setv[i][2];
+                      value = setv[i][1];
+                      value *= MParKeeper::gI()->get(rname);
+                    } else {
+                      std::cerr << "Error<plot settings>: set_to_value arguments can be only in format\n"
+                                << "    (\"name\",value) - should be clear"
+                                << "    (\"name1\",value,\"name2\") - to set value*get(\"name2\") to par \"name1\"\n\n";
+                    }
+                  } else {
+                    std::cerr << "Error<plot, settings>: set_to_value requires can be list of names or list of lists\n";
+                    return EXIT_FAILURE;
+                  }
+                  // backup
                   uint ip = MParKeeper::gI()->getIndex(std::string(pname));
                   if (ip == MParKeeper::error_uint) {std::cerr << "Error<main,plot>: \"set_to_zero\" check parameter name!\n"; return EXIT_FAILURE;}
                   double vp = MParKeeper::gI()->get(ip);
                   parsBackUp.push_back(std::make_pair(ip, vp));
-                  MParKeeper::gI()->set(ip, 0.);
+                  // set
+                  MParKeeper::gI()->set(pname, value);
+                  std::cout << "-------> set_to_value: \"" << pname << "\" is set to " << value << "\n";
                 }
+                
+                // Important to recalculate later
                 km->RecalculateNextTime();
                 for (auto & pr : vpr) pr->RecalculateNextTime();
-                // message
-                std::cout << "--> Settings " << j << " <" << title << "> : \n";
-                MParKeeper::gI()->printAll();
-
-                // fill vector of historrams where the model will be plotted on
-                std::vector<uint> vme;
-                if (what_to_plot[j].exists("mapping_elements")) {
-                  const libconfig::Setting &mapping_elements = what_to_plot[j]["mapping_elements"];
-                  for (int me = 0; me < mapping_elements.getLength(); me++) vme.push_back(uint(mapping_elements[me]));
-                } else {
-                  for (uint i=0; i < NrelsToPlot; i++) vme.push_back(i);
-                }
-                // add model curves to plot
-                for (uint i : vme) {
-                  if (mapping[i].getLength() == 0) continue;
-                  const uint iPad = mapping[i][0];
-                  // get data and model function
-                  const DP & data = MRelationHolder::gI()->GetRelation(iPad).data;
-                  std::function<double(double)> func = MRelationHolder::gI()->GetRelation(iPad).func;
-                  // plot
-                  mgr[i]->Add(
-                              SET3(draw(func,
-                                        (data.data.begin())->x , (--data.data.end())->x,
-                                        100),
-                                   SetLineStyle(2),
-                                   SetLineColor(color),
-                                   SetTitle("") ), "l");
-                  mgr[i]->Add(
-                              SET2(draw(func,
-                                        data.lrange, data.rrange,
-                                        100),
-                                   SetLineColor(color),
-                                   SetTitle(title.c_str()) ), "l");
-                }
-                // set back to nominal value
-                for (uint p = 0; p < NparsToZero; p++)
-                  MParKeeper::gI()->set(parsBackUp[p].first, parsBackUp[p].second);
               }
+              // message
+              std::cout << "--> Settings " << j << " <" << title << "> : \n";
+              MParKeeper::gI()->printAll();
+              
+              // fill vector of historrams where the model will be plotted on
+              std::vector<uint> vme;
+              if (what_to_plot[j].exists("mapping_elements")) {
+                const libconfig::Setting &mapping_elements = what_to_plot[j]["mapping_elements"];
+                for (int me = 0; me < mapping_elements.getLength(); me++) vme.push_back(uint(mapping_elements[me]));
+              } else {
+                for (uint i=0; i < NrelsToPlot; i++) vme.push_back(i);
+              }
+              // add model curves to plot
+              for (uint i : vme) {
+                if (mapping[i].getLength() == 0) continue;
+                const uint iPad = mapping[i][0];
+                // get data and model function
+                const DP & data = MRelationHolder::gI()->GetRelation(iPad).data;
+                std::function<double(double)> func = MRelationHolder::gI()->GetRelation(iPad).func;
+                // plot
+                mgr[i]->Add(
+                            SET3(draw(func,
+                                      (data.data.begin())->x , (--data.data.end())->x,
+                                      100),
+                                 SetLineStyle(2),
+                                 SetLineColor(color),
+                                 SetTitle("") ), "l");
+                mgr[i]->Add(
+                            SET2(draw(func,
+                                      data.lrange, data.rrange,
+                                      100),
+                                 SetLineColor(color),
+                                 SetTitle(title.c_str()) ), "l");
+              }
+              // set back to nominal value
+              const uint Nv = parsBackUp.size();
+              for (uint p = 0; p < Nv; p++)
+                MParKeeper::gI()->set(parsBackUp[p].first, parsBackUp[p].second);
             }
           } else {
             std::cerr << "Error<main,plot>: \"what_to_plot\" have to be specified for the model!\n";
@@ -1049,7 +1101,11 @@ int main(int argc, char *argv[]) {
 	  }
           // set values from tree and set to keeper
           tres->GetEntry(entry);
-          for (uint i = 0; i < Npars; i++) MParKeeper::gI()->set(i, pars[i]);
+          for (uint i = 0; i < Npars; i++) {
+            const std::string & name = MParKeeper::gI()->getName(i);
+	    if (tres->GetListOfBranches()->FindObject(name.c_str()))
+              MParKeeper::gI()->set(i, pars[i]);
+	  }
           fres->Close(); fout->cd();
         } else {
           // otherwise from random
