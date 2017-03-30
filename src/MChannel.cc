@@ -17,17 +17,19 @@ cd MChannel::DisperceRhoLtilda(double s) const {
   double DC = DumpC(s);
   std::function<cd(double)> drhoLtilda = [&](double up)->cd{
     double sp = 1./up;
-    return (rho(sp)*DumpC(sp)-RH*DC)/(sp*(sp-s-cd(0., 1.e-6))) * 1./(up*up);  // minus in taken in integration range
+    double DCs = DumpC(sp);
+    return (rho(sp)*DCs*DCs-RH*DC*DC)/(sp*(sp-s-cd(0., 1.e-6))) * 1./(up*up);  // minus in taken in integration range
   };
   cd integral = s*cintegrate(drhoLtilda, 0.0, 1./sth());
-  cd add_term = RH*DC*cd(-log(fabs(s/sth()-1.)), M_PI);
+  cd add_term = RH*DC*DC*cd(-log(fabs(s/sth()-1.)), M_PI);
   return cd(0, -1./(M_PI))*(integral+add_term);
 }
 
 cd MChannel::DisperceRhoLtilda(cd s) const {
   std::function<cd(double)> drhoLtilda = [&](double up)->cd{
     double sp = 1./up;
-    return rho(sp)*DumpC(sp)/(sp*(sp-s-cd(0., 1.e-6))) * 1./(up*up);  // minus in taken in integration range
+    double DCs = DumpC(sp);
+    return rho(sp)*DCs*DCs/(sp*(sp-s-cd(0., 1.e-6))) * 1./(up*up);  // minus in taken in integration range
   };
   cd integral = cintegrate(drhoLtilda, 0.0, 1./sth());
   return s*cd(0, -1.)*integral/(M_PI);

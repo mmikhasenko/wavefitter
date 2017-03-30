@@ -144,10 +144,10 @@ void MProductionPhysics::calculate(double s) {
   b::matrix<cd> CThat(_Nch, _Nch);
   const b::matrix<cd> &T = _getT(s);
   b::vector<cd> DumpC(_Nch);
-  for (uint i = 0; i < _Nch; i++) DumpC(i) = 1.;  // _iso[i]->DumpC(s);
+  for (uint i = 0; i < _Nch; i++) DumpC(i) = _iso[i]->DumpC(s);
 
   for (uint i = 0; i < _Nch; i++)
-    for (uint j = 0; j < _Nch; j++) CThat(i, j) = T(i, j)*DumpC(j);
+    for (uint j = 0; j < _Nch; j++) CThat(i, j) = T(i, j)*DumpC(i);
   // direct production
   if (_fC.size()) {
     b::vector<cd> cvect(_Nch, 0);
