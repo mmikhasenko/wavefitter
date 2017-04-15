@@ -62,8 +62,8 @@ MIsobarPiPiS::MIsobarPiPiS() :
 }
 
 double MIsobarPiPiS::U(double s) const {
-  const double cR = 1./35;
-  return cR * norm(T(s)) * 1./(8*M_PI)*sqrt(LAMBDA(s, POW2(PI_MASS), POW2(PI_MASS)))/s;
+  // const double cR = 1./35;
+  return /*cR */ norm(T(s)) * 1./(8*M_PI)*sqrt(LAMBDA(s, POW2(PI_MASS), POW2(PI_MASS)))/s;
 }
 
 cd MIsobarPiPiS::U(cd s) const {
@@ -84,8 +84,8 @@ cd MIsobarPiPiS::U(cd s) const {
     M00 += sc *_c[i](0,0);
   }
 
-  double cR = 1./35.;
-  cd _U00 = cR*POW2(16*M_PI)/(M00*M00 + rho00*rho00) * 1./(8*M_PI)*sqrt(LAMBDA(s, POW2(PI_MASS), POW2(PI_MASS)))/s;
+  // double cR = 1./35.;
+  cd _U00 = /*cR*/ POW2(16*M_PI)/(M00*M00 + rho00*rho00) * 1./(8*M_PI)*sqrt(LAMBDA(s, POW2(PI_MASS), POW2(PI_MASS)))/s;
   return _U00;
 }
 
