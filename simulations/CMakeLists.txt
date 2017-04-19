@@ -25,3 +25,9 @@ add_executable(SymmetrizedPhaseSpace SymmetrizedPhaseSpace.cc)
 target_link_libraries(SymmetrizedPhaseSpace polesearch )
 target_link_libraries(SymmetrizedPhaseSpace isobars_and_deck )
 target_link_libraries(SymmetrizedPhaseSpace ${ROOT_LIBRARIES})
+
+# only one program
+add_executable(calculate_phase_space calculate_phase_space.cc)
+target_link_libraries(calculate_phase_space polesearch )
+target_link_libraries(calculate_phase_space isobars_and_deck )
+target_link_libraries(calculate_phase_space ${ROOT_LIBRARIES})

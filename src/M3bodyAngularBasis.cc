@@ -80,8 +80,7 @@ double Math::integrate3bphs(std::function<double(double, double, double, double,
   double tfpars[] = {m1sq, m2sq, m3sq, s}; tfs1distr.SetParameters(tfpars);
 
   double intgr(0.);
-  uint nLoop = 1e6;
-  for (uint i = 0; i < nLoop; i++) {
+  for (uint i = 0; i < Npoints; i++) {
     /****************************************************************/
     // generation
     /****************************************************************/
@@ -157,7 +156,7 @@ double Math::integrate3bphs(std::function<double(double, double, double, double,
                      m_s3, m_theta3, m_phi3, m_theta12, m_phi12);
     intgr += val;
   }
-  intgr /= nLoop;
+  intgr /= Npoints;
 
   return intgr;
 }
