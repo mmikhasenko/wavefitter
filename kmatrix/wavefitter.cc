@@ -661,19 +661,56 @@ int main(int argc, char *argv[]) {
         uint iModel1 = iRel[2][1][0]; uint iCh1 = iRel[2][1][1];
         if (iModel0 != iModel1) { std::cerr << "Error: iModel0!=iModel1!\n"; return 1;}
         MProductionPhysics *pr = vpr[iModel1];
-        MRelationHolder::gI()->AddRelation(whole_data[jData], [&, iCh0, iCh1, pr](double e)->double{
+
+        std::function<double(double)> int_lambda_function;
+        if (iRel.getLength() <= 3) {
+          int_lambda_function = [&, iCh0, iCh1, pr](double e)->double{
             auto v = pr->getValue(e*e);
             return real(v(iCh0)*conj(v(iCh1)))*sqrt(iset[iCh0]->rho(e*e)*iset[iCh1]->rho(e*e));
-          });
+          };
+        } else {
+          std::cout << "READ: fourth parameter to scale intensity: ";
+          if (iRel[3].getType() == libconfig::Setting::TypeFloat) {
+            double cbFactor = iRel[3];
+            std::cout << "cbFactor = " << cbFactor << "\n";
+            int_lambda_function = [&, iCh0, iCh1, pr, cbFactor](double e)->double{
+              auto v = pr->getValue(e*e);
+              return cbFactor * real(v(iCh0)*conj(v(iCh1)))*sqrt(iset[iCh0]->rho(e*e)*iset[iCh1]->rho(e*e));
+            };
+          } else {
+            std::cerr << "Error<main,relations>: fourth argument have to be float!\n";
+            return 1;
+          }
+        }
+
+        MRelationHolder::gI()->AddRelation(whole_data[jData], int_lambda_function);
+
       } else if (type == "ImInterf@") {
         uint iModel0 = iRel[2][0][0]; uint iCh0 = iRel[2][0][1];
         uint iModel1 = iRel[2][1][0]; uint iCh1 = iRel[2][1][1];
         if (iModel0 != iModel1) { std::cerr << "Error: iModel0!=iModel1!\n"; return 1;}
         MProductionPhysics *pr = vpr[iModel1];
-        MRelationHolder::gI()->AddRelation(whole_data[jData], [&, iCh0, iCh1, pr](double e)->double{
+        std::function<double(double)> int_lambda_function;
+        if (iRel.getLength() <= 3) {
+          int_lambda_function = [&, iCh0, iCh1, pr](double e)->double{
             auto v = pr->getValue(e*e);
             return imag(v(iCh0)*conj(v(iCh1)))*sqrt(iset[iCh0]->rho(e*e)*iset[iCh1]->rho(e*e));
-          });
+          };
+        } else {
+          std::cout << "READ: fourth parameter to scale intensity: ";
+          if (iRel[3].getType() == libconfig::Setting::TypeFloat) {
+            double cbFactor = iRel[3];
+            std::cout << "cbFactor = " << cbFactor << "\n";
+            int_lambda_function = [&, iCh0, iCh1, pr, cbFactor](double e)->double{
+              auto v = pr->getValue(e*e);
+              return cbFactor * imag(v(iCh0)*conj(v(iCh1)))*sqrt(iset[iCh0]->rho(e*e)*iset[iCh1]->rho(e*e));
+            };
+          } else {
+            std::cerr << "Error<main,relations>: fourth argument have to be float!\n";
+            return 1;
+          }
+        }
+        MRelationHolder::gI()->AddRelation(whole_data[jData], int_lambda_function);
       }
     }
   } else {
@@ -1065,8 +1102,8 @@ int main(int argc, char *argv[]) {
         min->SetMaxIterations(UINT_MAX);
         min->SetTolerance(0.001);
         min->SetStrategy(1);
-        min->SetPrintLevel(3);
-        min->Options().Print();
+        min->SetPrintLevel(2);
+        // min->Options().Print();
 
         // Create funciton wrapper for minmizer a IMultiGenFunction type
         ROOT::Math::Functor functor([&](const double *pars)->double {

@@ -32,6 +32,5 @@ add_executable(testi_MDeck testi_MDeck.cc)
 target_link_libraries(testi_MDeck isobars_and_deck)
 target_link_libraries(testi_MDeck ${ROOT_LIBRARIES})
 
-
 # additional test with libconfig
-target_link_libraries(test_libconfig ${Libconfig_LIBS})
+# target_link_libraries(test_libconfig ${Libconfig_LIBS})
