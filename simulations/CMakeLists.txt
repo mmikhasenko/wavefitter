@@ -31,3 +31,8 @@ add_executable(calculate_phase_space calculate_phase_space.cc)
 target_link_libraries(calculate_phase_space polesearch )
 target_link_libraries(calculate_phase_space isobars_and_deck )
 target_link_libraries(calculate_phase_space ${ROOT_LIBRARIES})
+
+# only one program
+add_executable(generate_3pi_angles generate_3pi_angles.cc)
+target_link_libraries(generate_3pi_angles polesearch )
+target_link_libraries(generate_3pi_angles ${ROOT_LIBRARIES})
