@@ -26,6 +26,27 @@ std::complex<double> Math::ZJMLS(uint J, int M, uint L, uint S,
   return val;
 } 
 
+std::complex<double> Math::ZJMLS_refl(uint J, int M, bool neg_refl, uint L, uint S,
+                                      double thetaI, double phiI,
+                                      double theta, double phi) {
+  int minSJ = (S < J) ? S : J;
+  std::complex<double> val = 0.0;
+  for (int lam = -minSJ; lam <= minSJ; lam++) {
+    val +=
+      // clebsch coefficient
+      sqrt(2*J+1) *
+      (((L-S+(-lam))%2 == 1) ? (-1) : (1)) *
+      ROOT::Math::wigner_3j(2*L, 2*S, 2*J, 2*0, 2*lam, -2*lam) *
+      // Wigner D-functions
+      WignerD_refl(2*J, 2*M, 2*lam, neg_refl, -phiI, thetaI, 0) *  // minus phi to conjugate
+      WignerD_refl(2*S, 2*lam, 0, neg_refl, -phi, theta, 0);   // minus phi to conjugate
+  }
+  val *= sqrt((2.*L+1.)/(2.*J+1.)*  // recoupling
+              (2.*J+1.)/(4.*M_PI)*  // first D-function
+              (2.*S+1.)/(4.*M_PI));  // second D-function
+  return val;
+} 
+
 
 #include "deflib.h"
 

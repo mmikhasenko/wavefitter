@@ -13,6 +13,9 @@ namespace Math {
   std::complex<double> ZJMLS(uint J, int M, uint L, uint S,
                              double thetaI, double phiI,
                              double theta, double phi);
+  std::complex<double> ZJMLS_refl(uint J, int M, bool neg_refl, uint L, uint S,
+                                  double thetaI, double phiI,
+                                  double theta, double phi);
 
   double integrate3bphs(std::function<double(double, double, double, double, double,
                                            double, double, double, double, double)> funct,
