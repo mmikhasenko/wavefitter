@@ -25,15 +25,17 @@ class MIsobarPiPiS : public MIsobar {
   explicit MIsobarPiPiS();
 
  private:
-  std::vector<boost::numeric::ublas::matrix<cd> > _a;
-  std::vector<boost::numeric::ublas::matrix<cd> > _c;
-  boost::numeric::ublas::matrix<double> _sP;
+  std::vector<double> _a;
+  std::vector<double> _c;
+  std::vector<double> _sP;
   
  public:
   virtual double U(double s12) const;
   virtual cd     U(cd s)       const;
   virtual cd     T(double s)   const;
   virtual cd     T(cd s)       const;
+  virtual cd ToneVertex(double s) const;
+
 };
 
 #endif  // SRC_MISOBARPIPIS_H_

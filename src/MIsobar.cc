@@ -28,16 +28,6 @@ double MIsobar::IntU() const {
   return intU;
 }
 
-cd MIsobar::ToneVertex(double s) const {
-  if (s < POW2(m1+m2)) return 0.0;
-  cd G = G0/RHO(M*M, m1*m1, m2*m2)  *  RHO(s, m1*m1, m2*m2);
-  const double p_2 = LAMBDA(s, m1*m1, m2*m2)/(4.*s);
-  const double p0_2 = LAMBDA(M*M, m1*m1, m2*m2)/(4.*M*M);
-  double BltWskpf = pow(p_2/p0_2 * (1.+R*R*p0_2)/(1.+R*R*p_2), L);
-  double gsq = 2*M*G0/RHO(M*M, m1*m1, m2*m2);
-  return sqrt(gsq * BltWskpf / intU) / (M*M-s-cd(0., M)*G*BltWskpf);
-}
-
 
 double MIsobar::U(double s) const {
   if (s < POW2(m1+m2)) return 0.0;
@@ -53,9 +43,17 @@ cd MIsobar::U(cd s) const {
   const cd p_2 = LAMBDA(s, m1*m1, m2*m2)/(4.*s);
   const double p0_2 = LAMBDA(M*M, m1*m1, m2*m2)/(4.*M*M);
   G *=  pow(p_2/p0_2 * (1.+R*R*p0_2)/(1.+R*R*p_2), L);
-  // return -2.0*imag( 1./(M*M-s+cd(0, M)*G) );
-  // return 2.*imag( 1./(M*M-s-cd(0, M)*G) );
   return 2.0*M*G/(POW2(M*M-s)+POW2(M*G)) / intU;
+}
+
+cd MIsobar::ToneVertex(double s) const {
+  if (s < POW2(m1+m2)) return 0.0;
+  double G = G0/RHO(M*M, m1*m1, m2*m2)  *  RHO(s, m1*m1, m2*m2);
+  const double p_2 = LAMBDA(s, m1*m1, m2*m2)/(4.*s);
+  const double p0_2 = LAMBDA(M*M, m1*m1, m2*m2)/(4.*M*M);
+  G *=  pow(p_2/p0_2 * (1.+R*R*p0_2)/(1.+R*R*p_2), L);
+  double gsq = 2*M*G/RHO(M*M, m1*m1, m2*m2);
+  return sqrt(gsq/intU)/(M*M-s-cd(0., M)*G);  // / intU
 }
 
 cd     MIsobar::T(cd     s) const {
@@ -63,15 +61,15 @@ cd     MIsobar::T(cd     s) const {
   const cd p_2 = LAMBDA(s, m1*m1, m2*m2)/(4.*s);
   const double p0_2 = LAMBDA(M*M, m1*m1, m2*m2)/(4.*M*M);
   G *=  pow(p_2/p0_2 * (1.+R*R*p0_2)/(1.+R*R*p_2), L);
-  double gsq = 2*M*G0/RHO(M*M, m1*m1, m2*m2);
+  cd gsq = 2*M*G/RHO(M*M, m1*m1, m2*m2);
   return gsq/(M*M-s-cd(0., M)*G);  // / intU
 }
 
 cd     MIsobar::T(double s) const {
-  cd G = G0/RHO(M*M, m1*m1, m2*m2)  *  RHO(s, m1*m1, m2*m2);
+  double G = G0/RHO(M*M, m1*m1, m2*m2)  *  RHO(s, m1*m1, m2*m2);
   const double p_2 = LAMBDA(s, m1*m1, m2*m2)/(4.*s);
   const double p0_2 = LAMBDA(M*M, m1*m1, m2*m2)/(4.*M*M);
   G *=  pow(p_2/p0_2 * (1.+R*R*p0_2)/(1.+R*R*p_2), L);
-  double gsq = 2*M*G0/RHO(M*M, m1*m1, m2*m2);
+  double gsq = 2*M*G/RHO(M*M, m1*m1, m2*m2);
   return gsq/(M*M-s-cd(0., M)*G);  // / intU;
 }
