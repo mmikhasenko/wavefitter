@@ -29,35 +29,45 @@ typedef struct {
   std::string title;
 } wave;
 
-wave make_wave(uint _J, uint _M, uint _S, uint _L, bool _neg_refl = true, double _threshold = 0.5,
-               const std::string &_title = "") {
-  wave n; n.J = _J; n.M = _M; n.S = _S; n.L = _L;
-  n.neg_refl = _neg_refl; n.title = _title; n.threshold = _threshold;
-  return n;
-}
+// wave make_wave(uint _J, uint _M, uint _S, uint _L, bool _neg_refl = true, double _threshold = 0.5,
+//                const std::string &_title = "") {
+//   wave n; n.J = _J; n.M = _M; n.S = _S; n.L = _L;
+//   n.neg_refl = _neg_refl; n.title = _title; n.threshold = _threshold;
+//   return n;
+// }
 
 void fill_wavepull(const char* wave_fname, std::vector<wave> *waves);
 
 int main(int argc, char *argv[]) {
 
 
-  TH1D htest("test", "nonSymm. phase space 2^{++}0^{+}#rho#pi D-wave", 100, 0.5, 2.5);
-  TH1D htest2("test2", "Symm. phase space 2^{++}0^{+}#rho#pi D-wave", 100, 0.5, 2.5);
-  // waves.push_back(make_wave(2, 0, 2, 2, 1.0, "2^{++}0^{+}#rho#pi D-wave"));
   std::vector<wave> waves;
   fill_wavepull("/localhome/mikhasenko/results/pwa_3pi/wavelist_formated.txt", &waves);
   std::cout << "waves.size() = " << waves.size() << "\n";
   for (auto & w : waves)
     std::cout << w.index << ": " << w.title << " " << w.J << " " << w.M << " " << w.S << " " << w.L << "\n";
-  // waves.push_back(make_wave(1, 0, 1, 0, 0.0, "2^{++}0^{+}#rho#pi D-wave"));
-  const double iw = 1;  // wave index waves[iw];
 
-  return 0;
+
+  TH1D *hsymm[waves.size()];
+  TH1D *hnsym[waves.size()];
+  for (uint w = 0; w < waves.size(); w++) {
+    hsymm[w] = new TH1D(TString::Format("h%d", waves[w].index),
+                     waves[w].title.c_str(),
+                     100, 0.5, 2.5);
+    hnsym[w] = new TH1D(TString::Format("h%d_nsym", waves[w].index),
+                     waves[w].title.c_str(),
+                     100, 0.5, 2.5);
+  }
 
   // for out mode;
-  MIsobar rho_iso(RHO_MASS, RHO_WIDTH, PI_MASS, PI_MASS, 1, 5.); rho_iso.setIntU();
-  MIsobar  f2_iso(F2_MASS, F2_WIDTH,  PI_MASS, PI_MASS, 2, 5.); f2_iso.setIntU();
-  MIsobar *iso[] = {&rho_iso, &rho_iso, &f2_iso};
+  MIsobar rho(RHO_MASS, RHO_WIDTH, PI_MASS, PI_MASS, 1, 5.); rho.setIntU();
+  MIsobar  f2(F2_MASS, F2_WIDTH,  PI_MASS, PI_MASS, 2, 5.); f2.setIntU();
+  MIsobar rho3(1.69, 0.16, PI_MASS, PI_MASS, 1, 5.); rho3.setIntU();
+  MIsobarPiPiS pipiS; pipiS.setIntU();
+  MIsobar *iso[] = {&pipiS, &rho, &f2, &rho3};
+  MIsobar f980(0.99, 0.04, PI_MASS, PI_MASS, 0); f980.setIntU();
+  MIsobar f1500(1.504, 0.11, PI_MASS, PI_MASS, 0); f1500.setIntU();
+  MIsobar *iso_scalars[] = {&pipiS, &f980, &f1500};
 
   for (uint e = 0; e < 100; e++) {
     std::cout << "---> File #" << e << "\n";
@@ -94,18 +104,23 @@ int main(int argc, char *argv[]) {
         return sqrt(LAMBDA(s, _s1, POW2(PI_MASS))*LAMBDA(_s1, POW2(PI_MASS), POW2(PI_MASS)))/_s1;
       }, 4*POW2(PI_MASS), POW2(sqrt(s)-PI_MASS)) / (2*M_PI*POW2(8*M_PI)*s);
     // with isobar
-    double quasi_two_body_phsp = integrate([&, s](double s1)->double{
-        return sqrt(LAMBDA(s, s1, POW2(PI_MASS))*LAMBDA(s1, POW2(PI_MASS), POW2(PI_MASS)))/s1 * 
-          norm(iso[1]->ToneVertex(s1));
-      }, 4*POW2(PI_MASS), POW2(sqrt(s)-PI_MASS)) / (2*M_PI*POW2(8*M_PI)*s);
+    // double quasi_two_body_phsp = integrate([&, s](double s1)->double{
+    //     return sqrt(LAMBDA(s, s1, POW2(PI_MASS))*LAMBDA(s1, POW2(PI_MASS), POW2(PI_MASS)))/s1 *
+    //       norm(iso[1]->ToneVertex(s1));
+    //   }, 4*POW2(PI_MASS), POW2(sqrt(s)-PI_MASS)) / (2*M_PI*POW2(8*M_PI)*s);
 
-    double integral = 0, integral_symm = 0;
+    // select a set of non-zero waves
+    uint nWaves = waves.size();
+    // create and clean integral variables
+    double integral[nWaves], integral_symm[nWaves];
+    for (uint w = 0; w < nWaves; w++) { integral[w] = 0; integral_symm[w] = 0; }
+
     const int Nentries = tin->GetEntries();
     for (int i = 0; i < Nentries; i++) {
       if (i%1000000 == 0 && i != 0) std::cout << "Processing entry " << i << "\n";
       tin->GetEntry(i);
 
-      cd amp[2] = {cd(0., 0.), cd(0., 0.)};
+      cd amp[nWaves][2];
       for (uint bose = 0; bose < 2; bose++) {
         /*************************************/
         double sI        = bose?         s3 :         s1;
@@ -117,25 +132,43 @@ int main(int argc, char *argv[]) {
         double thetaI = acos(costhetaI);
         double theta  = acos(costheta);
         // loop over waves
-        amp[bose] = Math::ZJMLS(waves[iw].J, waves[iw].M, waves[iw].L, waves[iw].S,
-                           thetaI, phiI, theta, phi) * iso[waves[iw].S]->ToneVertex(sI);
+        for (uint w = 0; w < nWaves; w++) {
+          cd iso_shape = waves[w].S == -7 ? 1. :
+            (waves[w].S > 0 ?
+             iso        [ waves[w].S]->ToneVertex(sI) :
+             iso_scalars[-waves[w].S]->ToneVertex(sI));
+          amp[w][bose] = Math::ZJMLS_refl(waves[w].J, waves[w].M, waves[w].L, waves[w].S > 0 ? waves[w].S : 0,
+                                          waves[w].neg_refl,
+                                          thetaI, phiI, theta, phi) * iso_shape;
+        }
         /*************************************/
       }
-      integral += norm(amp[0]);
-      integral_symm += norm(amp[0]+amp[1])/2.;
+      for (uint w = 0; w < nWaves; w++) {
+        integral[w] += norm(amp[w][0]);
+        integral_symm[w] += norm(amp[w][0]+amp[w][1])/2.;
+      }
     }
-    
     f->Close();
 
-    // waves[iw];
-    htest.SetBinContent(e+1, integral*phsp*POW2(4*M_PI)/Nentries * (8*M_PI));
-    htest2.SetBinContent(e+1, integral_symm*phsp*POW2(4*M_PI)/Nentries * (8*M_PI));
+    for (uint w = 0; w < nWaves; w++) {
+      hsymm[w]->SetBinContent(e+1, integral_symm[w]*phsp*POW2(4*M_PI)/Nentries * (8*M_PI));
+      hnsym[w]->SetBinContent(e+1, integral[w]*phsp*POW2(4*M_PI)/Nentries * (8*M_PI));
+    }
   }
 
-  TCanvas c1("c1");
-  htest.Draw("hist");
-  htest2.SetLineColor(kRed); htest2.Draw("same");
+  TCanvas c1("c1", "title", 1000, 1000);
+  c1.DivideSquare(waves.size());
+  for (uint w = 0; w < waves.size(); w++) {
+    c1.cd(w+1);
+    hsymm[w]->Draw();
+    hnsym[w]->SetLineColor(kRed); hnsym[w]->Draw("same");
+  }
   c1.Print("/tmp/ph.sp.PhoPiS.pdf");
+  c1.SaveAs("/tmp/ph.sp.PhoPiS.pdf");
+
+  TFile fout("/tmp/waves.calculate_phase_space.root", "RECREATE");
+  for (uint w = 0; w < waves.size(); w++) { hsymm[w]->Write(); hnsym[w]->Write(); }
+  fout.Close();
 
   return 0;
 }

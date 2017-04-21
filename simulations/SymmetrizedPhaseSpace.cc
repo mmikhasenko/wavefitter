@@ -14,15 +14,15 @@ int main() {
   // set parameters
   // MIsobar rho(RHO_MASS, RHO_WIDTH, PI_MASS, PI_MASS, 1, 5.); rho.setIntU();
   // MIsobar *iso = &rho;
-  MIsobar f2(F2_MASS, F2_WIDTH, PI_MASS, PI_MASS, 2, 5.); f2.setIntU();
-  MIsobar *iso = &f2;
-  // MIsobarPiPiS pipiS;  pipiS.setIntU();
-  // MIsobar *iso = &pipiS;
+  // MIsobar f2(F2_MASS, F2_WIDTH, PI_MASS, PI_MASS, 2, 5.); f2.setIntU();
+  // MIsobar *iso = &f2;
+  MIsobarPiPiS pipiS;  pipiS.setIntU();
+  MIsobar *iso = &pipiS;
 
   uint J = 2, M = 1, L = 1, S = 2;
 
   uint Npoints = 21;
-  uint NintPoints = 1000;
+  uint NintPoints = 50000;
   std::pair<double, double> range(0.5, 2.5);
   for (uint i = 0; i < Npoints; i++) {
     double s = POW2(range.first + (range.second-range.first)/(Npoints-1)*i);
@@ -36,7 +36,7 @@ int main() {
     double quasi_two_body_phsp = integrate([&, s](double s1)->double{
         return sqrt(LAMBDA(s, s1, POW2(PI_MASS))*LAMBDA(s1, POW2(PI_MASS), POW2(PI_MASS)))/s1 * 
           norm(iso->ToneVertex(s1));
-      }, 4*POW2(PI_MASS), POW2(sqrt(s)-PI_MASS)) / (2*M_PI*POW2(8*M_PI)*s);
+      }, 4*POW2(PI_MASS), POW2(sqrt(s)-PI_MASS)) / (2*M_PI*POW2(8*M_PI)*s) *  (8*M_PI);
     std::cout << "sqrt(s) = " << sqrt(s) << ", qtb phsp: " << quasi_two_body_phsp;
 
     /***********************************************************************************/
@@ -51,7 +51,7 @@ int main() {
       cd amp = (iso->ToneVertex(s1)*Zf1 + iso->ToneVertex(s3)*Zf3) / sqrt(2.);
       return norm(amp);};
     double int_symm = Math::integrate3bphs(Msq_symm, NintPoints, s, POW2(PI_MASS), POW2(PI_MASS), POW2(PI_MASS));
-    std::cout << ", Symm = " << int_symm * phsp * POW2(4*M_PI);
+    std::cout << ", Symm = " << int_symm * phsp * POW2(4*M_PI) * (8*M_PI);
 
     /***********************************************************************************/
     // Non symmetrized
@@ -64,7 +64,7 @@ int main() {
       cd amp = iso->ToneVertex(s1)*Zf1;
       return norm(amp);};
     double int_nonsymm = Math::integrate3bphs(Msq_nonsymm, NintPoints, s, POW2(PI_MASS), POW2(PI_MASS), POW2(PI_MASS));
-    double int_nonsymm_norm = int_nonsymm * phsp * POW2(4*M_PI);
+    double int_nonsymm_norm = int_nonsymm * phsp * POW2(4*M_PI) * (8*M_PI);
     std::cout << ", Nonsymm = " << int_nonsymm_norm << ", err: " << 100*fabs(1-int_nonsymm_norm/quasi_two_body_phsp) << "%\n";
   }
 
