@@ -93,17 +93,17 @@ std::complex<double> Math::WignerD(int aj, int am, int an, double alpha, double 
   return WignerD(aj, am, an, beta) * exp((-alpha*am-an*gamma)/2.*std::complex<double>(0., 1.));
 }
 
-std::complex<double> Math::WignerD_refl(int aj, int am, int an, bool neg_refl,
+std::complex<double> Math::WignerD_refl(int aj, int am, int an, bool pos_refl,
                                       double alpha, double beta, double gamma) {
   if (am < 0) return 0.0;
 
-  if (am == 0) return Math::WignerD(aj, am, an, alpha, beta, gamma);
-  int eps = neg_refl ? -1 : 1;
-
+  std::complex<double> amp1 = Math::WignerD(aj, am, an, alpha, beta, gamma);
+  std::complex<double> amp2 = (am == 0) ? amp1 :
+    Math::WignerD(aj, -am, an, alpha, beta, gamma);
+ 
+  int eps = pos_refl ? 1 : -1;
   if (aj/2*2 != aj || am/2*2 != am) { std::cerr << "Warning: check how the case is implemented. It has never been tested\n"; }
   int m1JM = (aj/2-am/2)%2 ? -1 : 1;
   double factor = eps * m1JM;
-  return (Math::WignerD(aj, am, an, alpha, beta, gamma) -
-          factor *
-          Math::WignerD(aj, -am, an, alpha, beta, gamma)) / sqrt(2.);
+  return (amp1 - factor * amp2) / (am == 0 ? 2. : sqrt(2.));
 }

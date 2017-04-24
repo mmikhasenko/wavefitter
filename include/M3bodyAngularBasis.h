@@ -13,7 +13,7 @@ namespace Math {
   std::complex<double> ZJMLS(uint J, int M, uint L, uint S,
                              double thetaI, double phiI,
                              double theta, double phi);
-  std::complex<double> ZJMLS_refl(uint J, int M, bool neg_refl, uint L, uint S,
+  std::complex<double> ZJMLS_refl(uint J, int M, bool pos_refl, uint L, uint S,
                                   double thetaI, double phiI,
                                   double theta, double phi);
 

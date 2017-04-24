@@ -8,7 +8,7 @@
 namespace Math {
   double WignerD(int aj, int am, int an, double beta);
   std::complex<double> WignerD(int aj, int am, int an, double alpha, double beta, double gamma);
-  std::complex<double> WignerD_refl(int aj, int am, int an, bool neg_refl,
+  std::complex<double> WignerD_refl(int aj, int am, int an, bool pos_refl,
                                         double alpha, double beta, double gamma);
 }
 #endif

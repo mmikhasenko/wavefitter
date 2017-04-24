@@ -10,6 +10,7 @@
 #include "TDirectory.h"
 #include "TH1D.h"
 #include "TCanvas.h"
+#include "TRandom.h"
 
 #include "MDeck.h"
 #include "MIsobar.h"
@@ -51,24 +52,14 @@ int main(int argc, char *argv[]) {
               << w.J << " " << (w.parity ? "+" : "-") << " " << w.M << " " << (w.pos_refl ? "+" : "-")
               << " " << w.S << " " << w.L << "\n";
 
-
-  TH1D *hdiag[waves.size()];
-  TH1D *hinterf[waves.size()][waves.size()];
+  TH1D *hreal[waves.size()], *himag[waves.size()];
   for (uint iw = 0; iw < waves.size(); iw++) {
-    for (uint jw = 0; jw < waves.size(); jw++) {
-      if (jw > iw)
-        hinterf[iw][jw] = new TH1D(TString::Format("h1%03d%03d", waves[iw].index, waves[jw].index),
-                                   TString::Format("Re[ %s* %s ]", waves[iw].title.c_str(), waves[jw].title.c_str()),
-                                   100, 0.5, 2.5);
-      if (jw < iw)
-        hinterf[iw][jw] = new TH1D(TString::Format("h2%03d%03d", waves[jw].index, waves[iw].index),
-                                   TString::Format("Im[ %s* %s ]", waves[jw].title.c_str(), waves[iw].title.c_str()),
-                                   100, 0.5, 2.5);
-      if (jw == iw)
-        hdiag[iw] = new TH1D(TString::Format("h%d", waves[iw].index),
-                            waves[iw].title.c_str(),
-                            100, 0.5, 2.5);
-    }
+    hreal[iw] = new TH1D(TString::Format("r%d", waves[iw].index),
+                         waves[iw].title.c_str(),
+                         100, 0.5, 2.5);
+    himag[iw] = new TH1D(TString::Format("i%d", waves[iw].index),
+                         waves[iw].title.c_str(),
+                         100, 0.5, 2.5);
   }
   // for out mode;
   MIsobar rho(RHO_MASS, RHO_WIDTH, PI_MASS, PI_MASS, 1, 5.); rho.setIntU();
@@ -79,6 +70,10 @@ int main(int argc, char *argv[]) {
   MIsobar f980(0.99, 0.04, PI_MASS, PI_MASS, 0); f980.setIntU();
   MIsobar f1500(1.504, 0.11, PI_MASS, PI_MASS, 0); f1500.setIntU();
   MIsobar *iso_scalars[] = {&pipiS, &f980, &f1500};
+
+  double E_BEAM = 190;  // GeV
+  double s0 = 2*E_BEAM*PROT_MASS + POW2(PROT_MASS) + POW2(PI_MASS);
+  double R = 5.;
 
   for (uint e = 0; e < 100; e++) {
     std::cout << "---> File #" << e << "\n";
@@ -124,10 +119,9 @@ int main(int argc, char *argv[]) {
     uint nWaves = waves.size();
 
     // create and clean integral variables
-    cd integrals[nWaves][nWaves];
+    cd integrals[nWaves];
     for (uint iw = 0; iw < waves.size(); iw++)
-      for (uint jw = 0; jw < waves.size(); jw++)
-        integrals[iw][jw] = 0.;
+        integrals[iw] = 0.;
 
     // integration loop
     const int Nentries = tin->GetEntries();
@@ -136,6 +130,8 @@ int main(int argc, char *argv[]) {
       tin->GetEntry(i);
 
       cd amp[nWaves][2];
+      cd deck[2];
+
       for (uint bose = 0; bose < 2; bose++) {
         /*************************************/
         double sI        = bose?         s3 :         s1;
@@ -153,7 +149,6 @@ int main(int argc, char *argv[]) {
              iso        [ waves[w].S]->ToneVertex(sI) :
              iso_scalars[-waves[w].S]->ToneVertex(sI));
 
-          double R = 5.;
           double qsq = LAMBDA(s, sI, POW2(PI_MASS))/(4*s);
           double BlattWeisskopf = pow(R*R*qsq/(1.+R*R*qsq), waves[w].L/2.);
 
@@ -162,24 +157,25 @@ int main(int argc, char *argv[]) {
                                           waves[w].L, (waves[w].S > 0 ? waves[w].S : 0),
                                           thetaI, phiI, theta, phi) * iso_shape * BlattWeisskopf;
         }
-        /*************************************/
+        /* Deck */
+        double t = -0.1-gRandom->Exp(1./12.);
+        deck[bose] = MDeck::getAmplitude(costhetaI, phiI,
+                                         sI, R,
+                                         costheta , phi,
+                                         s, t,
+                                         POW2(PI_MASS),
+                                         s0,
+                                         POW2(PI_MASS), POW2(PROT_MASS), POW2(PROT_MASS),
+                                         POW2(PI_MASS), POW2(PI_MASS), POW2(PI_MASS));
       }
       for (uint iw = 0; iw < waves.size(); iw++)
-        for (uint jw = iw; jw < waves.size(); jw++)
-          integrals[iw][jw] += /* conj(amp[iw][0])*(amp[jw][0]); */ conj(amp[iw][0]+amp[iw][1])*(amp[jw][0]+amp[jw][1])/2.;
+          integrals[iw] += /* conj(amp[iw][0])*(deck[0]); */ conj(amp[iw][0]+amp[iw][1])*(deck[0]+deck[1])/2.;
     }
     f->Close();
 
     for (uint iw = 0; iw < waves.size(); iw++) {
-      for (uint jw = 0; jw < waves.size(); jw++) {
-        if (jw > iw)
-          hinterf[iw][jw]->SetBinContent(e+1, real(integrals[iw][jw])*phsp*POW2(4*M_PI)/Nentries * (8*M_PI));
-        if (jw < iw)
-          hinterf[iw][jw]->SetBinContent(e+1, imag(integrals[jw][iw])*phsp*POW2(4*M_PI)/Nentries * (8*M_PI));
-        if (jw == iw) {
-          hdiag[iw]->SetBinContent(e+1,  abs(integrals[iw][jw])*phsp*POW2(4*M_PI)/Nentries * (8*M_PI));
-        }
-      }
+      hreal[iw]->SetBinContent(e+1, real(integrals[iw])*phsp*POW2(4*M_PI)/Nentries * (8*M_PI));
+      himag[iw]->SetBinContent(e+1, imag(integrals[iw])*phsp*POW2(4*M_PI)/Nentries * (8*M_PI));
     }
   }
 
@@ -187,16 +183,16 @@ int main(int argc, char *argv[]) {
   c1.DivideSquare(waves.size());
   for (uint w = 0; w < waves.size(); w++) {
     c1.cd(w+1);
-    hdiag[w]->Draw();
+    hreal[w]->Draw();
   }
   c1.Print("/tmp/ph.sp.PhoPiS.pdf");
   c1.SaveAs("/tmp/ph.sp.PhoPiS.pdf");
 
-  TFile fout("/tmp/waves.calculate_phase_space.root", "RECREATE");
-  for (uint iw = 0; iw < waves.size(); iw++)
-    for (uint jw = 0; jw < waves.size(); jw++)
-      if (jw == iw) hdiag[iw]->Write();
-      else hinterf[iw][jw]->Write();
+  TFile fout("/tmp/waves.calculate_Deck_integrals.root", "RECREATE");
+  for (uint iw = 0; iw < waves.size(); iw++) {
+    hreal[iw]->Write();
+    himag[iw]->Write();
+  }
 
   fout.Close();
   std::cout << "File " << fout.GetName() << " has been created\n";

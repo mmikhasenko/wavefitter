@@ -9,6 +9,8 @@
 #include "TF2.h"
 // #include "TH1D.h"
 
+#include "MDeck.h"
+
 #include "constants.h"
 #include "mintegrate.h"
 #include "deflib.h"
@@ -68,6 +70,23 @@ int main(int ac, char **av) {
   tout.Branch("phi3", &phi3);
   tout.Branch("costheta12", &costheta12);
   tout.Branch("phi12", &phi12);
+
+  // general
+  double E_BEAM = 190;  // GeV
+  double s0 = 2*E_BEAM*PROT_MASS + POW2(PROT_MASS) + POW2(PI_MASS);
+  double t;
+  tout.Branch("s0", &s0);
+  tout.Branch("t", &t);
+
+  double R = 5;
+
+  // Deck-(23), Deck-(12)
+  cd decklike1, decklike3;
+  double decklike1_real, decklike1_imag, decklike3_real, decklike3_imag;
+  tout.Branch("decklike1_real", &decklike1_real);
+  tout.Branch("decklike1_imag", &decklike1_imag);
+  tout.Branch("decklike3_real", &decklike3_real);
+  tout.Branch("decklike3_imag", &decklike3_imag);
 
   double s;
   tout.Branch("s", &s);
@@ -133,6 +152,31 @@ int main(int ac, char **av) {
       n1_rot[3] = cp*st* n1[1] + sp*st* n1[2] +    ct* n1[3];
     }
     phi12 = atan2(n1_rot[2], n1_rot[1]);  // BRANCH
+
+    /* deck-(23) */
+    t = -0.1-gRandom->Exp(1./12.);
+    decklike1 = MDeck::getAmplitude(costheta1, phi1,
+                                    s1, R,
+                                    costheta23 , phi23,
+                                    s, t,
+                                    POW2(PI_MASS),
+                                    s0,
+                                    POW2(PI_MASS), POW2(PROT_MASS), POW2(PROT_MASS),
+                                    POW2(PI_MASS), POW2(PI_MASS), POW2(PI_MASS));
+    // if (!(e%1000))std::cout << decklike1_real << "\n";
+    decklike1_real = real(decklike1);  // BRANCH
+    decklike1_imag = imag(decklike1);  // BRANCH
+    /* deck-(12) */
+    decklike3 = MDeck::getAmplitude(costheta3, phi3,
+                                    s3, R,
+                                    costheta12 , phi12,
+                                    s, t,
+                                    POW2(PI_MASS),
+                                    s0,
+                                    POW2(PI_MASS), POW2(PROT_MASS), POW2(PROT_MASS),
+                                    POW2(PI_MASS), POW2(PI_MASS), POW2(PI_MASS));
+    decklike3_real = real(decklike3);  // BRANCH
+    decklike3_imag = imag(decklike3);  // BRANCH
 
     tout.Fill();
   }
