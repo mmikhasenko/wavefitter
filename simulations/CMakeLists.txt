@@ -41,3 +41,8 @@ target_link_libraries(generate_3pi_angles ${ROOT_LIBRARIES})
 add_executable(calculate_Deck_projections calculate_Deck_projections.cc)
 target_link_libraries(calculate_Deck_projections polesearch )
 target_link_libraries(calculate_Deck_projections ${ROOT_LIBRARIES})
+
+# only one program
+add_executable(invert_matrix invert_matrix.cc)
+target_link_libraries(invert_matrix polesearch )
+target_link_libraries(invert_matrix ${ROOT_LIBRARIES})
