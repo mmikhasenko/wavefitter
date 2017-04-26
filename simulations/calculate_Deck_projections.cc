@@ -71,13 +71,11 @@ int main(int argc, char *argv[]) {
   MIsobar f1500(1.504, 0.11, PI_MASS, PI_MASS, 0); f1500.setIntU();
   MIsobar *iso_scalars[] = {&pipiS, &f980, &f1500};
 
-  double E_BEAM = 190;  // GeV
-  double s0 = 2*E_BEAM*PROT_MASS + POW2(PROT_MASS) + POW2(PI_MASS);
   double R = 5.;
 
   for (uint e = 0; e < 100; e++) {
     std::cout << "---> File #" << e << "\n";
-    TString fin_name = TString::Format("/mnt/data/compass/2008/phase_space_MC/%d.root", e);
+    TString fin_name = TString::Format("/mnt/data/compass/2008/phase_space_MC/_with_deck_%d.root", e);
 
     // open file and check
     TFile *f = TFile::Open(fin_name);
@@ -103,6 +101,18 @@ int main(int argc, char *argv[]) {
     tin->SetBranchAddress("phi3", &phi3);
     tin->SetBranchAddress("costheta12", &costheta12);
     tin->SetBranchAddress("phi12", &phi12);
+
+    // general
+    double s0, t;
+    tin->SetBranchAddress("s0", &s0);
+    tin->SetBranchAddress("t", &t);
+
+    // deck
+    double decklike_real[2], decklike_imag[2];
+    tin->SetBranchAddress("decklike1_real", &decklike_real[0]);
+    tin->SetBranchAddress("decklike1_imag", &decklike_imag[0]);
+    tin->SetBranchAddress("decklike3_real", &decklike_real[1]);
+    tin->SetBranchAddress("decklike3_imag", &decklike_imag[1]);
 
     // Phhase space
     tin->GetEntry(0);
@@ -158,15 +168,7 @@ int main(int argc, char *argv[]) {
                                           thetaI, phiI, theta, phi) * iso_shape * BlattWeisskopf;
         }
         /* Deck */
-        double t = -0.1-gRandom->Exp(1./12.);
-        deck[bose] = MDeck::getAmplitude(costhetaI, phiI,
-                                         sI, R,
-                                         costheta , phi,
-                                         s, t,
-                                         POW2(PI_MASS),
-                                         s0,
-                                         POW2(PI_MASS), POW2(PROT_MASS), POW2(PROT_MASS),
-                                         POW2(PI_MASS), POW2(PI_MASS), POW2(PI_MASS));
+        deck[bose] = cd(decklike_real[bose], decklike_imag[bose]);
       }
       for (uint iw = 0; iw < waves.size(); iw++)
           integrals[iw] += /* conj(amp[iw][0])*(deck[0]); */ conj(amp[iw][0]+amp[iw][1])*(deck[0]+deck[1])/2.;
@@ -188,7 +190,7 @@ int main(int argc, char *argv[]) {
   c1.Print("/tmp/ph.sp.PhoPiS.pdf");
   c1.SaveAs("/tmp/ph.sp.PhoPiS.pdf");
 
-  TFile fout("/tmp/waves.calculate_Deck_integrals.root", "RECREATE");
+  TFile fout("/tmp/waves.calculate_Deck_integrals_quicker.root", "RECREATE");
   for (uint iw = 0; iw < waves.size(); iw++) {
     hreal[iw]->Write();
     himag[iw]->Write();

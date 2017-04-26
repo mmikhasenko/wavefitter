@@ -154,7 +154,7 @@ int main(int ac, char **av) {
     phi12 = atan2(n1_rot[2], n1_rot[1]);  // BRANCH
 
     /* deck-(23) */
-    t = -0.1-gRandom->Exp(1./12.);
+    t = -0.1-gRandom->Exp(1./12.);  // BRANCH
     decklike1 = MDeck::getAmplitude(costheta1, phi1,
                                     s1, R,
                                     costheta23 , phi23,
