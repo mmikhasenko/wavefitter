@@ -10,6 +10,7 @@
 #include "TLorentzVector.h"
 #include "TFile.h"
 #include "TTree.h"
+#include "TBranch.h"
 #include "TDirectory.h"
 #include "TH1D.h"
 #include "TCanvas.h"
@@ -35,12 +36,11 @@ typedef struct {
 
 void fill_wavepull(const char* wave_fname, std::vector<wave> *waves);
 
-int main(int argc, char *argv[]) {
-
+int main(int ac, char *av[]) {
 
   std::vector<wave> waves;
   fill_wavepull("/localhome/mikhasenko/results/pwa_3pi/wavelist_formated.txt", &waves);
-  // waves.resize(4);
+  uint nWaves = waves.size();
   std::cout << "waves.size() = " << waves.size() << "\n";
   for (auto & w : waves)
     std::cout << w.index << ": " << w.title << " "
@@ -48,24 +48,6 @@ int main(int argc, char *argv[]) {
               << " " << w.S << " " << w.L << "\n";
 
 
-  TH1D *hdiag[waves.size()];
-  TH1D *hinterf[waves.size()][waves.size()];
-  for (uint iw = 0; iw < waves.size(); iw++) {
-    for (uint jw = 0; jw < waves.size(); jw++) {
-      if (jw > iw)
-        hinterf[iw][jw] = new TH1D(TString::Format("h1%03d%03d", waves[iw].index, waves[jw].index),
-                                   TString::Format("Re[ %s* %s ]", waves[iw].title.c_str(), waves[jw].title.c_str()),
-                                   100, 0.5, 2.5);
-      if (jw < iw)
-        hinterf[iw][jw] = new TH1D(TString::Format("h2%03d%03d", waves[jw].index, waves[iw].index),
-                                   TString::Format("Im[ %s* %s ]", waves[jw].title.c_str(), waves[iw].title.c_str()),
-                                   100, 0.5, 2.5);
-      if (jw == iw)
-        hdiag[iw] = new TH1D(TString::Format("h%d", waves[iw].index),
-                            waves[iw].title.c_str(),
-                            100, 0.5, 2.5);
-    }
-  }
   // for out mode;
   MIsobar rho(RHO_MASS, RHO_WIDTH, PI_MASS, PI_MASS, 1, 5.); rho.setIntU();
   MIsobar  f2(F2_MASS, F2_WIDTH,  PI_MASS, PI_MASS, 2, 5.); f2.setIntU();
@@ -78,7 +60,7 @@ int main(int argc, char *argv[]) {
 
   for (uint e = 0; e < 100; e++) {
     std::cout << "---> File #" << e << "\n";
-    TString fin_name = TString::Format("/mnt/data/compass/2008/phase_space_MC/_with_deck_%d_large1e6.root", e);  //
+    TString fin_name = TString::Format("/mnt/data/compass/2008/phase_space_MC/_with_deck_%d.root", e);  // _large1e6
 
     // open file and check
     TFile *f = TFile::Open(fin_name);
@@ -86,6 +68,20 @@ int main(int argc, char *argv[]) {
     TTree *tin = 0; gDirectory->GetObject("angles", tin);
     if (!tin) {std::cout << "Error: no tree" << std::endl; return 0;}
 
+    // out file, recreate
+    TString fout_name = TString::Format("/mnt/data/compass/2008/phase_space_MC/_with_deck_and_PWs_%d.root", e);  // _large1e6
+    TFile *fout = TFile::Open(fout_name, "recreate");
+    TTree *tout = tin->CloneTree();
+    // add a branch for every wave
+    double amp_real[nWaves][2], amp_imag[nWaves][2];
+    TBranch *br[nWaves][4];
+    for (uint w = 0; w < nWaves; w++) {
+      br[w][0] = tout->Branch(TString::Format("amp%d_frame1_real", waves[w].index), &amp_real[w][0]);
+      br[w][1] = tout->Branch(TString::Format("amp%d_frame1_imag", waves[w].index), &amp_imag[w][0]);
+      br[w][2] = tout->Branch(TString::Format("amp%d_frame3_real", waves[w].index), &amp_real[w][1]);
+      br[w][3] = tout->Branch(TString::Format("amp%d_frame3_imag", waves[w].index), &amp_imag[w][1]);
+    }
+    
     double s;
     tin->SetBranchAddress("s", &s);
 
@@ -105,19 +101,8 @@ int main(int argc, char *argv[]) {
     tin->SetBranchAddress("costheta12", &costheta12);
     tin->SetBranchAddress("phi12", &phi12);
 
-    // Phhase space
-    tin->GetEntry(0);
-    double phsp = integrate([s](double _s1)->double{
-        return sqrt(LAMBDA(s, _s1, POW2(PI_MASS))*LAMBDA(_s1, POW2(PI_MASS), POW2(PI_MASS)))/_s1;
-      }, 4*POW2(PI_MASS), POW2(sqrt(s)-PI_MASS)) / (2*M_PI*POW2(8*M_PI)*s);
-    // with isobar
-    // double quasi_two_body_phsp = integrate([&, s](double s1)->double{
-    //     return sqrt(LAMBDA(s, s1, POW2(PI_MASS))*LAMBDA(s1, POW2(PI_MASS), POW2(PI_MASS)))/s1 *
-    //       norm(iso[1]->ToneVertex(s1));
-    //   }, 4*POW2(PI_MASS), POW2(sqrt(s)-PI_MASS)) / (2*M_PI*POW2(8*M_PI)*s);
-
-    // select a set of non-zero waves
-    uint nWaves = waves.size();
+    // Phase space
+    tin->GetEntry(0);  // to get s
 
     // create and clean integral variables
     cd integrals[nWaves][nWaves];
@@ -126,12 +111,12 @@ int main(int argc, char *argv[]) {
         integrals[iw][jw] = 0.;
 
     // integration loop
+    cd amp[nWaves][2];
     const int Nentries = tin->GetEntries();
     for (int i = 0; i < Nentries; i++) {
       if (i%1000000 == 0 && i != 0) std::cout << "Processing entry " << i << "\n";
       tin->GetEntry(i);
 
-      cd amp[nWaves][2];
       for (uint bose = 0; bose < 2; bose++) {
         /*************************************/
         double sI        = bose?         s3 :         s1;
@@ -157,47 +142,21 @@ int main(int argc, char *argv[]) {
                                           (waves[w].pos_refl == waves[w].parity),  // (-1)*(-1) = (+1)*(+1) = true, otherwise is false
                                           waves[w].L, (waves[w].S > 0 ? waves[w].S : 0),
                                           thetaI, phiI, theta, phi) * iso_shape * BlattWeisskopf;
+          amp_real[w][bose] = real(amp[w][bose]);
+          amp_imag[w][bose] = imag(amp[w][bose]);
         }
         /*************************************/
       }
-      for (uint iw = 0; iw < waves.size(); iw++)
-        for (uint jw = iw; jw < waves.size(); jw++)
-          integrals[iw][jw] +=
-            // conj(amp[iw][0])*(amp[jw][0]);  // non-symmetrized
-            conj(amp[iw][0]+amp[iw][1])*(amp[jw][0]+amp[jw][1])/2.;  // symmetrized
+      // tout->Fill();
+      for (uint w = 0; w < nWaves; w++) for (uint b = 0; b < 4; b++) br[w][b]->Fill();
     }
     f->Close();
-
-    for (uint iw = 0; iw < waves.size(); iw++) {
-      for (uint jw = 0; jw < waves.size(); jw++) {
-        if (jw > iw)
-          hinterf[iw][jw]->SetBinContent(e+1, real(integrals[iw][jw])*phsp*POW2(4*M_PI)/Nentries * (8*M_PI));
-        if (jw < iw)
-          hinterf[iw][jw]->SetBinContent(e+1, imag(integrals[jw][iw])*phsp*POW2(4*M_PI)/Nentries * (8*M_PI));
-        if (jw == iw) {
-          hdiag[iw]->SetBinContent(e+1,  abs(integrals[iw][jw])*phsp*POW2(4*M_PI)/Nentries * (8*M_PI));
-        }
-      }
-    }
+    fout->cd(); tout->Write();
+    std::cout << "File " << fout->GetName() << " have been completed!\n";
+    fout->Close();
   }
 
-  TCanvas c1("c1", "title", 1000, 1000);
-  c1.DivideSquare(waves.size());
-  for (uint w = 0; w < waves.size(); w++) {
-    c1.cd(w+1);
-    hdiag[w]->Draw();
-  }
-  c1.Print("/tmp/ph.sp.PhoPiS.pdf");
-  c1.SaveAs("/tmp/ph.sp.PhoPiS.pdf");
-
-  TFile fout("/tmp/waves.calculate_phase_space_symm.root", "RECREATE");
-  for (uint iw = 0; iw < waves.size(); iw++)
-    for (uint jw = 0; jw < waves.size(); jw++)
-      if (jw == iw) hdiag[iw]->Write();
-      else hinterf[iw][jw]->Write();
-
-  fout.Close();
-  std::cout << "File " << fout.GetName() << " has been created\n";
+  std::cout << "Done!\n";
   return 0;
 }
 

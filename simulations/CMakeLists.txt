@@ -46,3 +46,8 @@ target_link_libraries(calculate_Deck_projections ${ROOT_LIBRARIES})
 add_executable(invert_matrix invert_matrix.cc)
 target_link_libraries(invert_matrix polesearch )
 target_link_libraries(invert_matrix ${ROOT_LIBRARIES})
+
+# only one program
+add_executable(add_weight_PWs add_weight_PWs.cc)
+target_link_libraries(add_weight_PWs polesearch )
+target_link_libraries(add_weight_PWs ${ROOT_LIBRARIES})

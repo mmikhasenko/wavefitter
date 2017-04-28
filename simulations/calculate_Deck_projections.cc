@@ -75,7 +75,7 @@ int main(int argc, char *argv[]) {
 
   for (uint e = 0; e < 100; e++) {
     std::cout << "---> File #" << e << "\n";
-    TString fin_name = TString::Format("/mnt/data/compass/2008/phase_space_MC/_with_deck_%d.root", e);
+    TString fin_name = TString::Format("/mnt/data/compass/2008/phase_space_MC/_with_deck_%d_large1e6.root", e);
 
     // open file and check
     TFile *f = TFile::Open(fin_name);
@@ -171,7 +171,7 @@ int main(int argc, char *argv[]) {
         deck[bose] = cd(decklike_real[bose], decklike_imag[bose]);
       }
       for (uint iw = 0; iw < waves.size(); iw++)
-          integrals[iw] += /* conj(amp[iw][0])*(deck[0]); */ conj(amp[iw][0]+amp[iw][1])*(deck[0]+deck[1])/2.;
+        integrals[iw] += conj(amp[iw][0])*(deck[0]);  // */ conj(amp[iw][0]+amp[iw][1])*(deck[0]+deck[1])/2.;
     }
     f->Close();
 
