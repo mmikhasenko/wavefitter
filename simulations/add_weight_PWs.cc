@@ -61,7 +61,7 @@ int main(int ac, char *av[]) {
 
   for (uint e = 0; e < 100; e++) {
     std::cout << "---> File #" << e << "\n";
-    TString fin_name = TString::Format("/mnt/data/compass/2008/phase_space_MC/_with_deck_%d.root", e);  // _large1e6
+    TString fin_name = TString::Format("/mnt/data/compass/2008/phase_space_MC/_with_deck_%d_large1e6.root", e);
 
     // open file and check
     TFile *f = TFile::Open(fin_name);
@@ -70,7 +70,7 @@ int main(int ac, char *av[]) {
     if (!tin) {std::cout << "Error: no tree" << std::endl; return 0;}
 
     // out file, recreate
-    TString fout_name = TString::Format("/mnt/data/compass/2008/phase_space_MC/_with_deck_and_PWs_%d.root", e);  // _large1e6
+    TString fout_name = TString::Format("/mnt/data/compass/2008/phase_space_MC/_with_deck_and_PWs_%d_large1e6.root", e);
     TFile *fout = TFile::Open(fout_name, "recreate");
     TTree *tout = tin->CloneTree();
     // add a branch for every wave

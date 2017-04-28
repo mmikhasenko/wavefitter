@@ -13,6 +13,7 @@
 #include "TDirectory.h"
 #include "TH1D.h"
 #include "TCanvas.h"
+#include "TText.h"
 
 #include "MDeck.h"
 #include "MIsobar.h"
@@ -23,30 +24,24 @@
 
 typedef struct {
   uint index;
-  uint J;
-  bool parity;
-  uint M;
-  bool pos_refl;
-  int S;
-  uint L;
-  double threshold;
   std::string title;
 } wave;
 
-void fill_wavepull(const char* wave_fname, std::vector<wave> *waves);
-
 int main(int argc, char *argv[]) {
 
-
-  std::vector<wave> waves;
-  fill_wavepull("/localhome/mikhasenko/results/pwa_3pi/wavelist_formated.txt", &waves);
-  // waves.resize(4);
-  std::cout << "waves.size() = " << waves.size() << "\n";
-  for (auto & w : waves)
-    std::cout << w.index << ": " << w.title << " "
-              << w.J << " " << (w.parity ? "+" : "-") << " " << w.M << " " << (w.pos_refl ? "+" : "-")
-              << " " << w.S << " " << w.L << "\n";
-
+  const char *fin_tmpl = "/mnt/data/compass/2008/phase_space_MC/_with_deck_and_PWs_%d.root";
+  TFile *f = TFile::Open(TString::Format(fin_tmpl, 0));
+  if (!f) {std::cout << "Error: no file 0!\n"; return 0;}
+  // check and load
+  uint nWaves = 88;
+  std::vector<wave> waves(nWaves);
+  for (uint w = 0; w < nWaves; w++) {
+    waves[w].index = w+1;
+    TText *t;
+    gDirectory->GetObject(TString::Format("t%d", w+1), t);
+    if (!t) { std::cerr << "Text field t" << w+1 << " is not found. You gonna get empty title!\n"; }
+    else waves[w].title = std::string(t->GetTitle());
+  }
 
   TH1D *hdiag[waves.size()];
   TH1D *hinterf[waves.size()][waves.size()];
@@ -66,19 +61,10 @@ int main(int argc, char *argv[]) {
                             100, 0.5, 2.5);
     }
   }
-  // for out mode;
-  MIsobar rho(RHO_MASS, RHO_WIDTH, PI_MASS, PI_MASS, 1, 5.); rho.setIntU();
-  MIsobar  f2(F2_MASS, F2_WIDTH,  PI_MASS, PI_MASS, 2, 5.); f2.setIntU();
-  MIsobar rho3(1.69, 0.16, PI_MASS, PI_MASS, 1, 5.); rho3.setIntU();
-  MIsobarPiPiS pipiS; pipiS.setIntU();
-  MIsobar *iso[] = {&pipiS, &rho, &f2, &rho3};
-  MIsobar f980(0.99, 0.04, PI_MASS, PI_MASS, 0); f980.setIntU();
-  MIsobar f1500(1.504, 0.11, PI_MASS, PI_MASS, 0); f1500.setIntU();
-  MIsobar *iso_scalars[] = {&pipiS, &f980, &f1500};
 
   for (uint e = 0; e < 100; e++) {
     std::cout << "---> File #" << e << "\n";
-    TString fin_name = TString::Format("/mnt/data/compass/2008/phase_space_MC/_with_deck_%d_large1e6.root", e);  //
+    TString fin_name = TString::Format(fin_tmpl, e);  //
 
     // open file and check
     TFile *f = TFile::Open(fin_name);
@@ -86,43 +72,27 @@ int main(int argc, char *argv[]) {
     TTree *tin = 0; gDirectory->GetObject("angles", tin);
     if (!tin) {std::cout << "Error: no tree" << std::endl; return 0;}
 
-    double s;
-    tin->SetBranchAddress("s", &s);
-
-    // (23)-frame
-    double s1, costheta1, phi1, costheta23, phi23;
-    tin->SetBranchAddress("s1", &s1);
-    tin->SetBranchAddress("costheta1", &costheta1);
-    tin->SetBranchAddress("phi1", &phi1);
-    tin->SetBranchAddress("costheta23", &costheta23);
-    tin->SetBranchAddress("phi23", &phi23);
-
-    // (12)-frame
-    double s3, costheta3, phi3, costheta12, phi12;
-    tin->SetBranchAddress("s3", &s3);
-    tin->SetBranchAddress("costheta3", &costheta3);
-    tin->SetBranchAddress("phi3", &phi3);
-    tin->SetBranchAddress("costheta12", &costheta12);
-    tin->SetBranchAddress("phi12", &phi12);
+    // add a branch for every wave
+    double amp_real[nWaves][2], amp_imag[nWaves][2];
+    for (uint w = 0; w < nWaves; w++) {
+      tin->SetBranchAddress(TString::Format("amp%d_frame1_real", waves[w].index), &amp_real[w][0]);
+      tin->SetBranchAddress(TString::Format("amp%d_frame1_imag", waves[w].index), &amp_imag[w][0]);
+      tin->SetBranchAddress(TString::Format("amp%d_frame3_real", waves[w].index), &amp_real[w][1]);
+      tin->SetBranchAddress(TString::Format("amp%d_frame3_imag", waves[w].index), &amp_imag[w][1]);
+    }
 
     // Phhase space
-    tin->GetEntry(0);
+    double s; tin->SetBranchAddress("s", &s); tin->GetEntry(0);  // to use it at the next line
     double phsp = integrate([s](double _s1)->double{
         return sqrt(LAMBDA(s, _s1, POW2(PI_MASS))*LAMBDA(_s1, POW2(PI_MASS), POW2(PI_MASS)))/_s1;
       }, 4*POW2(PI_MASS), POW2(sqrt(s)-PI_MASS)) / (2*M_PI*POW2(8*M_PI)*s);
-    // with isobar
-    // double quasi_two_body_phsp = integrate([&, s](double s1)->double{
-    //     return sqrt(LAMBDA(s, s1, POW2(PI_MASS))*LAMBDA(s1, POW2(PI_MASS), POW2(PI_MASS)))/s1 *
-    //       norm(iso[1]->ToneVertex(s1));
-    //   }, 4*POW2(PI_MASS), POW2(sqrt(s)-PI_MASS)) / (2*M_PI*POW2(8*M_PI)*s);
 
     // select a set of non-zero waves
-    uint nWaves = waves.size();
 
     // create and clean integral variables
     cd integrals[nWaves][nWaves];
-    for (uint iw = 0; iw < waves.size(); iw++)
-      for (uint jw = 0; jw < waves.size(); jw++)
+    for (uint iw = 0; iw < nWaves; iw++)
+      for (uint jw = 0; jw < nWaves; jw++)
         integrals[iw][jw] = 0.;
 
     // integration loop
@@ -132,36 +102,12 @@ int main(int argc, char *argv[]) {
       tin->GetEntry(i);
 
       cd amp[nWaves][2];
-      for (uint bose = 0; bose < 2; bose++) {
-        /*************************************/
-        double sI        = bose?         s3 :         s1;
-        double costhetaI = bose?  costheta3 :  costheta1;
-        double phiI      = bose?       phi3 :       phi1;
-        double costheta  = bose? costheta12 : costheta23;
-        double phi       = bose?      phi12 :      phi23;
+      for (uint w = 0; w < nWaves; w++)
+        for (uint bose = 0; bose < 2; bose++)
+          amp[w][bose] = cd(amp_real[w][bose], amp_imag[w][bose]);
 
-        double thetaI = acos(costhetaI);
-        double theta  = acos(costheta);
-        // loop over waves
-        for (uint w = 0; w < nWaves; w++) {
-          cd iso_shape = waves[w].S == -7 ? 1. :
-            (waves[w].S > 0 ?
-             iso        [ waves[w].S]->ToneVertex(sI) :
-             iso_scalars[-waves[w].S]->ToneVertex(sI));
-
-          double R = 5.;
-          double qsq = LAMBDA(s, sI, POW2(PI_MASS))/(4*s);
-          double BlattWeisskopf = pow(R*R*qsq/(1.+R*R*qsq), waves[w].L/2.);
-
-          amp[w][bose] = Math::ZJMLS_refl(waves[w].J, waves[w].M,
-                                          (waves[w].pos_refl == waves[w].parity),  // (-1)*(-1) = (+1)*(+1) = true, otherwise is false
-                                          waves[w].L, (waves[w].S > 0 ? waves[w].S : 0),
-                                          thetaI, phiI, theta, phi) * iso_shape * BlattWeisskopf;
-        }
-        /*************************************/
-      }
-      for (uint iw = 0; iw < waves.size(); iw++)
-        for (uint jw = iw; jw < waves.size(); jw++)
+      for (uint iw = 0; iw < nWaves; iw++)
+        for (uint jw = iw; jw < nWaves; jw++)
           integrals[iw][jw] +=
             // conj(amp[iw][0])*(amp[jw][0]);  // non-symmetrized
             conj(amp[iw][0]+amp[iw][1])*(amp[jw][0]+amp[jw][1])/2.;  // symmetrized
@@ -181,15 +127,6 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  TCanvas c1("c1", "title", 1000, 1000);
-  c1.DivideSquare(waves.size());
-  for (uint w = 0; w < waves.size(); w++) {
-    c1.cd(w+1);
-    hdiag[w]->Draw();
-  }
-  c1.Print("/tmp/ph.sp.PhoPiS.pdf");
-  c1.SaveAs("/tmp/ph.sp.PhoPiS.pdf");
-
   TFile fout("/tmp/waves.calculate_phase_space_symm.root", "RECREATE");
   for (uint iw = 0; iw < waves.size(); iw++)
     for (uint jw = 0; jw < waves.size(); jw++)
@@ -199,40 +136,6 @@ int main(int argc, char *argv[]) {
   fout.Close();
   std::cout << "File " << fout.GetName() << " has been created\n";
   return 0;
-}
-
-
-void fill_wavepull(const char* wave_fname, std::vector<wave> *waves) {
-  std::ifstream fin(wave_fname);
-  if (!fin.is_open()) {
-    std::cerr << "Error: can not find the file!\n";
-    return;
-  }
-  std::string line;
-  while (std::getline(fin, line)) {
-    std::istringstream iss(line);
-    wave n;
-    iss >> n.index;
-    iss >> n.title;
-    if (n.title == "FLAT") {
-      n.J = 0; n.M = 0; n.S = -7; n.L = 0;
-      n.parity = false;
-      n.pos_refl = true;
-      waves->push_back(n);
-      continue;
-    }
-    iss >> n.J;
-    std::string parity;
-    iss >> parity;
-    n.parity = (parity == "+");
-    iss >> n.M;
-    std::string epsilon;
-    iss >> epsilon;
-    n.pos_refl = (epsilon == "+");
-    iss >> n.S;
-    iss >> n.L;
-    waves->push_back(n);
-  }  
 }
 
 /***************************************************************************************/
