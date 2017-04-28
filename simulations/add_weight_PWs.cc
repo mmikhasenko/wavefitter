@@ -21,6 +21,7 @@
 #include "waves.h"
 #include "mintegrate.h"
 #include "M3bodyAngularBasis.h"
+#include "TText.h"
 
 typedef struct {
   uint index;
@@ -101,9 +102,6 @@ int main(int ac, char *av[]) {
     tin->SetBranchAddress("costheta12", &costheta12);
     tin->SetBranchAddress("phi12", &phi12);
 
-    // Phase space
-    tin->GetEntry(0);  // to get s
-
     // create and clean integral variables
     cd integrals[nWaves][nWaves];
     for (uint iw = 0; iw < waves.size(); iw++)
@@ -152,6 +150,11 @@ int main(int ac, char *av[]) {
     }
     f->Close();
     fout->cd(); tout->Write();
+    // save titles
+    for (uint w = 0; w < nWaves; w++) {
+      TText tx(0., 0., waves[w].title.c_str()); tx.SetName(TString::Format("t%d", waves[w].index));
+      tx.Write();
+    }
     std::cout << "File " << fout->GetName() << " have been completed!\n";
     fout->Close();
   }
