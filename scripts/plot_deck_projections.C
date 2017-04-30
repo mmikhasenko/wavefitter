@@ -15,9 +15,9 @@
 
 uint plot_deck_projections(uint nPads = 4);
 uint plot_deck_projections(uint nPads) {
-  TFile *fin1 = new TFile("/mnt/data/compass/2008/Deck.88waves.linal.misha/inverted.Deck.root");
+  TFile *fin1 = new TFile("/mnt/data/compass/2008/Deck.88waves.linal.misha/inverted.Deck.large.root");
   if (!fin1) { std::cerr << "Error with file1!\n"; return 1; }
-  TFile *fin2 = new TFile("/mnt/data/compass/2008/Deck.88waves.linal.misha/inverted.Deck.thresholded.root");
+  TFile *fin2 = new TFile("/mnt/data/compass/2008/Deck.88waves.linal.misha/inverted.Deck.thresholded.large.root");
   if (!fin2) { std::cerr << "Error with file2!\n"; return 1; }
 
   TCanvas *c1 = new TCanvas("c1");

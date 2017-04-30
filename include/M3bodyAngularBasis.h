@@ -21,5 +21,9 @@ namespace Math {
                                            double, double, double, double, double)> funct,
                       uint Npoints,
                       double s, double m1sq, double m2sq, double m3sq);
+
+  bool changeAngularBasis(double  s1, double  costheta1, double  phi1, double  costheta23, double  phi23,
+                          double *s3, double *costheta3, double *phi3, double *costheta12, double *phi12,
+                          double m1sq, double m2sq, double m3sq, double s);
 }
 #endif

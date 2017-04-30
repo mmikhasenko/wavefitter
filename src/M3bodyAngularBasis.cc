@@ -183,3 +183,59 @@ double Math::integrate3bphs(std::function<double(double, double, double, double,
 }
 
 
+bool Math::changeAngularBasis(double  s1, double  costheta1, double  phi1, double  costheta23, double  phi23,
+                              double *s3, double *costheta3, double *phi3, double *costheta12, double *phi12,
+                              double m1sq, double m2sq, double m3sq, double s) {
+  // calculate s3 in (23) frame
+  *s3 = m1sq + m2sq +
+    // 2*(  E2 * E1 -
+    2*( (s1 + m2sq - m3sq)/(2*sqrt(s1)) * (s-m1sq-s1)/(2*sqrt(s1)) -
+        // |p2|*cos(theta23) * (-|p1|)
+        sqrt(LAMBDA(s1, m2sq, m3sq)/(4*s1))*costheta23 * (-sqrt(LAMBDA(s, m1sq, s1)/(4*s1))) );
+  if (*s3 != *s3) return false;  // nan check
+
+  // caluclate p3 in (23) frame
+  double p23bu = sqrt(LAMBDA(s1, m2sq, m3sq)/(4*s1));
+  double p3_in23[] = {(s1 + m3sq - m2sq)/sqrt(4*s1),
+                      -p23bu*sqrt(1-POW2(costheta23))*cos(phi23),
+                      -p23bu*sqrt(1-POW2(costheta23))*sin(phi23),
+                      -p23bu*costheta23};
+  double gamma1 = (s + s1 - m1sq)/sqrt(4*s*s1);
+  double beta1 = sqrt(1.-1./POW2(gamma1));
+  double p3_b[] = {gamma1*(p3_in23[0]+beta1*p3_in23[3]),
+                   p3_in23[1],
+                   p3_in23[2],
+                   gamma1*(beta1*p3_in23[0]+p3_in23[3])};
+  double p3_rot[4];
+  { double ct = costheta1, st = sqrt(1.-POW2(costheta1)), cp = cos(phi1), sp = sin(phi1);
+    // Rz(phi1) * Ry(theta1) * p3_boost
+    p3_rot[0] = p3_b[0];
+    p3_rot[1] = cp*ct* p3_b[1] + (-sp)* p3_b[2] + cp*st* p3_b[3];
+    p3_rot[2] = sp*ct* p3_b[1] +   cp * p3_b[2] + sp*st* p3_b[3];
+    p3_rot[3] =  - st* p3_b[1] +    0 * p3_b[2] +    ct* p3_b[3];
+  }
+  // calculate Omega12
+  *costheta3 = - p3_rot[3]/sqrt(POW2(p3_rot[1])+POW2(p3_rot[2])+POW2(p3_rot[3]));
+  *phi3 = atan2(-p3_rot[2], -p3_rot[1]);
+
+  *costheta12 = (s1 - m2sq - m3sq - 2* (*s3+m2sq-m1sq)/(2*sqrt(*s3)) * (s-m3sq-*s3)/(2*sqrt(*s3))) /
+    (2 * sqrt(LAMBDA(*s3, m1sq, m2sq)/(4*(*s3))) * sqrt(LAMBDA(s, m3sq, *s3)/(4*(*s3))) );
+  if (*costheta12 != *costheta12) return false;  // nan check
+
+  double n1[] = {0.,
+                 -sqrt(1.-POW2(costheta1))*cos(phi1),
+                 -sqrt(1.-POW2(costheta1))*sin(phi1),
+                 -costheta1};
+  // Ry(-theta12) * Rz(-phi12) * n1;
+  double n1_rot[4];
+  { double ct = *costheta3, st = sqrt(1.-POW2(*costheta3)), cp = cos(*phi3), sp = sin(*phi3);
+    // Rz(phi23) * Ry(theta23) * p3_boost
+    n1_rot[0] = n1[0];
+    n1_rot[1] = cp*ct* n1[1] + sp*ct* n1[2] + (-st)* n1[3];
+    n1_rot[2] = (-sp)* n1[1] +   cp * n1[2] +    0 * n1[3];
+    n1_rot[3] = cp*st* n1[1] + sp*st* n1[2] +    ct* n1[3];
+  }
+  *phi12 = atan2(n1_rot[2], n1_rot[1]);
+
+  return true;
+}

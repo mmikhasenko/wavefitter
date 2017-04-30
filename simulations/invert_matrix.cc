@@ -61,10 +61,10 @@ int main() {
   TH1D *hresr[Nwaves], *hresi[Nwaves], *hint[Nwaves];
   for (uint i = 0; i < Nwaves; i++) {
     hresr[i] = new TH1D(TString::Format("hr%d", i+1),
-                        TString::Format("Expansion coeff, real part, %s", hdiag[i]->GetName()),
+                        TString::Format("Expansion coeff, real part, %s", hdiag[i]->GetTitle()),
                         100, 0.5, 2.5);
     hresi[i] = new TH1D(TString::Format("hi%d", i+1),
-                        TString::Format("Expansion coeff, imag part, %s", hdiag[i]->GetName()),
+                        TString::Format("Expansion coeff, imag part, %s", hdiag[i]->GetTitle()),
                         100, 0.5, 2.5);
     hint[i] = new TH1D(TString::Format("h%d", i+1),
                        TString::Format("Intensity %s", hdiag[i]->GetTitle()),

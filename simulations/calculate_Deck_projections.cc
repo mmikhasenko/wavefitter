@@ -1,4 +1,7 @@
 // Copyright [2016] Misha Mikhasenko
+// Discription:
+//    It calculates Deck projections based on event by event phase space MonteCarlo
+
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -27,7 +30,7 @@ typedef struct {
 
 int main(int argc, char *argv[]) {
 
-  const char *fin_tmpl = "/mnt/data/compass/2008/phase_space_MC/_with_deck_and_PWs_%d.root";  // _large1e6
+  const char *fin_tmpl = "/mnt/data/compass/2008/phase_space_MC/_with_deck_and_PWs_%d_large1e6.root";  // _large1e6
   TFile *f = TFile::Open(TString::Format(fin_tmpl, 0));
   if (!f) {std::cout << "Error: no file 0!\n"; return 0;}
   // check and load

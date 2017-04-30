@@ -29,7 +29,7 @@ typedef struct {
 
 int main(int argc, char *argv[]) {
 
-  const char *fin_tmpl = "/mnt/data/compass/2008/phase_space_MC/_with_deck_and_PWs_%d.root";
+  const char *fin_tmpl = "/mnt/data/compass/2008/phase_space_MC/_with_deck_and_PWs_%d_large1e6.root";
   TFile *f = TFile::Open(TString::Format(fin_tmpl, 0));
   if (!f) {std::cout << "Error: no file 0!\n"; return 0;}
   // check and load
