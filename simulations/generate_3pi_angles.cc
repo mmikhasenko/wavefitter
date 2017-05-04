@@ -2,6 +2,9 @@
 // A simple program to generate 3 particles phase space decay angles
 
 #include <iostream>
+#include <fstream>
+#include <sstream>
+#include <complex>
 
 #include "TRandom.h"
 #include "TFile.h"
@@ -10,12 +13,30 @@
 // #include "TH1D.h"
 
 #include "MDeck.h"
+#include "MIsobar.h"
+#include "MIsobarPiPiS.h"
+#include "waves.h"
+#include "M3bodyAngularBasis.h"
+#include "TText.h"
+
 
 #include "constants.h"
 #include "mintegrate.h"
 #include "deflib.h"
 
-#include "M3bodyAngularBasis.h"
+typedef struct {
+  uint index;
+  uint J;
+  bool parity;
+  uint M;
+  bool pos_refl;
+  int S;
+  uint L;
+  double threshold;
+  std::string title;
+} wave;
+
+void fill_wavepull(const char* wave_fname, std::vector<wave> *waves);
 
 
 double fs1(double *x, double *par) {
@@ -83,6 +104,8 @@ int main(int ac, char **av) {
 
   double R = 5;
 
+  /* prepare for the calculation of Deck-like amplitude */
+
   // Deck-(23), Deck-(12)
   cd decklike1, decklike3;
   double decklike1_real, decklike1_imag, decklike3_real, decklike3_imag;
@@ -94,6 +117,37 @@ int main(int ac, char **av) {
   double s;
   tout.Branch("s", &s);
 
+  /* prepare for the calculation of PWs */
+  // read wavepull
+  std::vector<wave> waves;
+  fill_wavepull("/localhome/mikhasenko/results/pwa_3pi/wavelist_formated.txt", &waves);
+  uint nWaves = waves.size();
+  std::cout << "waves.size() = " << waves.size() << "\n";
+  for (auto & w : waves)
+    std::cout << w.index << ": " << w.title << " "
+              << w.J << " " << (w.parity ? "+" : "-") << " " << w.M << " " << (w.pos_refl ? "+" : "-")
+              << " " << w.S << " " << w.L << "\n";
+  // branches
+  cd amp[nWaves][2];
+  double amp_real[nWaves][2], amp_imag[nWaves][2];
+  for (uint w = 0; w < nWaves; w++) {
+    tout.Branch(TString::Format("amp%d_frame1_real", waves[w].index), &amp_real[w][0]);
+    tout.Branch(TString::Format("amp%d_frame1_imag", waves[w].index), &amp_imag[w][0]);
+    tout.Branch(TString::Format("amp%d_frame3_real", waves[w].index), &amp_real[w][1]);
+    tout.Branch(TString::Format("amp%d_frame3_imag", waves[w].index), &amp_imag[w][1]);
+  }
+
+  // Create isobars
+  MIsobar rho(RHO_MASS, RHO_WIDTH, PI_MASS, PI_MASS, 1, 5.); rho.setIntU();
+  MIsobar  f2(F2_MASS, F2_WIDTH,  PI_MASS, PI_MASS, 2, 5.); f2.setIntU();
+  MIsobar rho3(1.69, 0.16, PI_MASS, PI_MASS, 1, 5.); rho3.setIntU();
+  MIsobarPiPiS pipiS; pipiS.setIntU();
+  MIsobar *iso[] = {&pipiS, &rho, &f2, &rho3};
+  MIsobar f980(0.99, 0.04, PI_MASS, PI_MASS, 0); f980.setIntU();
+  MIsobar f1500(1.504, 0.11, PI_MASS, PI_MASS, 0); f1500.setIntU();
+  MIsobar *iso_scalars[] = {&pipiS, &f980, &f1500};
+
+  // main loop
   for (uint e = 0; e < nEvents; e++) {
     // from the function
     tfs1.GetRandom2(s1, s);  // BRANCH
@@ -140,10 +194,79 @@ int main(int ac, char **av) {
     /**********************************************************************************************/
     /* Partial Waves */
 
+    for (uint bose = 0; bose < 2; bose++) {
+      /*************************************/
+      double sI        = bose?         s3 :         s1;
+      double costhetaI = bose?  costheta3 :  costheta1;
+      double phiI      = bose?       phi3 :       phi1;
+      double costheta  = bose? costheta12 : costheta23;
+      double phi       = bose?      phi12 :      phi23;
+
+      double thetaI = acos(costhetaI);
+      double theta  = acos(costheta);
+      // loop over waves
+      for (uint w = 0; w < nWaves; w++) {
+        cd iso_shape = waves[w].S == -7 ? 1. :
+          (waves[w].S > 0 ?
+           iso        [ waves[w].S]->ToneVertex(sI) :
+           iso_scalars[-waves[w].S]->ToneVertex(sI));
+
+        double R = 5.;
+        double qsq = LAMBDA(s, sI, POW2(PI_MASS))/(4*s);
+        double BlattWeisskopf = pow(R*R*qsq/(1.+R*R*qsq), waves[w].L/2.);
+
+        amp[w][bose] = Math::ZJMLS_refl(waves[w].J, waves[w].M,
+                                        (waves[w].pos_refl == waves[w].parity),  // (-1)*(-1) = (+1)*(+1) = true, otherwise is false
+                                        waves[w].L, (waves[w].S > 0 ? waves[w].S : 0),
+                                        thetaI, phiI, theta, phi) * iso_shape * BlattWeisskopf;
+        amp_real[w][bose] = real(amp[w][bose]);
+        amp_imag[w][bose] = imag(amp[w][bose]);
+      }
+    }
+
     tout.Fill();
   }
   tout.Write();
+  for (uint w = 0; w < nWaves; w++) {
+    TText tx(0., 0., waves[w].title.c_str()); tx.SetName(TString::Format("t%d", waves[w].index));
+    tx.Write();
+  }
   fout.Close();
   
   return 0;
+}
+
+
+
+void fill_wavepull(const char* wave_fname, std::vector<wave> *waves) {
+  std::ifstream fin(wave_fname);
+  if (!fin.is_open()) {
+    std::cerr << "Error: can not find the file!\n";
+    return;
+  }
+  std::string line;
+  while (std::getline(fin, line)) {
+    std::istringstream iss(line);
+    wave n;
+    iss >> n.index;
+    iss >> n.title;
+    if (n.title == "FLAT") {
+      n.J = 0; n.M = 0; n.S = -7; n.L = 0;
+      n.parity = false;
+      n.pos_refl = true;
+      waves->push_back(n);
+      continue;
+    }
+    iss >> n.J;
+    std::string parity;
+    iss >> parity;
+    n.parity = (parity == "+");
+    iss >> n.M;
+    std::string epsilon;
+    iss >> epsilon;
+    n.pos_refl = (epsilon == "+");
+    iss >> n.S;
+    iss >> n.L;
+    waves->push_back(n);
+  }
 }

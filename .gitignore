@@ -1,0 +1,13 @@
+.gitignore
+
+# build folder
+build
+
+# against dinamically generated root-files
+*.so
+*.pcm
+*.d
+
+# strange files from jupyter-notebook
+.ipynb_checkpoints
+

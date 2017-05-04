@@ -22,14 +22,18 @@
 #include "mintegrate.h"
 #include "M3bodyAngularBasis.h"
 
+#define SYMM true
+
 typedef struct {
   uint index;
   std::string title;
 } wave;
 
-int main(int argc, char *argv[]) {
+int main(int ac, char *av[]) {
+  if (ac < 3) { std::cerr << "Usage: ./calculate_phase_space [FILE_NAME_TMPL] [FOUT_NAME]"; return 0; }
+  const char *fin_tmpl = av[1];  // "/mnt/data/compass/2008/phase_space_MC/_with_deck_and_PWs_%d_large1e6.root"
+  const char *fout_name = av[2];  // "/tmp/waves.calculate_phase_space_non_symm.root"
 
-  const char *fin_tmpl = "/mnt/data/compass/2008/phase_space_MC/_with_deck_and_PWs_%d_large1e6.root";
   TFile *f = TFile::Open(TString::Format(fin_tmpl, 0));
   if (!f) {std::cout << "Error: no file 0!\n"; return 0;}
   // check and load
@@ -108,9 +112,9 @@ int main(int argc, char *argv[]) {
 
       for (uint iw = 0; iw < nWaves; iw++)
         for (uint jw = iw; jw < nWaves; jw++)
-          integrals[iw][jw] +=
-            // conj(amp[iw][0])*(amp[jw][0]);  // non-symmetrized
-            conj(amp[iw][0]+amp[iw][1])*(amp[jw][0]+amp[jw][1])/2.;  // symmetrized
+          integrals[iw][jw] += (SYMM ?
+                                conj(amp[iw][0]+amp[iw][1])*(amp[jw][0]+amp[jw][1])/2. :  // symmetrized
+                                conj(amp[iw][0])*(amp[jw][0]) );  // non-symmetrized
     }
     f->Close();
 
@@ -127,7 +131,7 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  TFile fout("/tmp/waves.calculate_phase_space_symm.root", "RECREATE");
+  TFile fout(TString::Format("%s_%s", fout_name, (SYMM ? ".symm" : ".non_symm")), "RECREATE");
   for (uint iw = 0; iw < waves.size(); iw++)
     for (uint jw = 0; jw < waves.size(); jw++)
       if (jw == iw) hdiag[iw]->Write();
@@ -143,51 +147,21 @@ int main(int argc, char *argv[]) {
 /***************************************************************************************/
 /*
 TCanvas c1
-c1.Divide(4,4)
+c1.Divide(4,4);
+uint inds[4] = {
+1 +gRandom->Integer(15),
+15+gRandom->Integer(15),
+30+gRandom->Integer(15),
+45+gRandom->Integer(15)};
 for(int i=0; i<4; i++) {
 for (int j=0; j<4; j++) {
 c1.cd(1+i*4+j);
-if(i==j) gDirectory->Get(TString::Format("h%d",i+1))->Draw();
-if(i<j) gDirectory->Get(TString::Format("h1%03d%03d",i+1,j+1))->Draw();
-if(i>j) gDirectory->Get(TString::Format("h2%03d%03d",j+1,i+1))->Draw();
+std::cout << "(i,j) = " << inds[i] << ", " << inds[j] << ";\n";
+if(i==j) gDirectory->Get(TString::Format("h%d",inds[i]))->Draw();
+if(i<j) gDirectory->Get(TString::Format("h1%03d%03d",inds[i],inds[j]))->Draw();
+if(i>j) gDirectory->Get(TString::Format("h2%03d%03d",inds[j],inds[i]))->Draw();
 }
 }
-*/
-/***************************************************************************************/
-/***************************************************************************************/
-/***************************************************************************************/
-
-
-/***************************************************************************************/
-/**** script to plot in the matrix form and colors *************************************/
-/***************************************************************************************/
-/*
-TMatrixD m(88,88);
-for(int i=0; i<88;i++) {
-  for (int j=0; j<88; j++) {
-    TH1D *h = (TH1D*)gDirectory->Get((i==j) ? TString::Format("h%d",i+1) : ((i<j) ? TString::Format("h1%03d%03d",i+1,j+1) : TString::Format("h1%03d%03d",j+1,i+1)));
-    m(i,j) = h->GetBinContent(81);
-  }
-}
-TCanvas *c1 = new TCanvas("c1", "title", 1000, 1000);
-m.Draw("colz");
-TH2D *h = (TH2D*)gROOT->FindObject("TMatrixDBase");
-if (h) {
-  for(int i=0; i<88;i++) {
-    TH1D *hdiag = (TH1D*)gROOT->FindObject(TString::Format("h%d", i+1));
-    if (!hdiag) break;
-    h->GetXaxis()->SetBinLabel(i+1, hdiag->GetTitle());
-    h->GetYaxis()->SetBinLabel(i+1, hdiag->GetTitle());
-  }
-}
-h->SetStats(kFALSE);
-h->GetXaxis()->SetLabelSize(0.02);
-h->GetYaxis()->SetLabelSize(0.02);
-h->GetZaxis()->SetRangeUser(0.01, 1.0);
-h->GetXaxis()->SetTickSize(0);
-h->GetYaxis()->SetTickSize(0);
-h->SetTitle("PW integral matrix");
-h->Draw("colz");
 */
 /***************************************************************************************/
 /***************************************************************************************/

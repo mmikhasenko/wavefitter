@@ -23,14 +23,18 @@
 #include "mintegrate.h"
 #include "M3bodyAngularBasis.h"
 
+#define SYMM true
+
 typedef struct {
   uint index;
   std::string title;
 } wave;
 
-int main(int argc, char *argv[]) {
+int main(int ac, char *av[]) {
+  if (ac < 3) { std::cerr << "Usage: ./calculate_phase_space [FILE_NAME_TMPL] [FOUT_NAME]"; return 0; }
+  const char *fin_tmpl = av[1];  // "/mnt/data/compass/2008/phase_space_MC/_with_deck_and_PWs_%d_large1e6.root";
+  const char *fout_name = av[2];  // "/tmp/waves.calculate_phase_space_non_symm.root"
 
-  const char *fin_tmpl = "/mnt/data/compass/2008/phase_space_MC/_with_deck_and_PWs_%d_large1e6.root";  // _large1e6
   TFile *f = TFile::Open(TString::Format(fin_tmpl, 0));
   if (!f) {std::cout << "Error: no file 0!\n"; return 0;}
   // check and load
@@ -114,8 +118,8 @@ int main(int argc, char *argv[]) {
       }
       for (uint iw = 0; iw < waves.size(); iw++)
         integrals[iw] +=
-          // conj(amp[iw][0])*(deck[0]);
-          conj(amp[iw][0]+amp[iw][1])*(deck[0]+deck[1])/2.;
+          conj(amp[iw][0])*(deck[0]);
+          // conj(amp[iw][0]+amp[iw][1])*(deck[0]+deck[1])/2.;
     }
     f->Close();
 
@@ -125,7 +129,7 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  TFile fout("/tmp/waves.calculate_Deck_integrals_symm.root", "RECREATE");
+  TFile fout(TString::Format("%s_%s", fout_name, (SYMM ? ".symm" : ".non_symm")), "RECREATE");
   for (uint iw = 0; iw < waves.size(); iw++) {
     hreal[iw]->Write();
     himag[iw]->Write();
