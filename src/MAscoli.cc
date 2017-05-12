@@ -31,12 +31,8 @@ double MAscoli::getReducedDeck(double costheta, double phi,
   double qdsq = LAMBDA(mS1sq, mAsq, mtRsq)/(4*mS1sq);  // tR OR mtRsq?
   double damp = RS1*RS1*qdsq/(1.+RS1*RS1*qdsq);
 
-  double pa = sqrt(LAMBDA(wsq, mAsq, t)/(4*wsq));  // GJ
-  double p1 = sqrt(LAMBDA(wsq, mS1sq, m1sq)/(4*wsq));  // break up at GJ
-  double eI = sqrt(p1*p1 + mS1sq);  // E_{pion1} at GJ
-  double ea = sqrt(pa*pa + mAsq);
   // virtuality
-  double tR = mAsq + mS1sq - 2.*ea*eI + 2.*pa*p1*costheta;  // GJ
+  double tR = tPionIsobar(costheta, mS1sq, wsq, t, mAsq, m1sq);  // GJ
 
   double spip = sPionProton(costheta, phi, mS1sq, wsq, t, stot, mAsq, mBsq, mDsq, m1sq);
   double amp_pion_proton = spip+(t-mBsq-mDsq-tR-m1sq)/2;
@@ -112,12 +108,7 @@ cd MAscoli::fullDeckTerm(double costheta, double phi,
                          double m1sq) {
   if (sqrt(wsq) <= sqrt(mS1sq)+sqrt(m1sq)) return 0;
   // calculate pi-p amplitude
-  double pa = sqrt(LAMBDA(wsq, mAsq, t)/(4*wsq));  // GJ
-  double p1 = sqrt(LAMBDA(wsq, mS1sq, m1sq)/(4*wsq));  // break up at GJ
-  double eI = sqrt(p1*p1 + mS1sq);  // E_{pion1} at GJ
-  double ea = sqrt(pa*pa + mAsq);
-  // virtuality
-  double tR = mAsq + mS1sq - 2.*ea*eI + 2.*pa*p1*costheta;  // GJ
+  double tR = tPionIsobar(costheta, mS1sq, wsq, t, mAsq, m1sq);  // GJ
   // pi-p
   double spip = sPionProton(costheta, phi, mS1sq, wsq, t, stot, mAsq, mBsq, mDsq, m1sq);
   double amp_pion_proton = spip+(t-mBsq-mDsq-tR-m1sq)/2;
@@ -168,6 +159,15 @@ double MAscoli::sPionProton(double costheta, double phi,
   return spip_int_phi;
 }
 
+double MAscoli::tPionIsobar(double costheta, double mS1sq,
+                            double wsq, double t, double mAsq, double m1sq) {
+  double pa = sqrt(LAMBDA(wsq, mAsq, t)/(4*wsq));  // GJ
+  double p1 = sqrt(LAMBDA(wsq, mS1sq, m1sq)/(4*wsq));  // break up at GJ
+  double eI = sqrt(p1*p1 + mS1sq);  // E_{pion1} at GJ
+  double ea = sqrt(pa*pa + mAsq);
+  return mAsq + mS1sq - 2.*ea*eI + 2.*pa*p1*costheta;
+}
+
 double MAscoli::upperPart(double costheta,
                           double mS1sq, uint S1, int lamS1, double RS1,
                           double wsq, double t,
@@ -176,13 +176,8 @@ double MAscoli::upperPart(double costheta,
                           double m1sq) {
   if (sqrt(wsq) <= sqrt(mS1sq)+sqrt(m1sq)) return 0;
 
-  double pa = sqrt(LAMBDA(wsq, mAsq, t)/(4*wsq));  // GJ
-  double p1 = sqrt(LAMBDA(wsq, mS1sq, m1sq)/(4*wsq));  // break up at GJ
-  double e1 = sqrt(p1*p1 + m1sq);  // E_{pion1} at GJ
-  double eI = sqrt(wsq) - e1;  // E_{isobar} at GJ
-  double ea = sqrt(pa*pa + mAsq);
   // virtuality
-  double tR = mAsq + mS1sq - 2.*ea*eI + 2.*pa*p1*costheta;  // GJ
+  double tR = MAscoli::tPionIsobar(costheta, mS1sq, wsq, t, mAsq, m1sq);
   // calculation for the main quantity
   double psi = MAscoli::psi(costheta, mS1sq, wsq, t, mAsq, m1sq);
 

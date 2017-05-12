@@ -39,6 +39,7 @@ namespace MAscoli {
                             double stot,
                             double mAsq, double mBsq, double mDsq,
                             double m1sq);
+  double tPionIsobar(double costheta, double mS1sq, double wsq, double t, double mAsq, double m1sq);
 
   cd fullDeckTerm(double costheta, double phi,
                          double mS1sq, uint S1, int lamS1, double RS1,
