@@ -123,13 +123,17 @@ int main(int ac, char **av) {
     for (uint i = 0; i < chs.size(); i++) {
       hresr[chs[i]]->SetBinContent(iBin, real(vBres(i)));
       hresi[chs[i]]->SetBinContent(iBin, imag(vBres(i)));
-      hint[chs[i]]->SetBinContent(iBin, norm(vBres(i)) * hdiag[chs[i]]->GetBinContent(iBin));
+      hint[chs[i]]->SetBinContent(iBin, norm(vBres(i)) * hdiag[chs[i]]->GetBinContent(iBin) *
+                                  1./POW2(4*M_PI) * 1./(8*M_PI));  // because of the normalization of integrals
     }
   }
   
   // Save the result
   TFile fout(fout_name, "RECREATE");
   for (uint i = 0; i < Nwaves; i++) { hresr[i]->Write(); hresi[i]->Write(); hint[i]->Write(); }
+  fincr->cd();
+  TH1D *hnorm; gDirectory->GetObject("hnorm", hnorm);
+  if (hnorm) { fout.cd(); hnorm->Write(); }  // just propagate histogram to the next file
 
   std::cout << "File " << fout.GetName() << " has been created!\n";
 

@@ -25,7 +25,7 @@ int main() {
   uint S = 2;
   double mIso = F2_MASS;
   double R = 5.0;
-  double RI = 5.0;
+  // double RI = 5.0;
   double E_BEAM_LAB = 190;
   double mAsq = POW2(PI_MASS);
   double mBsq = POW2(PROT_MASS);
@@ -35,10 +35,10 @@ int main() {
   double tP = -0.01;
 
   // isobar
-  MIsobar f2_iso(F2_MASS, F2_WIDTH,  PI_MASS, PI_MASS, S, RI);
-  MIsobarChannel *mCh = new MIsobarChannel(f2_iso, PI_MASS, L);
-  MIsobarChannel *_iso = mCh;
-  double sth = _iso->sth();
+  // MIsobar f2_iso(F2_MASS, F2_WIDTH,  PI_MASS, PI_MASS, S, RI);
+  // MIsobarChannel *mCh = new MIsobarChannel(f2_iso, PI_MASS, L);
+  // MIsobarChannel *_iso = mCh;
+  // double sth = _iso->sth();
 
   // Deck table
   uint Ninterp = 100;

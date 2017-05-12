@@ -61,7 +61,8 @@ TH1D *plot_coherent_sums(const std::vector<uint> &_indeces,
     cd sum = 0;
     for (uint i = 0; i < nInd; i++) {
       for (uint j = 0; j < nInd; j++) {
-        sum += conj(proj[i])*proj[j] * amp[i][j];
+        sum += conj(proj[i])*proj[j] * amp[i][j] *
+          1./POW2(4*M_PI) * 1./(8*M_PI));  // because of the normalization of integrals
       }
     }
     hint->SetBinContent(b+1, real(sum));

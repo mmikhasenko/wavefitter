@@ -23,7 +23,7 @@
 #include "mintegrate.h"
 #include "M3bodyAngularBasis.h"
 
-#define SYMM true
+#define SYMM false
 
 typedef struct {
   uint index;
@@ -57,8 +57,10 @@ int main(int ac, char *av[]) {
                          waves[iw].title.c_str(),
                          100, 0.5, 2.5);
   }
+  TH1D *hnorm = new TH1D("hnorm", "d #sigma / d s", 100, 0.5, 2.5);
 
-  for (uint e = 0; e < 100; e++) {
+  const uint Nbins = 100;
+  for (uint e = 0; e < Nbins; e++) {
     std::cout << "---> File #" << e << "\n";
     TString fin_name = TString::Format(fin_tmpl, e);
 
@@ -68,9 +70,8 @@ int main(int ac, char *av[]) {
     TTree *tin = 0; gDirectory->GetObject("angles", tin);
     if (!tin) {std::cout << "Error: no tree" << std::endl; return 0;}
 
-    double s;
+    double s = 0.5 + (2.5-0.5)/Nbins*e;
     tin->SetBranchAddress("s", &s);
-
 
     // general
     double s0, t;
@@ -95,7 +96,6 @@ int main(int ac, char *av[]) {
     }
 
     // Phhase space
-    tin->GetEntry(0);  // to get s
     double phsp = integrate([s](double _s1)->double{
         return sqrt(LAMBDA(s, _s1, POW2(PI_MASS))*LAMBDA(_s1, POW2(PI_MASS), POW2(PI_MASS)))/_s1;
       }, 4*POW2(PI_MASS), POW2(sqrt(s)-PI_MASS)) / (2*M_PI*POW2(8*M_PI)*s);
@@ -103,6 +103,7 @@ int main(int ac, char *av[]) {
     // create and clean integral variables
     cd integrals[nWaves];
     for (uint iw = 0; iw < waves.size(); iw++) integrals[iw] = 0.;
+    double vnorm = 0.;
 
     // integration loop
     const int Nentries = tin->GetEntries();
@@ -116,10 +117,11 @@ int main(int ac, char *av[]) {
         for (uint w = 0; w < nWaves; w++) amp[w][bose] = cd(amp_real[w][bose], amp_imag[w][bose]);
         deck[bose] = cd(decklike_real[bose], decklike_imag[bose]);
       }
+      vnorm += SYMM  ?  norm(deck[0]+deck[1])/2.  :  norm(deck[0]);
       for (uint iw = 0; iw < waves.size(); iw++)
-        integrals[iw] +=
+        integrals[iw] += SYMM ?
+          conj(amp[iw][0]+amp[iw][1])*(deck[0]+deck[1])/2. :
           conj(amp[iw][0])*(deck[0]);
-          // conj(amp[iw][0]+amp[iw][1])*(deck[0]+deck[1])/2.;
     }
     f->Close();
 
@@ -127,13 +129,15 @@ int main(int ac, char *av[]) {
       hreal[iw]->SetBinContent(e+1, real(integrals[iw])*phsp*POW2(4*M_PI)/Nentries * (8*M_PI));
       himag[iw]->SetBinContent(e+1, imag(integrals[iw])*phsp*POW2(4*M_PI)/Nentries * (8*M_PI));
     }
+    hnorm->SetBinContent(e+1, vnorm * phsp / Nentries);
   }
 
-  TFile fout(TString::Format("%s_%s", fout_name, (SYMM ? ".symm" : ".non_symm")), "RECREATE");
+  TFile fout(TString::Format("%s%s", fout_name, (SYMM ? ".symm" : ".non_symm")), "RECREATE");
   for (uint iw = 0; iw < waves.size(); iw++) {
     hreal[iw]->Write();
     himag[iw]->Write();
   }
+  hnorm->Write();
 
   fout.Close();
   std::cout << "File " << fout.GetName() << " has been created\n";

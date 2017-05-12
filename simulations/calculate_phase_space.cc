@@ -22,7 +22,7 @@
 #include "mintegrate.h"
 #include "M3bodyAngularBasis.h"
 
-#define SYMM true
+#define SYMM false
 
 typedef struct {
   uint index;
@@ -131,7 +131,7 @@ int main(int ac, char *av[]) {
     }
   }
 
-  TFile fout(TString::Format("%s_%s", fout_name, (SYMM ? ".symm" : ".non_symm")), "RECREATE");
+  TFile fout(TString::Format("%s%s", fout_name, (SYMM ? ".symm" : ".non_symm")), "RECREATE");
   for (uint iw = 0; iw < waves.size(); iw++)
     for (uint jw = 0; jw < waves.size(); jw++)
       if (jw == iw) hdiag[iw]->Write();
