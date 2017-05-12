@@ -31,8 +31,18 @@ double MAscoli::getReducedDeck(double costheta, double phi,
   double qdsq = LAMBDA(mS1sq, mAsq, mtRsq)/(4*mS1sq);  // tR OR mtRsq?
   double damp = RS1*RS1*qdsq/(1.+RS1*RS1*qdsq);
 
+  double pa = sqrt(LAMBDA(wsq, mAsq, t)/(4*wsq));  // GJ
+  double p1 = sqrt(LAMBDA(wsq, mS1sq, m1sq)/(4*wsq));  // break up at GJ
+  double eI = sqrt(p1*p1 + mS1sq);  // E_{pion1} at GJ
+  double ea = sqrt(pa*pa + mAsq);
+  // virtuality
+  double tR = mAsq + mS1sq - 2.*ea*eI + 2.*pa*p1*costheta;  // GJ
+
+  double spip = sPionProton(costheta, phi, mS1sq, wsq, t, stot, mAsq, mBsq, mDsq, m1sq);
+  double amp_pion_proton = spip+(t-mBsq-mDsq-tR-m1sq)/2;
+
   double val =
-    sPionProton(costheta, phi, mS1sq, wsq, t, stot, mAsq, mBsq, mDsq, m1sq) *
+    amp_pion_proton *
     upperPart(costheta, mS1sq, S1, lamS1, RS1, wsq, t, mtRsq, mAsq, m1sq) *
     4*M_PI * sqrt((2.*S1+1.)/(4*M_PI)) *  // left after reduction
     pow(damp, S1/2.);  // left damping
@@ -101,9 +111,19 @@ cd MAscoli::fullDeckTerm(double costheta, double phi,
                          double mAsq, double mBsq, double mDsq,
                          double m1sq) {
   if (sqrt(wsq) <= sqrt(mS1sq)+sqrt(m1sq)) return 0;
+  // calculate pi-p amplitude
+  double pa = sqrt(LAMBDA(wsq, mAsq, t)/(4*wsq));  // GJ
+  double p1 = sqrt(LAMBDA(wsq, mS1sq, m1sq)/(4*wsq));  // break up at GJ
+  double eI = sqrt(p1*p1 + mS1sq);  // E_{pion1} at GJ
+  double ea = sqrt(pa*pa + mAsq);
+  // virtuality
+  double tR = mAsq + mS1sq - 2.*ea*eI + 2.*pa*p1*costheta;  // GJ
+  // pi-p
+  double spip = sPionProton(costheta, phi, mS1sq, wsq, t, stot, mAsq, mBsq, mDsq, m1sq);
+  double amp_pion_proton = spip+(t-mBsq-mDsq-tR-m1sq)/2;
   // calculate from three component
   cd one_term =
-    sPionProton(costheta, phi, mS1sq, wsq, t, stot, mAsq, mBsq, mDsq, m1sq) *
+    amp_pion_proton *
     upperPart(costheta, mS1sq, S1, lamS1, RS1, wsq, t, mtRsq, mAsq, m1sq) *
     Math::WignerD(2*S1, 2*lamS1, 0, phi_pr, acos(costheta_pr), 0.0);
   return one_term;
