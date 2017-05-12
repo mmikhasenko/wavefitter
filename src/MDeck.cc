@@ -28,6 +28,11 @@ cd MDeck::getAmplitude(double costheta, double phi,
   double BrF2pipi = 0.845;
   isobarT[2] = [&](double s) -> cd { return f2.T(s) * sqrt(2.)/3. * BrF2pipi; };
 
+  // Blatt-Weisskopf factors
+  double qsq = LAMBDA(mS1sq, m2sq, m3sq)/(4*mS1sq);  // because m2 and m3 are used in the constructor
+  // double t1 = MAscoli::tPionIsobar(costheta, mS1sq, wsq, t, mAsq, m1sq);
+  double qsq_left = LAMBDA(mS1sq, mtRsq, mAsq)/(4*mS1sq);  // that is what one should use
+  double ratio = (1./(RS1*RS1*qsq)+1.)/(1./(RS1*RS1*qsq_left)+1.);  // correction
   // loop over spin, helicity
   cd amp = 0.0;
   for (uint S = 0; S <= 2; S++) {
@@ -47,7 +52,7 @@ cd MDeck::getAmplitude(double costheta, double phi,
       std::cerr << "Error<MDeck::getAmplitude> : imag = " << imag(deck_fixed_S_isobar_reduced) << " > 1e-8!!\n";
       return 0.0;
     }
-    amp += (2.*S+1.) * deck_fixed_S_isobar_reduced * isobarT[S](mS1sq);
+    amp += (2.*S+1.) * deck_fixed_S_isobar_reduced * isobarT[S](mS1sq) * pow(ratio, S/2.);
   }
   return amp;
 }
@@ -105,7 +110,7 @@ uint MDeck::fromLabToGJ(TLorentzVector &pi1_lv, TLorentzVector &pi2_lv, TLorentz
   /*************************** Transformation to GJ frame ********************************/
   // boost
   TLorentzVector reso_lv = pi1_lv + pi2_lv + pi3_lv;
-  
+
   TVector3 bv = -reso_lv.BoostVector();
   pi1_lv.Boost(bv);
   pi2_lv.Boost(bv);

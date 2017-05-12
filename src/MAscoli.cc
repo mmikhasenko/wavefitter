@@ -56,37 +56,39 @@ double MAscoli::getProjectedReducedDeck(uint J, int M, uint L,
                                         double stot,
                                         double mAsq, double mBsq, double mDsq,
                                         double m1sq) {
-  double phiIntegrFactor = 0, phiIntArg = 0;
-  if (M == 0) {
-    phiIntArg = M_PI/2.;
-    phiIntegrFactor = 2*M_PI;
-  } else if (M == -1 || M == 1) {
-    phiIntArg = 0.;
-    phiIntegrFactor = M_PI;
-  }
+  if (M > 1 || M < -1) return 0;
   // integrate
   int minSJ = (S1 < J) ? S1 : J;
   double int_val =
     integrate([=](double z)->double{
       double val = 0;
-      for (int lamS = -minSJ; lamS <= minSJ; lamS++)
+      for (int lamS = -minSJ; lamS <= minSJ; lamS++) {
+        // a bit tricky with the reduction because of phi-dependence
+        // I know that is in the form (A + B cos Phi)
+        // the projection of phi is given by  spip = (A + B cos Phi).
+        // \int_{0}^{2pi} \diff Phi exp(-i M Phi) (A + B cos Phi), it gives
+        //   -- M = 0 :  2pi A
+        //   -- M = \pm 1: pi B = pi ( spip(o) - spip(pi/2) )
+        double reduced_deck;
+        if (M == 0) {
+          reduced_deck = 2*M_PI*getReducedDeck(z, M_PI/2., mS1sq, S1, lamS, RS1, wsq, t, mtRsq, stot, mAsq, mBsq, mDsq, m1sq);
+        } else {
+          reduced_deck = M_PI*(
+            getReducedDeck(z,      0., mS1sq, S1, lamS, RS1, wsq, t, mtRsq, stot, mAsq, mBsq, mDsq, m1sq) -
+            getReducedDeck(z, M_PI/2., mS1sq, S1, lamS, RS1, wsq, t, mtRsq, stot, mAsq, mBsq, mDsq, m1sq));
+        }
+        // calculate all together
         val +=
           // clebsch coefficient
           sqrt(2*J+1) *
           (((L-S1+(-lamS))%2 == 1) ? (-1) : (1)) *
           ROOT::Math::wigner_3j(2*L, 2*S1, 2*J, 2*0, 2*lamS, -2*lamS) *
           // reduced Deck where integral over M has been performed
-          phiIntegrFactor *
-          getReducedDeck(z, phiIntArg,
-                         mS1sq, S1, lamS, RS1,
-                         wsq, t,
-                         mtRsq,
-                         stot,
-                         mAsq, mBsq, mDsq,
-                         m1sq) *
+          reduced_deck *
           // projecting D-function
           sqrt((2.*J+1.)/(4.*M_PI)) *
           Math::WignerD(2*J, 2*M, 2*lamS, acos(z));
+        }
       return val;
       }, -1., 1.);
   int_val *= sqrt((2.*L+1.)/(2.*J+1.)); /*because of normalisation*/
