@@ -65,8 +65,8 @@ int main(int ac, char *av[]) {
                             100, 0.5, 2.5);
     }
   }
-
-  for (uint e = 0; e < 100; e++) {
+  const uint Nbins = 100;
+  for (uint e = 0; e < Nbins; e++) {
     std::cout << "---> File #" << e << "\n";
     TString fin_name = TString::Format(fin_tmpl, e);  //
 
@@ -86,7 +86,8 @@ int main(int ac, char *av[]) {
     }
 
     // Phhase space
-    double s; tin->SetBranchAddress("s", &s); tin->GetEntry(0);  // to use it at the next line
+    double en = 0.5 + (2.5 - 0.5) / Nbins * (e+0.5);
+    double s = en*en;  // tin->SetBranchAddress("s", &s); tin->GetEntry(0);  // to use it at the next line
     double phsp = integrate([s](double _s1)->double{
         return sqrt(LAMBDA(s, _s1, POW2(PI_MASS))*LAMBDA(_s1, POW2(PI_MASS), POW2(PI_MASS)))/_s1;
       }, 4*POW2(PI_MASS), POW2(sqrt(s)-PI_MASS)) / (2*M_PI*POW2(8*M_PI)*s);

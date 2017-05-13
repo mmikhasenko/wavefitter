@@ -70,7 +70,8 @@ int main(int ac, char *av[]) {
     TTree *tin = 0; gDirectory->GetObject("angles", tin);
     if (!tin) {std::cout << "Error: no tree" << std::endl; return 0;}
 
-    double s = 0.5 + (2.5-0.5)/Nbins*e;
+    double en = 0.5 + (2.5 - 0.5) / Nbins * (e+0.5);
+    double s = POW2(en);
     tin->SetBranchAddress("s", &s);
 
     // general

@@ -56,3 +56,8 @@ target_link_libraries(add_weight_PWs ${ROOT_LIBRARIES})
 add_executable(cross_check_deck_shape cross_check_deck_shape.cc)
 target_link_libraries(cross_check_deck_shape polesearch )
 target_link_libraries(cross_check_deck_shape ${ROOT_LIBRARIES})
+
+# only one program
+add_executable(calculate_analytical_projections calculate_analytical_projections.cc)
+target_link_libraries(calculate_analytical_projections polesearch )
+target_link_libraries(calculate_analytical_projections ${ROOT_LIBRARIES})
