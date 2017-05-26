@@ -1,7 +1,4 @@
 // Copyright [2017] Misha Mikhasenko
-// Description:
-//   the script plot intensities I_S^J which are summed over M,lambda
-
 #include <iostream>
 #include <vector>
 #include <complex>
@@ -22,12 +19,22 @@ TH1D *make_hsum(std::vector<TH1D*> vec);
 TCanvas *plot_analytical_deck_components(const char *fin_name) {
 
         std::vector< std::pair<std::string, std::vector<uint>> > waves;
-        { std::vector<uint> v = { 1, 15}; waves.push_back(std::make_pair("The sum;M_{3#pi}", v)); }
-        { std::vector<uint> v = { 4,  6}; waves.push_back(std::make_pair("1^{?+}", v)); }
-        { std::vector<uint> v = { 1,  3}; waves.push_back(std::make_pair("0^{?+}", v)); }
-        { std::vector<uint> v = { 7,  9}; waves.push_back(std::make_pair("2^{?+}", v)); }
-        { std::vector<uint> v = {10, 12}; waves.push_back(std::make_pair("3^{?+}", v)); }
-        { std::vector<uint> v = {13, 15}; waves.push_back(std::make_pair("4^{?+}", v)); }
+        { std::vector<uint> v = {  1, 213}; waves.push_back(std::make_pair("The sum;M_{3#pi}", v)); }
+        { std::vector<uint> v = {  4,  24}; waves.push_back(std::make_pair("1^{?+}", v)); }
+        { std::vector<uint> v = {  1,   3}; waves.push_back(std::make_pair("0^{?+}", v)); }
+        { std::vector<uint> v = { 25,  69}; waves.push_back(std::make_pair("2^{?+}", v)); }
+        { std::vector<uint> v = { 70, 132}; waves.push_back(std::make_pair("3^{?+}", v)); }
+        { std::vector<uint> v = {133, 213}; waves.push_back(std::make_pair("4^{?+}", v)); }
+        // { std::vector<uint> v = {}; waves.push_back(std::make_pair("1^{++}", v)); }
+        // { std::vector<uint> v = {}; waves.push_back(std::make_pair("0^{-+}", v)); }
+        // { std::vector<uint> v = {}; waves.push_back(std::make_pair("2^{-+}", v)); }
+        // { std::vector<uint> v = {}; waves.push_back(std::make_pair("1^{-+}", v)); }
+        // { std::vector<uint> v = {}; waves.push_back(std::make_pair("2^{++}", v)); }
+        // { std::vector<uint> v = {}; waves.push_back(std::make_pair("3^{-+}", v)); }
+        // { std::vector<uint> v = {}; waves.push_back(std::make_pair("3^{++}", v)); }
+        // { std::vector<uint> v = {}; waves.push_back(std::make_pair("4^{-+}", v)); }
+        // { std::vector<uint> v = {}; waves.push_back(std::make_pair("4^{++}", v)); }
+        // { std::vector<uint> v = {}; waves.push_back(std::make_pair("#epsilon = (-)", v)); }
 
         TCanvas *c1 = new TCanvas("c1", "title", 1000, 1000);
 
