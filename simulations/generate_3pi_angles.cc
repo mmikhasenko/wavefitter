@@ -98,7 +98,7 @@ int main(int ac, char **av) {
   // general
   double E_BEAM = 190;  // GeV
   double s0 = 2*E_BEAM*PROT_MASS + POW2(PROT_MASS) + POW2(PI_MASS);
-  double t;
+  double t = -0.1;
   tout.Branch("s0", &s0);
   tout.Branch("t", &t);
 
@@ -167,7 +167,7 @@ int main(int ac, char **av) {
 
     /**********************************************************************************************/
     /* deck-(23) */
-    t = -0.1-gRandom->Exp(1./12.);  // BRANCH
+    // t = -0.1-gRandom->Exp(1./12.);  // BRANCH
     decklike1 = MDeck::getAmplitude(costheta1, phi1,
                                     s1, R,
                                     costheta23 , phi23,
