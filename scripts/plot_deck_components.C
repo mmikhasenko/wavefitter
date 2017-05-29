@@ -24,14 +24,14 @@ int plot_deck_components(const char *fin_proj_name, const char *fin_phsp_name) {
   { std::vector<uint> v = {26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42}; waves.push_back(std::make_pair("2^{-+}", v)); }
   { std::vector<uint> v = {20}; waves.push_back(std::make_pair("1^{-+}", v)); }
   { std::vector<uint> v = {21, 22, 23, 24, 25}; waves.push_back(std::make_pair("2^{++}", v)); }
-  { std::vector<uint> v = {43, 44}; waves.push_back(std::make_pair("3^{-+}", v)); }
-  { std::vector<uint> v = {45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55}; waves.push_back(std::make_pair("3^{++}", v)); }
-  { std::vector<uint> v = {56, 57, 58, 59, 60, 61}; waves.push_back(std::make_pair("4^{-+}", v)); }
-  { std::vector<uint> v = {62, 63, 64, 65, 66}; waves.push_back(std::make_pair("4^{++}", v)); }
-  { std::vector<uint> v = {67, 68, 69, 70, 71, 72, 73}; waves.push_back(std::make_pair("5^{++}", v)); }
-  { std::vector<uint> v = {74, 75, 76, 77, 78, 79}; waves.push_back(std::make_pair("6^{-+}", v)); }
-  { std::vector<uint> v = {80, 81}; waves.push_back(std::make_pair("6^{++}", v)); }
-  { std::vector<uint> v = {82, 83, 84, 85, 86, 87, 88}; waves.push_back(std::make_pair("#epsilon = (-)", v)); }
+  // { std::vector<uint> v = {43, 44}; waves.push_back(std::make_pair("3^{-+}", v)); }
+  // { std::vector<uint> v = {45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55}; waves.push_back(std::make_pair("3^{++}", v)); }
+  // { std::vector<uint> v = {56, 57, 58, 59, 60, 61}; waves.push_back(std::make_pair("4^{-+}", v)); }
+  // { std::vector<uint> v = {62, 63, 64, 65, 66}; waves.push_back(std::make_pair("4^{++}", v)); }
+  // { std::vector<uint> v = {67, 68, 69, 70, 71, 72, 73}; waves.push_back(std::make_pair("5^{++}", v)); }
+  // { std::vector<uint> v = {74, 75, 76, 77, 78, 79}; waves.push_back(std::make_pair("6^{-+}", v)); }
+  // { std::vector<uint> v = {80, 81}; waves.push_back(std::make_pair("6^{++}", v)); }
+  // { std::vector<uint> v = {82, 83, 84, 85, 86, 87, 88}; waves.push_back(std::make_pair("#epsilon = (-)", v)); }
 
   waves[0].second.resize(87);
   for (uint i = 0; i < waves[0].second.size(); i++) waves[0].second[i] = i+2;

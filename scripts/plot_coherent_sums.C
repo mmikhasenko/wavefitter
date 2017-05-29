@@ -15,7 +15,7 @@ TH1D *plot_coherent_sums(const std::vector<uint> &_indeces,
                          const char *ph_sp, const char *inversions) {
   std::vector<uint> indeces(_indeces);
   std::sort(indeces.begin(), indeces.end());
-  
+
   const uint nBins = 100;
   const uint nInd = indeces.size();
   // phase space
@@ -55,14 +55,16 @@ TH1D *plot_coherent_sums(const std::vector<uint> &_indeces,
       TH1D *h2; gDirectory->GetObject(TString::Format("hi%d", indeces[i]), h2); if (!h2) {std::cerr << "No hist i1\n"; return 0;}
       proj[i] = cd(h1->GetBinContent(b+1), h2->GetBinContent(b+1));
     }
-    // std::cout << "Projections extruction is done\n";
+    // std::cout << "Projections extraction is done\n";
 
     // result
     cd sum = 0;
     for (uint i = 0; i < nInd; i++) {
       for (uint j = 0; j < nInd; j++) {
-        sum += conj(proj[i])*proj[j] * amp[i][j] *
-          1./POW2(4*M_PI) * 1./(8*M_PI));  // because of the normalization of integrals
+        sum += conj(proj[i])*proj[j] *
+        (amp[i][j] * 1./(8*M_PI)) * // because of the normalization of integrals
+        1./((4*M_PI)*(4*M_PI)); // additional factors from the phase space
+        //
       }
     }
     hint->SetBinContent(b+1, real(sum));

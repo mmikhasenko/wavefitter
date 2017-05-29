@@ -143,7 +143,7 @@ int main(int ac, char *av[]) {
         if (en > m23 + sqrt(m1sq)) {
           // calculate phase space
           val = MAscoli::getProjectedReducedDeck(
-              waves[w].J, waves[w].M, // (waves[w].pos_refl == waves[w].parity),
+              waves[w].J, waves[w].M, (waves[w].pos_refl == waves[w].parity),
               waves[w].L, s1, S1, R, s, t, mtRsq, stot, mAsq, mBsq, mDsq,
               POW2(PI_MASS));
           // multiply to production clebsch, Blatt-Weisskopf
