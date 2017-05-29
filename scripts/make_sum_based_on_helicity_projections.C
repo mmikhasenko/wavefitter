@@ -18,6 +18,7 @@
 typedef std::complex<double> cd;
 
 TH1D *make_hsum(std::vector<TH1D*> vec);
+TH1D *integrate_ysq(TH2D *h);
 
 TCanvas *plot_analytical_deck_components(const char *fin_name) {
 
@@ -69,4 +70,25 @@ TH1D *make_hsum(std::vector<TH1D*> vec) {
                 }
         }
         return hsum;
+}
+
+TH1D *integrate_ysq(TH2D *h) {
+  double widthY = h->GetYaxis()->GetBinWidth(1);
+  uint NbX = h->GetXaxis()->GetNbins();
+  uint NbY = h->GetYaxis()->GetNbins();
+  TH1D *hr = new TH1D(TString::Format("%s_int_ysq", h->GetName()),
+                      TString::Format("%s_int_ysq", h->GetTitle()),
+                      NbY,
+                      h->GetYaxis()->GetBinLowEdge(1),
+                      h->GetYaxis()->GetBinLowEdge(NbY)+widthY);
+  for (uint i = 1; i <= NbX; i++) {
+    double v = 0;
+    for (uint j = 1; j <= NbY; j++) {
+      v += h->GetBinContent(i, j) *
+        2 * h->GetYaxis()->GetBinCenter(j) *  // jacobian
+        widthY;
+    }
+    hr->SetBinContent(i, v);
+  }
+  return hr;
 }

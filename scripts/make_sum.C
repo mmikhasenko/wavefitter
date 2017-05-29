@@ -22,6 +22,7 @@ void find_numbers_of_hists_which_much_the_pattern(const char *name_patt,
                                                   std::vector<uint> *result);
 
 TH1D *make_hsum(std::vector<TH1D*> vec);
+TH1D *integrate_ysq(TH2D *h);
 
 TCanvas *plot_analytical_deck_components(const char *fin_name) {
 
@@ -48,11 +49,6 @@ TCanvas *plot_analytical_deck_components(const char *fin_name) {
         { std::vector<uint> v = {};
           find_numbers_of_hists_which_much_the_pattern(NAME_PATT, vpos, "2-+", &v);
           waves.push_back(std::make_pair("2^{-+}", v));}
-        // neg reflectivity
-        std::vector<uint> vneg;
-        find_numbers_of_hists_which_much_the_pattern(NAME_PATT, waves[0].second, "-(S", &vneg);
-        std::cout << "Found " << vneg.size() << " hists with negative refl.\n";
-        waves.push_back(std::make_pair("#epsilon = (-)", vneg));
         // 1-+
         { std::vector<uint> v = {};
           find_numbers_of_hists_which_much_the_pattern(NAME_PATT, vpos, "1-+", &v);
@@ -61,6 +57,11 @@ TCanvas *plot_analytical_deck_components(const char *fin_name) {
         { std::vector<uint> v = {};
           find_numbers_of_hists_which_much_the_pattern(NAME_PATT, vpos, "2++", &v);
           waves.push_back(std::make_pair("2^{++}", v));}
+        // // neg reflectivity
+        // std::vector<uint> vneg;
+        // find_numbers_of_hists_which_much_the_pattern(NAME_PATT, waves[0].second, "-(S", &vneg);
+        // std::cout << "Found " << vneg.size() << " hists with negative refl.\n";
+        // waves.push_back(std::make_pair("#epsilon = (-)", vneg));
         // // 3++
         // { std::vector<uint> v = {};
         //   find_numbers_of_hists_which_much_the_pattern(NAME_PATT, vpos, "3++", &v);
@@ -90,7 +91,7 @@ TCanvas *plot_analytical_deck_components(const char *fin_name) {
                                 std::cerr << "Error: hist " << w << " is not found!\n";
                                 return 0;
                         }
-                        TH1D *h1 = h2->ProjectionX();
+                        TH1D *h1 = integrate_ysq(h2);
                         comp.push_back(h1);
                 }
                 TH1D *hsum = make_hsum(comp);
@@ -116,6 +117,28 @@ TH1D *make_hsum(std::vector<TH1D*> vec) {
                 }
         }
         return hsum;
+}
+
+TH1D *integrate_ysq(TH2D *h) {
+        double widthX = h->GetXaxis()->GetBinWidth(1);
+        double widthY = h->GetYaxis()->GetBinWidth(1);
+        uint NbX = h->GetXaxis()->GetNbins();
+        uint NbY = h->GetYaxis()->GetNbins();
+        TH1D *hr = new TH1D(TString::Format("%s_int_ysq", h->GetName()),
+                            TString::Format("%s_int_ysq", h->GetTitle()),
+                            NbX,
+                            h->GetXaxis()->GetBinLowEdge(1),
+                            h->GetXaxis()->GetBinLowEdge(NbX)+widthX);
+        for (uint i = 1; i <= NbX; i++) {
+                double v = 0;
+                for (uint j = 1; j <= NbY; j++) {
+                        v += h->GetBinContent(i, j) *
+                             2 * h->GetYaxis()->GetBinCenter(j) * // jacobian
+                             widthY;
+                }
+                hr->SetBinContent(i, v);
+        }
+        return hr;
 }
 
 void find_numbers_of_hists_which_much_the_pattern(const char *name_patt,
