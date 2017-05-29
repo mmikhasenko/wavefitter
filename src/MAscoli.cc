@@ -26,8 +26,9 @@ double MAscoli::getReducedDeck(double costheta, double phi, double mS1sq,
     return 0;
 
   // left break-up momentum for damping
-  double qdsq = LAMBDA(mS1sq, mAsq, mtRsq) / (4 * mS1sq); // tR OR mtRsq?
-  double damp = RS1 * RS1 * qdsq / (1. + RS1 * RS1 * qdsq);
+  // double qdsq = LAMBDA(mS1sq, mAsq, mtRsq) / (4 * mS1sq);  // tR OR mtRsq?
+  // double qdsq0 = LAMBDA(mS1sq, wPOW2(PI_MASS), POW2(PI_MASS)) / (4 * mS1sq);  // tR OR mtRsq?
+  // double ratio =  (1./(RS1 * RS1 * qdsq) + 1.) / (1./(RS1 * RS1 * qdsq0) + 1.);
 
   // virtuality
   double tR = tPionIsobar(costheta, mS1sq, wsq, t, mAsq, m1sq); // GJ
@@ -39,8 +40,8 @@ double MAscoli::getReducedDeck(double costheta, double phi, double mS1sq,
   double val =
       amp_pion_proton *
       upperPart(costheta, mS1sq, S1, lamS1, RS1, wsq, t, mtRsq, mAsq, m1sq) *
-      4 * M_PI * sqrt((2. * S1 + 1.) / (4 * M_PI)) * // left after reduction
-      pow(damp, S1 / 2.);                            // left damping
+      4 * M_PI * sqrt((2. * S1 + 1.) / (4 * M_PI));  // *  // left after reduction
+      // pow(ratio, S1 / 2.);                             // left damping
   return val;
 }
 
@@ -96,9 +97,11 @@ double MAscoli::getProjectedReducedDeck(uint J, int M, bool pos_refl, uint L,
   int eps = pos_refl ? 1 : -1;
   int m1JM = (J + M) % 2 ? -1 : 1;
   double factor = eps * m1JM;
-  double val = getProjectedReducedDeck(J, M, L, mS1sq, S1, RS1, wsq, t, mtRsq,
+  double val1 = getProjectedReducedDeck(J, M, L, mS1sq, S1, RS1, wsq, t, mtRsq,
                                        stot, mAsq, mBsq, mDsq, m1sq);
-  return val * (1. - factor) / (M == 0 ? 2. : sqrt(2.));
+  double val2 = getProjectedReducedDeck(J, -M, L, mS1sq, S1, RS1, wsq, t, mtRsq,
+                                       stot, mAsq, mBsq, mDsq, m1sq);
+  return  (val1 - factor*val2) / (M == 0 ? 2. : sqrt(2.));
 }
 
 //***********************************************************
@@ -186,7 +189,7 @@ cd MAscoli::fullDeckTerm(double costheta, double phi, double mS1sq, uint S1,
   cd one_term =
       amp_pion_proton *
       upperPart(costheta, mS1sq, S1, lamS1, RS1, wsq, t, mtRsq, mAsq, m1sq) *
-      Math::WignerD(2 * S1, 2 * lamS1, 0, phi_pr, acos(costheta_pr), 0.0);
+      Math::WignerD(2 * S1, 2 * lamS1, 0, -phi_pr, acos(costheta_pr), 0.0);  // -phi to conjugate
   return one_term;
 }
 
