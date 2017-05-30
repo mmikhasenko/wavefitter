@@ -45,6 +45,12 @@ double MAscoli::getReducedDeck(double costheta, double phi, double mS1sq,
   return val;
 }
 
+double MAscoli::tmin(double m1sq, double m2sq, double m3sq, double m4sq, double s) {
+  return m1sq + m3sq -
+    2 * (s+m1sq - m2sq) * (s+m3sq-m4sq) / (4*s) +
+    2 * sqrt(LAMBDA(s,m1sq,m2sq)*LAMBDA(s,m3sq,m4sq)) / (4*s);
+}
+
 //***********************************************************
 // projection is done in a standart way
 // ((2L+1)/(2J+1))^{1/2} #sum <L0Sl|Jl> ((2J+1)/(4#pi))^{1/2}

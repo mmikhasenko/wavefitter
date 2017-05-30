@@ -52,6 +52,7 @@ cd fullDeckTerm(double costheta, double phi, double mS1sq, uint S1, int lamS1,
 
 double psi(double costheta, double mS1sq, double wsq, double t, double mAsq,
            double m1sq);
+double tmin(double m1sq, double m2sq, double m3sq, double m4sq, double s);
 };
 
 #endif // SRC_MASCOLI_H_
