@@ -76,3 +76,8 @@ target_link_libraries(calculate_analytical_exact_2d_projections_summed_over_heli
 add_executable(test_some_quantities test_some_quantities.cc)
 target_link_libraries(test_some_quantities polesearch )
 target_link_libraries(test_some_quantities ${ROOT_LIBRARIES})
+
+# only one program
+add_executable(plot_isobars plot_isobars.cc)
+target_link_libraries(plot_isobars polesearch )
+target_link_libraries(plot_isobars ${ROOT_LIBRARIES})
