@@ -37,6 +37,11 @@ add_executable(generate_3pi_angles generate_3pi_angles.cc)
 target_link_libraries(generate_3pi_angles polesearch )
 target_link_libraries(generate_3pi_angles ${ROOT_LIBRARIES})
 
+# TEST: cross-check with COMPASS
+add_executable(generate_3pi_angles_cross_check_with_Stefan generate_3pi_angles_cross_check_with_Stefan.cc)
+target_link_libraries(generate_3pi_angles_cross_check_with_Stefan polesearch )
+target_link_libraries(generate_3pi_angles_cross_check_with_Stefan ${ROOT_LIBRARIES})
+
 # only one program
 add_executable(calculate_Deck_projections calculate_Deck_projections.cc)
 target_link_libraries(calculate_Deck_projections polesearch )
