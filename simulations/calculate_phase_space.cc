@@ -15,14 +15,11 @@
 #include "TCanvas.h"
 #include "TText.h"
 
-#include "MDeck.h"
-#include "MIsobar.h"
-#include "MIsobarPiPiS.h"
-#include "waves.h"
+#include "deflib.h"
+#include "constants.h"
 #include "mintegrate.h"
-#include "M3bodyAngularBasis.h"
 
-#define SYMM false
+#define SYMM true
 
 typedef struct {
   uint index;
