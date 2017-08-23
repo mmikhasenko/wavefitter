@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <utility>
+#include "BlttWsskpf.h"
 
 class MChannel {
  public:
@@ -22,8 +23,8 @@ class MChannel {
   virtual cd rho(cd s) const = 0;
   virtual double p(double s) const {return 4*M_PI*sqrt(s)*rho(s);}
   virtual cd p(cd s) const {return 4*M_PI*sqrt(s)*rho(s);}
-  virtual double DumpC(double s) const { double q = p(s); return pow(POW2(R*q)/(1.+POW2(R*q)), L/2.); }
-  virtual     cd DumpC(cd s)     const {     cd q = p(s); return pow(POW2(R*q)/(1.+POW2(R*q)), L/2.); }
+  virtual double DumpC(double s) const { double q = p(s); return sqrt(FFMod::BlttWskpf[L](R*R*q*q)); }
+  virtual     cd DumpC(cd s)     const {     cd q = p(s); return sqrt(FFMoc::BlttWskpf[L](R*R*q*q)); }
   virtual cd rholtilde(double s) const {
     if (dtable.size()) { return InterpolateRhoLtilda(s);
     } else { return DisperceRhoLtilda(s); }
