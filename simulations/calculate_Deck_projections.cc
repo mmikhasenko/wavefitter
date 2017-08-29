@@ -23,7 +23,7 @@
 #include "mintegrate.h"
 #include "M3bodyAngularBasis.h"
 
-#define SYMM false
+#define SYMM true
 
 typedef struct {
   uint index;

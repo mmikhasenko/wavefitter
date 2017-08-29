@@ -127,6 +127,13 @@ int main(int ac, char *av[]) {
         }
       }
     }
+    // dirty work around:
+    // FLAT should not interfer with anything
+    int iw = 0;  // FLAT
+    for (uint jw = 1; jw < waves.size(); jw++) {
+      hinterf[0][jw]->SetBinContent(e+1, 0);
+      hinterf[jw][0]->SetBinContent(e+1, 0);
+    }    
   }
 
   TFile fout(TString::Format("%s%s", fout_name, (SYMM ? ".symm" : ".non_symm")), "RECREATE");

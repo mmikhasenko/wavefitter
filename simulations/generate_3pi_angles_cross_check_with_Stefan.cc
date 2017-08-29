@@ -157,12 +157,12 @@ int main(int ac, char **av) {
   };
   // rho
   COMP_iso[1] = [&](double s)->cd{
-    double m = 0.7685;
-    double G = 0.1507;
-    double qsq_R = POW2(0.2024);
-    double qsq = LAMBDA(s,POW2(PI_MASS), POW2(PI_MASS))/(4*s);
-    double qsq0 = LAMBDA(POW2(m),POW2(PI_MASS), POW2(PI_MASS))/(4*POW2(m));
-    double mdepfactor = sqrt(qsq/qsq0)*BlattWeisskopf[1](qsq/qsq_R)/BlattWeisskopf[1](qsq0/qsq_R);
+    double m = 0.7685; // 0.770;
+    double G = 0.1507;  // 0.151;
+    double qsq_R = POW2(1./5.0);  // POW2(1./4.94);
+    double qsq =  LAMBDA(s,       POW2(PI_MASS), POW2(PI_MASS)) / (4*s      );
+    double qsq0 = LAMBDA(POW2(m), POW2(PI_MASS), POW2(PI_MASS)) / (4*POW2(m));
+    double mdepfactor = sqrt(qsq/qsq0)*BlattWeisskopf[1](qsq/qsq_R)/BlattWeisskopf[1](qsq0/qsq_R); /* *m/sqrt(s) */
     return m*G/(m*m-s-cd(0,m*G*mdepfactor)) * sqrt(BlattWeisskopf[1](qsq/qsq_R));
   };
   // f2
@@ -171,7 +171,7 @@ int main(int ac, char **av) {
     double G = 0.1852;
     double qsq_R = POW2(0.2024);
     double qsq = LAMBDA(s,POW2(PI_MASS), POW2(PI_MASS))/(4*s);
-    double qsq0 = LAMBDA(POW2(m),POW2(PI_MASS), POW2(PI_MASS))/(4*s);
+    double qsq0 = LAMBDA(POW2(m),POW2(PI_MASS), POW2(PI_MASS))/(4*POW2(m));
     double mdepfactor = sqrt(qsq/qsq0)*m/sqrt(s)*BlattWeisskopf[2](qsq/qsq_R)/BlattWeisskopf[2](qsq0/qsq_R);
     return m*G/(m*m-s-cd(0,m*G*mdepfactor)) * sqrt(BlattWeisskopf[2](qsq/qsq_R));
   };
