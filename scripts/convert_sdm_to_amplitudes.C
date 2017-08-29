@@ -35,14 +35,16 @@ int convert_sdm_to_amplitudes(const char *sdm, const char *phase_space,
                         TString::Format("Intensity %s", hphsp->GetTitle()),
                         100, 0.5, 2.5);
     for (uint c=0; c<100; c++) {
+      double M = 0.51+0.02*c;
       double intensity = hsdm->GetBinContent(c+1);
       double phsp = hphsp->GetBinContent(c+1);
       double phi = hphi->GetBinContent(c+1);
       if (phsp == 0 && intensity == 0) {std::cout << "Something is wrong!\n"; return -5;}
-      double amp_mod = sqrt(intensity/phsp);
+      // Dimas intensity = |A|^2 * M * phase space
+      double amp_mod = sqrt(intensity / M /phsp * (4*M_PI)*(4*M_PI) * (8*M_PI) );
       hr->SetBinContent(c+1, amp_mod*cos(phi/180*M_PI));
       hi->SetBinContent(c+1, amp_mod*sin(phi/180*M_PI));
-      hint->SetBinContent(c+1, intensity * 1./(4*M_PI)/(4*M_PI) * 1./(8*M_PI));
+      hint->SetBinContent(c+1, intensity);  // the factor (4pi)^2(8pi) will be devided in later
     }
     fout->cd();
     hr->Write();

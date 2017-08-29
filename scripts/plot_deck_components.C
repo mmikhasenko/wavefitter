@@ -21,9 +21,9 @@ int plot_deck_components(const char *fin_proj_name, const char *fin_phsp_name) {
   { std::vector<uint> v = {}; waves.push_back(std::make_pair("Coherent sum;M_{3#pi}", v)); }
   { std::vector<uint> v = {2, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19}; waves.push_back(std::make_pair("1^{++}", v)); }
   { std::vector<uint> v = {6, 3, 4, 5, 7}; waves.push_back(std::make_pair("0^{-+}", v)); }
-  { std::vector<uint> v = {26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42}; waves.push_back(std::make_pair("2^{-+}", v)); }
-  { std::vector<uint> v = {20}; waves.push_back(std::make_pair("1^{-+}", v)); }
-  { std::vector<uint> v = {21, 22, 23, 24, 25}; waves.push_back(std::make_pair("2^{++}", v)); }
+  { std::vector<uint> v = {26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 88}; waves.push_back(std::make_pair("2^{-+}", v)); }
+  { std::vector<uint> v = {21, 22, 23, 24, 25, 85, 86, 87}; waves.push_back(std::make_pair("2^{++}", v)); }
+  { std::vector<uint> v = {20, 82, 83}; waves.push_back(std::make_pair("1^{-+}", v)); }
   // { std::vector<uint> v = {43, 44}; waves.push_back(std::make_pair("3^{-+}", v)); }
   // { std::vector<uint> v = {45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55}; waves.push_back(std::make_pair("3^{++}", v)); }
   // { std::vector<uint> v = {56, 57, 58, 59, 60, 61}; waves.push_back(std::make_pair("4^{-+}", v)); }
@@ -33,8 +33,8 @@ int plot_deck_components(const char *fin_proj_name, const char *fin_phsp_name) {
   // { std::vector<uint> v = {80, 81}; waves.push_back(std::make_pair("6^{++}", v)); }
   // { std::vector<uint> v = {82, 83, 84, 85, 86, 87, 88}; waves.push_back(std::make_pair("#epsilon = (-)", v)); }
 
-  waves[0].second.resize(87);
-  for (uint i = 0; i < waves[0].second.size(); i++) waves[0].second[i] = i+2;
+  waves[0].second.resize(88);
+  for (uint i = 0; i < waves[0].second.size(); i++) waves[0].second[i] = i+1;
 
   TCanvas *c1 = new TCanvas("c1", "title", 1000, 1000);
 

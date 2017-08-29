@@ -26,6 +26,7 @@ TH1D *plot_coherent_sums(const std::vector<uint> &_indeces,
   TH1D *hint = new TH1D("hint", title, nBins, 0.5, 2.5);
 
   for (uint b = 0; b < nBins; b++) {
+    double M = 0.51+0.02*b;
     fin_ph_sp->cd();
     cd amp[88][88];
     for (uint i = 0; i < nInd; i++) {
@@ -61,7 +62,7 @@ TH1D *plot_coherent_sums(const std::vector<uint> &_indeces,
     cd sum = 0;
     for (uint i = 0; i < nInd; i++) {
       for (uint j = 0; j < nInd; j++) {
-        sum += conj(proj[i])*proj[j] *
+        sum += conj(proj[i])*proj[j] * M *
         (amp[i][j] * 1./(8*M_PI)) * // because of the normalization of integrals
         1./((4*M_PI)*(4*M_PI)); // additional factors from the phase space
         //

@@ -50,7 +50,7 @@ void draw_distribution_from_tree(const char *request,
   TTree *tin = 0; gDirectory->GetObject("angles", tin); if (!tin) return;
   TString weight("(");
   ROOT::v5::TFormula::SetMaxima(100000, 100000, 100000);
-  // real part
+  //*** real part
   if (SYMM) {
     for (uint w = 0; w < v.size(); w++) weight += TString::Format("(amp%d_frame1_real+amp%d_frame3_real)*(%f)+", v[w], v[w], bamp[w][0]);
     for (uint w = 0; w < v.size(); w++) weight += TString::Format("(-1.)*(amp%d_frame1_imag+amp%d_frame3_imag)*(%f)+", v[w], v[w], bamp[w][1]);
@@ -60,8 +60,10 @@ void draw_distribution_from_tree(const char *request,
     for (uint w = 0; w < v.size(); w++) weight += TString::Format("(-1.)*amp%d_frame1_imag*(%f)+", v[w], bamp[w][1]);
     weight += "0)**2";
   }
+  gROOT->cd();
   tin->Draw(request, weight);
-  // imag part
+  // std::cout << "first request: "<< request << "\n";
+  //**** imag part
   weight = "(";
   if (SYMM) {
     for (uint w = 0; w < v.size(); w++) weight += TString::Format("(amp%d_frame1_real+amp%d_frame3_real)*(%f)+", v[w], v[w], bamp[w][1]);
@@ -74,8 +76,11 @@ void draw_distribution_from_tree(const char *request,
   }
   // change the request "s1>>h3(2000)" to "s1>>+h3"
   TString srequest(request);
-  srequest.Insert(srequest.First(">>")+2, "+");
-  srequest = srequest(0, srequest.Last('('));
-
+  if (srequest.Last('+') != srequest.First(">>")+2)
+    srequest.Insert(srequest.First(">>")+2, "+");
+  if (srequest.First(">>") < srequest.Last('('))
+    srequest = srequest(0, srequest.Last('('));
+  // std::cout << "second request: "<< srequest << "\n";
   tin->Draw(srequest, weight);
+  fin->Close();
 }

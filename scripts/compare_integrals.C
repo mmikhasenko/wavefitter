@@ -35,8 +35,9 @@ TCanvas *compare_integrals(uint nPads,
     if (!hh) { std::cerr << "Error with hist!\n"; return 0; }
     hh->SetStats(kFALSE);
 
-    double scale1 = gr->GetY()[179];
-    double scale2 = hh->GetBinContent(90);
+    
+    double scale1 = 0; for (int i=0; i < 200; i++) scale1 += gr->GetY()[i]/200;
+    double scale2 = 0; for (int i=1; i <= 100; i++) scale2 += hh->GetBinContent(i)/100.;
     for (uint i = 0; i < gr->GetN(); i++) gr->GetY()[i] *= scale2/scale1;
 
     c1->cd(p+1);
