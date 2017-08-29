@@ -15,7 +15,10 @@
 
 #include "plot_coherent_sums.C"
 
-int plot_deck_components(const char *fin_proj_name, const char *fin_phsp_name) {
+int plot_deck_components(const char *fin_proj_name, const char *fin_phsp_name,
+                         const char *save_name = 0);
+int plot_deck_components(const char *fin_proj_name, const char *fin_phsp_name,
+                         const char *save_name) {
 
   std::vector< std::pair<std::string, std::vector<uint> > > waves;
   { std::vector<uint> v = {}; waves.push_back(std::make_pair("Coherent sum;M_{3#pi}", v)); }
@@ -50,8 +53,8 @@ int plot_deck_components(const char *fin_proj_name, const char *fin_phsp_name) {
   }
   hs->Draw("pfc nostack");
 
-  c1->BuildLegend();
-
+  c1->BuildLegend(0.7, 0.6, 0.9, 0.9);
+  if (save_name != 0) c1->SaveAs(TString::Format("%s_all.pdf", save_name));
 
   TFile *fin = new TFile(fin_proj_name);
   for (auto & i : waves)
@@ -82,7 +85,8 @@ int plot_deck_components(const char *fin_proj_name, const char *fin_phsp_name) {
     hsi->Add(h);
     hsi->Draw("pfc nostack");
     // h->Draw("same");
-    can->BuildLegend();
+    can->BuildLegend(0.55, 0.6, 0.9, 0.9);
+    if (save_name != 0) can->SaveAs(TString::Format("%s_%s.pdf", save_name, i.first.c_str()));
   }
 
   return 0;

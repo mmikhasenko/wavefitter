@@ -83,7 +83,7 @@ int main(int ac, char *av[]) {
   // result
   TH2D *hr[Nwaves], *hi[Nwaves], *hint[Nwaves], *hphi[Nwaves];
   const uint NbinsX = 100;
-  const uint NbinsY = 100;
+  const uint NbinsY = 300;
   const std::pair<double, double> rangeX = std::make_pair(0.5, 2.5);
   const std::pair<double, double> rangeY = std::make_pair(2 * PI_MASS, 2.4);
   for (uint i = 0; i < Nwaves; i++) {

@@ -127,7 +127,7 @@ int main(int ac, char **av) {
                                   1./POW2(4*M_PI) * 1./(8*M_PI));  // because of the normalization of integrals
     }
   }
-  
+
   // Save the result
   TFile fout(fout_name, "RECREATE");
   for (uint i = 0; i < Nwaves; i++) { hresr[i]->Write(); hresi[i]->Write(); hint[i]->Write(); }
@@ -144,33 +144,33 @@ int main(int ac, char **av) {
 void fill_thresholds(std::vector<double> *thr) {
   std::vector<std::pair<uint, double> > Dindex_threshold =
     {
-      // std::make_pair(4 , 1.2 ),
-      // std::make_pair(6 , 1.6 ),
-      // std::make_pair(12, 1.1 ),
-      // std::make_pair(13, 1.22),
-      // std::make_pair(16, 1.18),
-      // std::make_pair(17, 1.14),
-      // std::make_pair(23, 1.0 ),
-      // std::make_pair(24, 1.4 ),
-      // std::make_pair(25, 0.8 ),
-      // std::make_pair(27, 1.1 ),
-      // std::make_pair(38, 1.0 ),
-      // std::make_pair(39, 1.3 ),
-      // std::make_pair(42, 1.16),
-      // std::make_pair(44, 1.34),
-      // std::make_pair(49, 0.96),
-      // std::make_pair(50, 1.14),
-      // std::make_pair(51, 1.38),
-      // std::make_pair(52, 1.38),
-      // std::make_pair(54, 1.38),
-      // std::make_pair(55, 1.38),
-      // std::make_pair(59, 1.6 ),
-      // std::make_pair(60, 1.4 ),
-      // std::make_pair(64, 1.7 ),
-      // std::make_pair(68, 1.36),
-      // std::make_pair(71, 0.98),
-      // std::make_pair(86, 1.18),
-      // std::make_pair(87, 1.3 )
+      std::make_pair(4 , 1.2 ),
+      std::make_pair(6 , 1.6 ),
+      std::make_pair(12, 1.1 ),
+      std::make_pair(13, 1.22),
+      std::make_pair(16, 1.18),
+      std::make_pair(17, 1.14),
+      std::make_pair(23, 1.0 ),
+      std::make_pair(24, 1.4 ),
+      std::make_pair(25, 0.8 ),
+      std::make_pair(27, 1.1 ),
+      std::make_pair(38, 1.0 ),
+      std::make_pair(39, 1.3 ),
+      std::make_pair(42, 1.16),
+      std::make_pair(44, 1.34),
+      std::make_pair(49, 0.96),
+      std::make_pair(50, 1.14),
+      std::make_pair(51, 1.38),
+      std::make_pair(52, 1.38),
+      std::make_pair(54, 1.38),
+      std::make_pair(55, 1.38),
+      std::make_pair(59, 1.6 ),
+      std::make_pair(60, 1.4 ),
+      std::make_pair(64, 1.7 ),
+      std::make_pair(68, 1.36),
+      std::make_pair(71, 0.98),
+      std::make_pair(86, 1.18),
+      std::make_pair(87, 1.3 )
     };
   for (auto && p : Dindex_threshold) thr->at(p.first - 1)  = p.second;
 }
