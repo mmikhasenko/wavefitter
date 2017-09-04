@@ -23,6 +23,7 @@
 #include "constants.h"
 #include "mintegrate.h"
 #include "deflib.h"
+#include "BlttWsskpf.h"
 
 typedef struct {
   uint index;
@@ -138,16 +139,6 @@ int main(int ac, char **av) {
   // Create isobars
   MIsobarPiPiS pipiS; pipiS.setIntU();
 
-  // Original Blatt-Weisskopf
-  std::function<double(double)> BlattWeisskopf[7];
-  BlattWeisskopf[0] = [](double z)->double{return 1;};
-  BlattWeisskopf[1] = [](double z)->double{return 2*z/(z+1);};
-  BlattWeisskopf[2] = [](double z)->double{return 13*z*z/(z*z+3*z+9);}; 
-  BlattWeisskopf[3] = [](double z)->double{return 277*z*z*z/(z*z*z+6*z*z+45*z+225);};
-  BlattWeisskopf[4] = [](double z)->double{return 12746*z*z*z*z/(z*z*z*z+10*z*z*z+135*z*z+1575*z+11025);};
-  BlattWeisskopf[5] = [](double z)->double{return 998881*z*z*z*z*z/(z*z*z*z*z+15*z*z*z*z+315*z*z*z+6300*z*z+99225*z+893025);};
-  BlattWeisskopf[6] = [](double z)->double{return 118394977*z*z*z*z*z*z/(z*z*z*z*z*z+21*z*z*z*z*z+630*z*z*z*z+18900*z*z*z+496125*z*z+9823275*z+108056025);};
- 
   // **********************************************************************
   // COMPASS Isobars
   std::function<cd(double)> COMP_iso[4];
@@ -162,8 +153,8 @@ int main(int ac, char **av) {
     double qsq_R = POW2(1./5.0);  // POW2(1./4.94);
     double qsq =  LAMBDA(s,       POW2(PI_MASS), POW2(PI_MASS)) / (4*s      );
     double qsq0 = LAMBDA(POW2(m), POW2(PI_MASS), POW2(PI_MASS)) / (4*POW2(m));
-    double mdepfactor = sqrt(qsq/qsq0)*BlattWeisskopf[1](qsq/qsq_R)/BlattWeisskopf[1](qsq0/qsq_R); /* *m/sqrt(s) */
-    return m*G/(m*m-s-cd(0,m*G*mdepfactor)) * sqrt(BlattWeisskopf[1](qsq/qsq_R));
+    double mdepfactor = sqrt(qsq/qsq0)*FFMod::BlttWskpf[1](qsq/qsq_R)/FFMod::BlttWskpf[1](qsq0/qsq_R); /* *m/sqrt(s) */
+    return m*G/(m*m-s-cd(0,m*G*mdepfactor)) * sqrt(FFMod::BlttWskpf[1](qsq/qsq_R));
   };
   // f2
   COMP_iso[2] = [&](double s)->cd{
@@ -172,8 +163,8 @@ int main(int ac, char **av) {
     double qsq_R = POW2(0.2024);
     double qsq = LAMBDA(s,POW2(PI_MASS), POW2(PI_MASS))/(4*s);
     double qsq0 = LAMBDA(POW2(m),POW2(PI_MASS), POW2(PI_MASS))/(4*POW2(m));
-    double mdepfactor = sqrt(qsq/qsq0)*m/sqrt(s)*BlattWeisskopf[2](qsq/qsq_R)/BlattWeisskopf[2](qsq0/qsq_R);
-    return m*G/(m*m-s-cd(0,m*G*mdepfactor)) * sqrt(BlattWeisskopf[2](qsq/qsq_R));
+    double mdepfactor = sqrt(qsq/qsq0)*m/sqrt(s)*FFMod::BlttWskpf[2](qsq/qsq_R)/FFMod::BlttWskpf[2](qsq0/qsq_R);
+    return m*G/(m*m-s-cd(0,m*G*mdepfactor)) * sqrt(FFMod::BlttWskpf[2](qsq/qsq_R));
   };
   // rho 3
   COMP_iso[3] = [&](double s)->cd{
@@ -181,7 +172,7 @@ int main(int ac, char **av) {
     double G = 0.190;
     double qsq_R = POW2(0.2024);
     double qsq = LAMBDA(s,POW2(PI_MASS), POW2(PI_MASS))/(4*s);
-    return sqrt(m*sqrt(s))*G/(m*m-s-cd(0,m*G)) * sqrt(BlattWeisskopf[3](qsq/qsq_R));
+    return sqrt(m*sqrt(s))*G/(m*m-s-cd(0,m*G)) * sqrt(FFMod::BlttWskpf[3](qsq/qsq_R));
   };
   // **********************************************************************
   // COMPASS Isobars, scalars
@@ -274,7 +265,7 @@ int main(int ac, char **av) {
         // double R = 5.;
         double qsq_R = POW2(0.2024);
         double qsq = LAMBDA(s, sI, POW2(PI_MASS))/(4*s);
-        double BlttWsskf = sqrt(BlattWeisskopf[waves[w].L](qsq/qsq_R));
+        double BlttWsskf = sqrt(FFMod::BlttWskpf[waves[w].L](qsq/qsq_R));
 
         amp[w][bose] = Math::ZJMLS_refl(waves[w].J, waves[w].M,
                                         (waves[w].pos_refl == waves[w].parity),  // (-1)*(-1) = (+1)*(+1) = true, otherwise is false
