@@ -119,7 +119,8 @@ int main(int ac, char **av) {
   /* prepare for the calculation of PWs */
   // read wavepull
   std::vector<wave> waves;
-  fill_wavepull("/home/mikhasenko/Documents/phsp_with_COMPASS_basis/wavelist_formated.txt", &waves);
+  // it was /home/mikhasenko/Documents/phsp_with_COMPASS_basis/wavelist_formated.txt
+  fill_wavepull("/localhome/mikhasenko/results/pwa_3pi/wavelist_formated.txt", &waves);
   uint nWaves = waves.size();
   std::cout << "waves.size() = " << waves.size() << "\n";
   for (auto & w : waves)
@@ -148,31 +149,34 @@ int main(int ac, char **av) {
   };
   // rho
   COMP_iso[1] = [&](double s)->cd{
+    double lPI_MASS = 0.13956755;
     double m = 0.7685; // 0.770;
     double G = 0.1507;  // 0.151;
-    double qsq_R = POW2(1./5.0);  // POW2(1./4.94);
-    double qsq =  LAMBDA(s,       POW2(PI_MASS), POW2(PI_MASS)) / (4*s      );
-    double qsq0 = LAMBDA(POW2(m), POW2(PI_MASS), POW2(PI_MASS)) / (4*POW2(m));
+    double qsq_R = POW2(1./4.94);
+    double qsq =  LAMBDA(s,       POW2(lPI_MASS), POW2(lPI_MASS)) / (4*s      );
+    double qsq0 = LAMBDA(POW2(m), POW2(lPI_MASS), POW2(lPI_MASS)) / (4*POW2(m));
     double mdepfactor = sqrt(qsq/qsq0)*FFMod::BlttWskpf[1](qsq/qsq_R)/FFMod::BlttWskpf[1](qsq0/qsq_R); /* *m/sqrt(s) */
     return m*G/(m*m-s-cd(0,m*G*mdepfactor)) * sqrt(FFMod::BlttWskpf[1](qsq/qsq_R));
   };
   // f2
   COMP_iso[2] = [&](double s)->cd{
+    double lPI_MASS = 0.13956755;
     double m = 1.2754;
     double G = 0.1852;
-    double qsq_R = POW2(0.2024);
-    double qsq = LAMBDA(s,POW2(PI_MASS), POW2(PI_MASS))/(4*s);
-    double qsq0 = LAMBDA(POW2(m),POW2(PI_MASS), POW2(PI_MASS))/(4*POW2(m));
+    double qsq_R = POW2(1./5.);
+    double qsq = LAMBDA(s,POW2(lPI_MASS), POW2(lPI_MASS))/(4*s);
+    double qsq0 = LAMBDA(POW2(m),POW2(lPI_MASS), POW2(lPI_MASS))/(4*POW2(m));
     double mdepfactor = sqrt(qsq/qsq0)*m/sqrt(s)*FFMod::BlttWskpf[2](qsq/qsq_R)/FFMod::BlttWskpf[2](qsq0/qsq_R);
     return m*G/(m*m-s-cd(0,m*G*mdepfactor)) * sqrt(FFMod::BlttWskpf[2](qsq/qsq_R));
   };
   // rho 3
   COMP_iso[3] = [&](double s)->cd{
+    double lPI_MASS = 0.13956755;
     double m = 1.690;
     double G = 0.190;
-    double qsq_R = POW2(0.2024);
-    double qsq = LAMBDA(s,POW2(PI_MASS), POW2(PI_MASS))/(4*s);
-    return sqrt(m*sqrt(s))*G/(m*m-s-cd(0,m*G)) * sqrt(FFMod::BlttWskpf[3](qsq/qsq_R));
+    double qsq_R = POW2(1/4.94);
+    double qsq = LAMBDA(s,POW2(lPI_MASS), POW2(lPI_MASS))/(4*s);
+    return sqrt(m*G*sqrt(s))/(m*m-s-cd(0,m*G)) * sqrt(FFMod::BlttWskpf[3](qsq/qsq_R));
   };
   // **********************************************************************
   // COMPASS Isobars, scalars
@@ -196,7 +200,7 @@ int main(int ac, char **av) {
     double G = 0.109;
     return m*G/(m*m-s-cd(0,m*G));
   };
-    
+
   // main loop
   for (uint e = 0; e < nEvents; e++) {
     // from the function
@@ -206,7 +210,7 @@ int main(int ac, char **av) {
     phi1 = M_PI*(2*gRandom->Rndm()-1.);  // BRANCH
     costheta23 = 2*gRandom->Rndm()-1.;  // BRANCH
     phi23 = M_PI*(2*gRandom->Rndm()-1.);  // BRANCH
-    
+
     if (!Math::changeAngularBasis( s1,  costheta1,  phi1,  costheta23,  phi23,
                                   &s3, &costheta3, &phi3, &costheta12, &phi12,
                                   m1sq, m2sq, m3sq, s)) continue;
@@ -284,7 +288,7 @@ int main(int ac, char **av) {
     tx.Write();
   }
   fout.Close();
-  
+
   return 0;
 }
 
