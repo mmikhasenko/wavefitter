@@ -54,6 +54,11 @@ class MParKeeper {
   const std::string &pgetName(uint i) const {check(i, _pool.size()); return getName(_pool[i]);}
   uint pgetIndex(const std::string &name) const;
 
+  /* constraint */
+  void addConstraint(uint i, uint j, double factor);
+  void satisfyConstraints();
+  void removeConstraints();
+  
  private:
   static MParKeeper *_ref;
 
@@ -67,6 +72,8 @@ class MParKeeper {
   std::vector<parameter_description> _map;
 
   std::vector<uint> _pool;
+
+  std::vector<std::pair<std::pair<uint,uint>,double>> _constr;
 
  public:
   void check(uint i, uint N, const char *message = "DEFAULT") const;

@@ -236,7 +236,7 @@ int main(int argc, char *argv[]) {
           mCh->makeLookupTable(mCh->sth(), 10., 100);
           iset.push_back(mCh);
         } else {
-          std::cerr << "Error: isobar is not rho/f2/pipiS. Only them are available.";
+          std::cerr << "Error: isobar is not rho/f2/pipiS. Only them are available.\n";
           return EXIT_FAILURE;
         }
       } else if (type == "two-body") {
@@ -256,7 +256,7 @@ int main(int argc, char *argv[]) {
             } else if (pname == "pipiS") { fpartmass[ps] = PIPIS_MASS;
             } else {  std::cerr << "Error<particle description>: particle must be mass or name (" << pname << ")\n"; return EXIT_FAILURE; }
           } else {
-            std::cerr << "Error: isobar is not pi/rho/f2/pipiS. Only them are available.";
+            std::cerr << "Error: isobar is not pi/rho/f2/pipiS. Only them are available.\n";
             return EXIT_FAILURE;
           }
         }
@@ -610,7 +610,22 @@ int main(int argc, char *argv[]) {
           }
         }
         MRelationHolder::gI()->AddRelation(whole_data[jData], int_lambda_function);
-
+      } else if (type == "DECAY_dGdM@") {
+        uint iModel = iRel[2][0];
+        uint iCh = iRel[2][1];
+        MProductionPhysics *pr = vpr[iModel];
+        MChannel *ciso = iset[iCh];
+        if (iRel.getLength() != 5) { std::cerr << "Error<main,relations>: Expectation does not match a number of arguments in DECAY_dGdM!!\n"; }
+        // get decay mass A -> SYSTEM + B
+        double massA = iRel[3], massB = iRel[4];
+        // std::cout << "Constract differential rate dGdM for the A(" << massA << ")->(SYSTEM)+B(" << massB << ")\n";
+        std::function<double(double)> int_lambda_function;
+        int_lambda_function = [&, iCh, ciso, pr, massA, massB](double e)->double{
+          if (e+massB > massA) return 0.0;
+          auto v = pr->getValue(e*e);
+          return norm(v(iCh))*ciso->rho(e*e)*sqrt(LAMBDA(massA*massA,e*e,massB*massB));
+        };
+        MRelationHolder::gI()->AddRelation(whole_data[jData], int_lambda_function);
       } else if (type == "Re@") {
         uint iModel = iRel[2][0];
         uint iCh = iRel[2][1];
@@ -1108,6 +1123,7 @@ int main(int argc, char *argv[]) {
         // Create funciton wrapper for minmizer a IMultiGenFunction type
         ROOT::Math::Functor functor([&](const double *pars)->double {
             MParKeeper::gI()->pset(pars);
+            MParKeeper::gI()->satisfyConstraints();
             km->RecalculateNextTime();
             for (auto & pr : vpr) pr->RecalculateNextTime();
             return MRelationHolder::gI()->CalculateChi2();
@@ -1199,6 +1215,24 @@ int main(int argc, char *argv[]) {
               std::cout << "-------> randomize: \"" << pname << "\" is set to " << value << "\n";
             }
           }
+          MParKeeper::gI()->removeConstraints();
+          if (fit_step.exists("constraints")) {
+            const libconfig::Setting &setv = fit_step["constraints"];
+            const uint Nv = setv.getLength();
+            for (uint i = 0; i < Nv; i++) {
+              const libconfig::Setting &constr = setv[i];
+              if (constr.getLength() != 3) {
+                std::cerr << "Error<main,fit,constraints>: only multiplicative constraints are implemented! "
+                          <<" (\"par1\",factor,\"par2\") means \"par1\"=factor*\"par2\"\n";
+                continue;
+              }
+              std::string i_pname = constr[0]; uint i_ind = MParKeeper::gI()->getIndex(i_pname);
+              std::string j_pname = constr[2]; uint j_ind = MParKeeper::gI()->getIndex(j_pname);
+              double factor = constr[1];
+              MParKeeper::gI()->addConstraint(i_ind, j_ind, factor);
+              std::cout << "-------> added constraint: \"" << i_pname << "\" is set to " << factor << " * " << j_pname << "\n";
+            }
+          }
           MParKeeper::gI()->printAll();
           // adjust which parameters to vary
           const uint nPars_to_vary = pars.getLength();
@@ -1216,6 +1250,7 @@ int main(int argc, char *argv[]) {
 	  edm = min->Edm();
 
 	  MParKeeper::gI()->pset(min->X());
+          MParKeeper::gI()->satisfyConstraints();  // dirty fix
 
           if (fit_settings.exists("save_preview")) {
             // Plot all
