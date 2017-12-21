@@ -584,7 +584,7 @@ int main(int argc, char *argv[]) {
         if (iRel.getLength() <= 3) {
           int_lambda_function = [&, iCh, ciso, pr](double e)->double{
             auto v = pr->getValue(e*e);
-            return norm(v(iCh))*ciso->rho(e*e);
+            return norm(v(iCh))*ciso->rho(e*e) * e;
           };
         } else {
           std::cout << "READ: fourth parameter to scale intensity: ";
@@ -593,7 +593,7 @@ int main(int argc, char *argv[]) {
             std::cout << "cbFactor = " << cbFactor << "\n";
             int_lambda_function = [&, iCh, ciso, pr, cbFactor](double e)->double{
               auto v = pr->getValue(e*e);
-              return cbFactor*norm(v(iCh))*ciso->rho(e*e);
+              return cbFactor*norm(v(iCh))*ciso->rho(e*e) * e;
             };
           } else if (iRel[3].getType() == libconfig::Setting::TypeString) {
             const std::string cbFactor_str = iRel[3];
@@ -602,7 +602,7 @@ int main(int argc, char *argv[]) {
             int_lambda_function = [&, iCh, ciso, pr, cbFactor_index](double e)->double{
               auto v = pr->getValue(e*e);
               double cbFactor = MParKeeper::gI()->get(cbFactor_index);
-              return cbFactor*norm(v(iCh))*ciso->rho(e*e);
+              return cbFactor*norm(v(iCh))*ciso->rho(e*e) * e;
             };            
           } else {
             std::cerr << "Error<main,relations>: fourth argument have to be float of string!\n";
@@ -623,7 +623,7 @@ int main(int argc, char *argv[]) {
         int_lambda_function = [&, iCh, ciso, pr, massA, massB](double e)->double{
           if (e+massB > massA) return 0.0;
           auto v = pr->getValue(e*e);
-          return norm(v(iCh))*ciso->rho(e*e)*sqrt(LAMBDA(massA*massA,e*e,massB*massB));
+          return norm(v(iCh))*ciso->rho(e*e)*sqrt(LAMBDA(massA*massA,e*e,massB*massB)) * e;  // x E because of jacobian ds = 2e de
         };
         MRelationHolder::gI()->AddRelation(whole_data[jData], int_lambda_function);
       } else if (type == "Re@") {
