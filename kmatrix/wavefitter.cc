@@ -321,7 +321,7 @@ int main(int argc, char *argv[]) {
     const libconfig::Setting &modelsA = root["modelA"];
     const uint Nmodels = modelsA.getLength();
     for (uint i = 0; i < iset.size(); i++) long_range_lookup_values[i].resize(Nmodels);
-    
+
     std::cout << "\n\n";
     std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++++++++\n";
     std::cout << "/////////////// Production model: ////////////////////\n";
@@ -444,14 +444,14 @@ int main(int argc, char *argv[]) {
             const std::vector<std::pair<double, double> > *ltable = &(long_range_lookup_values[i][imodelA]);
             getB[i] = [&, ltable, mR, Jsector](double s)->cd {
               auto it = --(ltable->end());
-              // std::cout << it->first << "\n"; 
+              // std::cout << it->first << "\n";
               if (s >= it->first) return it->second * it->first / s;
               return getvalue(s, ltable->data(), ltable->size());
             };
             c3.cd(i+1);
             draw([&, i](double s)->double{return real(getB[i](s));}, 1.0, POW2(4.2))->Draw("al");
           }
-            
+
           c3.SaveAs("/tmp/deckAJ.pdf");
           // finally add Long Range
           if (long_range.exists("par_name")) {
@@ -502,7 +502,7 @@ int main(int argc, char *argv[]) {
             return EXIT_FAILURE;
           }
           std::cout << "DeckAJ projections will be constructed from txt lookup tables\n";
-            
+
           TCanvas c3("c3"); c3.DivideSquare(iset.size());
           for (uint i=0; i < iset.size(); i++) {
             const std::string &lut_path = long_range_lookup[i];
@@ -520,7 +520,7 @@ int main(int argc, char *argv[]) {
             const std::vector<std::pair<double, double> > *ltable = &(long_range_lookup_values[i][imodelA]);
             getB[i] = [&, ltable](double s)->cd {
               auto it = --(ltable->end());
-              // std::cout << it->first << "\n"; 
+              // std::cout << it->first << "\n";
               if (s >= it->first) return it->second * it->first / s;
               return getvalue(s, ltable->data(), ltable->size());
             };
@@ -603,7 +603,7 @@ int main(int argc, char *argv[]) {
               auto v = pr->getValue(e*e);
               double cbFactor = MParKeeper::gI()->get(cbFactor_index);
               return cbFactor*norm(v(iCh))*ciso->rho(e*e) * e;
-            };            
+            };
           } else {
             std::cerr << "Error<main,relations>: fourth argument have to be float of string!\n";
             return 1;
@@ -611,21 +611,39 @@ int main(int argc, char *argv[]) {
         }
         MRelationHolder::gI()->AddRelation(whole_data[jData], int_lambda_function);
       } else if (type == "DECAY_dGdM@") {
-        uint iModel = iRel[2][0];
-        uint iCh = iRel[2][1];
-        MProductionPhysics *pr = vpr[iModel];
-        MChannel *ciso = iset[iCh];
-        if (iRel.getLength() != 5) { std::cerr << "Error<main,relations>: Expectation does not match a number of arguments in DECAY_dGdM!!\n"; }
-        // get decay mass A -> SYSTEM + B
-        double massA = iRel[3], massB = iRel[4];
-        // std::cout << "Constract differential rate dGdM for the A(" << massA << ")->(SYSTEM)+B(" << massB << ")\n";
-        std::function<double(double)> int_lambda_function;
-        int_lambda_function = [&, iCh, ciso, pr, massA, massB](double e)->double{
-          if (e+massB > massA) return 0.0;
-          auto v = pr->getValue(e*e);
-          return norm(v(iCh))*ciso->rho(e*e)*sqrt(LAMBDA(massA*massA,e*e,massB*massB)) * e;  // x E because of jacobian ds = 2e de
-        };
-        MRelationHolder::gI()->AddRelation(whole_data[jData], int_lambda_function);
+        if (iRel.getLength() != 4 && iRel.getLength() != 5) {
+           std::cerr << "Error<main,relations>: Expectation does not match a number of arguments in DECAY_dGdM!!\n";
+        }
+        if (iRel.getLength() == 5) {
+          uint iModel = iRel[2][0];
+          uint iCh = iRel[2][1];
+          MProductionPhysics *pr = vpr[iModel];
+          MChannel *ciso = iset[iCh];
+          // get decay mass A -> SYSTEM + B
+          double massA = iRel[3], massB = iRel[4];
+          // std::cout << "Constract differential rate dGdM for the A(" << massA << ")->(SYSTEM)+B(" << massB << ")\n";
+          std::function<double(double)> int_lambda_function;
+          int_lambda_function = [&, iCh, ciso, pr, massA, massB](double e)->double{
+            if (e+massB > massA) return 0.0;
+            auto v = pr->getValue(e*e);
+            return norm(v(iCh))*ciso->rho(e*e)*sqrt(LAMBDA(massA*massA,e*e,massB*massB)) * e;  // x E because of jacobian ds = 2e de
+          };
+          MRelationHolder::gI()->AddRelation(whole_data[jData], int_lambda_function);
+        } else if (iRel.getLength() == 4) {
+          uint iModel = 0;
+          MProductionPhysics *pr = vpr[iModel];
+          // get decay mass A -> SYSTEM + B
+          double massA = iRel[2], massB = iRel[3];
+          std::function<double(double)> int_lambda_function;
+          int_lambda_function = [&, pr, massA, massB](double e)->double{
+            if (e+massB > massA) return 0.0;
+            double intensity_sum = 0;
+            auto v = pr->getValue(e*e);
+            for (uint iCh=0; iCh < v.size(); iCh++) intensity_sum += norm(v(iCh))*iset[iCh]->rho(e*e);
+            return intensity_sum*sqrt(LAMBDA(massA*massA,e*e,massB*massB)) * e;  // x E because of jacobian ds = 2e de
+          };
+          MRelationHolder::gI()->AddRelation(whole_data[jData], int_lambda_function);
+        }
       } else if (type == "Re@") {
         uint iModel = iRel[2][0];
         uint iCh = iRel[2][1];
@@ -868,7 +886,7 @@ int main(int argc, char *argv[]) {
       if (!plot_settings.lookupValue("fplot_name", fplot_name))
 	std::cerr << "Warning: fplot_name is not specified. A default name wil be used.\n";
 
-      // open file for canvas 
+      // open file for canvas
       TFile fcanvas(TString::Format("%s.root", fplot_name.c_str()), "RECREATE");
       save_config_to_file(iconfig);
 
@@ -882,7 +900,7 @@ int main(int argc, char *argv[]) {
 	uint npX = 1, npY = 1;
 	if(!plot_settings.lookupValue("nplotsX", npX) ||
 	   !plot_settings.lookupValue("nplotsY", npY)) {
-	  canva->DivideSquare(NrelsToPlot);	  
+	  canva->DivideSquare(NrelsToPlot);
 	} else {
 	  std::cout << "READ: canva for plotting will be divided " << npX << " x " << npY << "\n";
 	  canva->Divide(npX, npY);
@@ -944,7 +962,7 @@ int main(int argc, char *argv[]) {
                   MParKeeper::gI()->set(pname, value);
                   std::cout << "-------> set_to_value: \"" << pname << "\" is set to " << value << "\n";
                 }
-                
+
                 // Important to recalculate later
                 km->RecalculateNextTime();
                 for (auto & pr : vpr) pr->RecalculateNextTime();
@@ -952,7 +970,7 @@ int main(int argc, char *argv[]) {
               // message
               std::cout << "--> Settings " << j << " <" << title << "> : \n";
               MParKeeper::gI()->printAll();
-              
+
               // fill vector of historrams where the model will be plotted on
               std::vector<uint> vme;
               if (what_to_plot[j].exists("mapping_elements")) {
@@ -1030,7 +1048,7 @@ int main(int argc, char *argv[]) {
 	fcanvas.cd(); canva->Write();
       }  // Npages
       delete canva;
-    }  // exists plot_settings    
+    }  // exists plot_settings
   }  // try
   catch(const libconfig::SettingNotFoundException &nfex) {
     std::cerr << "Error <> libconfig::SettingNotFoundException in \"plot_settings\" section" << std::endl;
@@ -1393,7 +1411,7 @@ int main(int argc, char *argv[]) {
       MParKeeper::gI()->printAll();
 
 
-      
+
       TCanvas canva_sheets("sheets");
       const libconfig::Setting &ranges = continuation_settings["plot_range"];
       const libconfig::Setting &real_range = ranges["real_range"];
@@ -1480,7 +1498,7 @@ int main(int argc, char *argv[]) {
     std::cerr << "Error <> libconfig::SettingNotFoundException in \"continuation_settings\" section" << std::endl;
     return EXIT_FAILURE;
   }
-  
+
   // well done
 
   return(EXIT_SUCCESS);
