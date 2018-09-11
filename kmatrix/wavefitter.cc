@@ -1437,19 +1437,20 @@ int main(int argc, char *argv[]) {
       // calculation loop
       km->RecalculateNextTime();
       km->Print();
-      std::cout << "\nCalculations for " << Nbx*Nby << "points started:\n";
+      std::cout << "\nCalculations for " << Nbx*Nby << " points started:\n";
       for (uint ix = 0; ix < Nbx; ix++) {
-        for (uint iy = 0; iy < Nbx; iy++) {
-          cd s(habs.GetXaxis()->GetBinCenter(ix+1), // s = (M+iG/2)^2;
-	       habs.GetYaxis()->GetBinCenter(iy+1)/2.); s = s*s;
+        for (uint iy = 0; iy < Nby; iy++) {
+          cd sqrts(habs.GetXaxis()->GetBinCenter(ix+1), // s = (M+iG/2)^2;
+                   habs.GetYaxis()->GetBinCenter(iy+1));  // ); 
+          cd s = sqrts;  // *sqrts;
           cd Tm1 = 0;
-	  if (sheet == 1)  Tm1 = 1./det_fast(km->getFSdenominator(s));
-	  if (sheet == 2)  Tm1 = 1./det_fast(km->getSSdenominator(s));
-	  if (sheet == 12) Tm1 = (imag(s) > 0) ? det_fast(km->getFSdenominator(s)) : det_fast(km->getSSdenominator(s));
+      	  if (sheet == 1)  Tm1 = 1./det_fast(km->getFSdenominator(s));
+      	  if (sheet == 2)  Tm1 = 1./det_fast(km->getSSdenominator(s));
+      	  if (sheet == 12) Tm1 = (imag(s) > 0) ? det_fast(km->getFSdenominator(s)) : det_fast(km->getSSdenominator(s));
           // if (sheet == 1)  Tm1 = 1./km->getValue(s)(0,0);
           // if (sheet == 2)  Tm1 = 1./km->getSSvalue(s)(0,0);
           // if (sheet == 12) Tm1 = (imag(s) > 0) ? 1./km->getValue(s)(0,0) : 1./km->getSSvalue(s)(0,0);
-          if((ix*Nbx+iy) % 50 == 0) std::cout << std::setprecision(3) << 100.*(ix*Nby+iy)/(Nbx*Nby) << "%: s = " << s << ", Tm1 = " << Tm1 << "\n";
+          if((ix*Nbx+iy) % 50 == 0) std::cout << std::setprecision(3) << 100.*(ix*Nby+iy)/(Nbx*Nby) << "%: s = " << s << ", sqrts = " << sqrts << ", Tm1 = " << Tm1 << "\n";
           hreal.SetBinContent(ix+1, iy+1, real(Tm1));
           himag.SetBinContent(ix+1, iy+1, imag(Tm1));
           habs .SetBinContent(ix+1, iy+1, log10(abs(Tm1)));

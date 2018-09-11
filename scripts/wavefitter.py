@@ -48,19 +48,19 @@ parser.add_argument('--version', action='version', version='%(prog)s 1.0')
 
 results = parser.parse_args();
 # print results
-print 'model_args =', results.model_args
-print 'fit           =', results.fit
-print 'fit_args      =', results.fit_args
-print 'continue      =', results.continuation
+print 'model_args        =', results.model_args
+print 'fit               =', results.fit
+print 'fit_args          =', results.fit_args
+print 'continuation      =', results.continuation
 print 'continuation_args =', results.continuation_args
-print 'plot          =', results.plot
-print 'plot_args     =', results.plot_args
+print 'plot              =', results.plot
+print 'plot_args         =', results.plot_args
 
 # files are assumed in the directory
 # might be it is worth to parse them later
 model_name = "model.cfg"
 fit_name = "fit.cfg"
-continuation_name = "continue.cfg"
+continuation_name = "continuation.cfg"
 plot_name = "plot.cfg"
 
 # list of replacements to get around {} in the config file
