@@ -3,11 +3,21 @@
 # build folder
 build
 
-# against dinamically generated root-files
-*.so
-*.pcm
-*.d
+# root auto-generated
+*_C_ACLiC_dict_rdict.pcm
+*_C.so
+*_C.d
 
 # strange files from jupyter-notebook
 .ipynb_checkpoints
+Untitled*.ipynb
 
+gmon.out
+
+kmatrix/test_Test.cc
+#	kmatrix/test_pwProjections.cc
+#	scripts/compare_decks.C
+#	scripts/create_root_file.C
+#	scripts/draw_data_projection_from_tree.C
+#	scripts/plot_deck_2D.C
+scripts/test_scrtipts/
