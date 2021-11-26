@@ -8,6 +8,7 @@
 #include <vector>
 #include <functional>
 #include <algorithm>
+#include <iostream>
 
 #include "TGraph.h"
 #include "TGraphErrors.h"
