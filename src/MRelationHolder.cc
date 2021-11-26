@@ -24,6 +24,27 @@ void MRelationHolder::AddRelation(const DP &intensity,
   status.push_back(true);
 }
 
+uint MRelationHolder::ExtractChi2Array(uint iR, double* arr) {
+  if (iR >= store.size()) {
+    std::cout << "Error<MRelationHolder::ExtractChi2Array> : _store.size()" << std::endl;
+    return 0;
+  }
+  const relation & rel = store[iR];
+  const DP & dps = rel.data;
+  uint arr_index = 0;
+  for (auto && dp : dps.data) {
+    if (dp.x > dps.lrange && dp.x < dps.rrange) {
+      if (arr == 0) { arr_index++; continue; }
+      double yf = rel.func(dp.x);  // 0 is calculation option
+      double diff = dp.y - yf;
+      double sigma = dp.dy;
+      arr[arr_index++] = POW2(diff/sigma);
+    }
+  }
+  return arr_index;
+}
+
+
 double MRelationHolder::CalculateChi2() {
   double chi2 = 0;
   for (uint i=0; i < store.size(); i++) {

@@ -45,7 +45,9 @@ class MIsobar {
   virtual cd     U(cd s)       const;
   virtual cd     T(double s)   const;
   virtual cd     T(cd s)       const;
-  double IntU() const {return intU;};
+  virtual cd ToneVertex(double s) const;
+  double IntU() const;
+  MIsobar * const setIntU();
 
  private:
   std::vector<std::pair<double, double> > ltable;

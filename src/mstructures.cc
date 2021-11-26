@@ -33,6 +33,12 @@ TGraph *draw(std::function<double(double)> func, double lrange, double rrange, u
   return lgr;
 }
 
+
+TGraph *draw(const std::vector<double> & xv, const std::vector<double> & yv) {
+  if (yv.size() < xv.size()) { std::cerr << "Error<TGraph *draw(xv, yv)>: yv.size() < xv.size() \n"; return new TGraph(); }
+  return new TGraph(xv.size(), xv.data(), yv.data());
+}
+
 TGraph *style(TGraph *lgr, double color, double style) {
   lgr->SetLineColor(color);
   lgr->SetLineStyle(style);
@@ -47,9 +53,7 @@ TMultiGraph *combine(std::list<TGraph*> grs) {
   }
   return lm;
 }
-TMultiGraph *combine(TGraph* g1) {
-  return combine({g1});
-}
+
 TMultiGraph *combine(TGraph* g1, TGraph* g2) {
   return combine({g1, g2});
 }

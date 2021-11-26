@@ -3,63 +3,56 @@
 #ifndef SRC_MASCOLI_H_
 #define SRC_MASCOLI_H_
 
+#include "deflib.h"
+
 #include <iostream>
 #define _USE_MATH_DEFINES
 
-class MAscoli {
- public:
- MAscoli(double mAsq, double mBsq, double wsq, double mDsq, double mtRsq, double mIsq,
-         double s, double t,
-         uint S, int lamS, double R) :
-  _mAsq(mAsq), _mBsq(mBsq), _wsq(wsq), _mDsq(mDsq), _mtRsq(mtRsq), _mIsq(mIsq),
-    _s(s), _t(t), _S(S), _lamS(lamS), _R(R)/*, _table(0)*/ { ; }
+namespace MAscoli {
 
- private:
-  double _mAsq;
-  double _mBsq;
-  double _wsq;
-  double _mDsq;
-  double _mtRsq;
-  double _mIsq;
+double getReducedDeck(double costheta, double phi, double mS1sq, uint S1,
+                      int lamS1, double RS1, double wsq, double t, double mtRsq,
+                      double stot, double mAsq, double mBsq, double mDsq,
+                      double m1sq);
 
-  double _s;
-  double _t;
+double getReducedDeckProjectionM(int M, double costheta,
+                                 double mS1sq, uint S1, int lamS1, double RS1,
+                                 double wsq, double t, double mtRsq,
+                                 double stot, double mAsq, double mBsq,
+                                 double mDsq, double m1sq);
 
- private:
-  uint _J, _M, _L, _S;
-  int _lamS;
+double getProjectedReducedDeck(uint J, int M, uint L, double mS1sq, uint S1,
+                               double RS1, double wsq, double t, double mtRsq,
+                               double stot, double mAsq, double mBsq,
+                               double mDsq, double m1sq);
 
-  double _R;
+double getProjectedReducedDeck(uint J, int M, bool pos_refl, uint L,
+                               double mS1sq, uint S1, double RS1, double wsq,
+                               double t, double mtRsq, double stot, double mAsq,
+                               double mBsq, double mDsq, double m1sq);
 
-// private:
-//  std::vector<std::pair<double, double> > _ltable;
+double getProjectionJMSlam(uint J, int M, int lam, double mS1sq, uint S1,
+                           double RS1, double wsq, double t, double mtRsq,
+                           double stot, double mAsq, double mBsq, double mDsq,
+                           double m1sq);
 
- public:
-  static double getDeck(double mAsq, double mBsq, double wsq, double mDsq, double mtRsq,
-                        double mIsq, double s, double t, double z,
-                        uint S, int lamS, double R);
+double upperPart(double costheta, double mS1sq, uint S1, int lamS1, double RS1,
+                 double wsq, double t, double mtRsq, double mAsq, double m1sq);
 
-  static double getProjectedDeck(double mAsq, double mBsq, double wsq, double mDsq, double mtRsq,
-                                 double mIsq, double s, double t,
-                                 uint J, uint M, uint L, uint S, double R);
+double sPionProton(double costheta, double phi, double mS1sq, double wsq,
+                   double t, double stot, double mAsq, double mBsq, double mDsq,
+                   double m1sq);
+double tPionIsobar(double costheta, double mS1sq, double wsq, double t,
+                   double mAsq, double m1sq);
 
-  inline double getValue(double wsq, double z) const {
-    return getDeck(_mAsq, _mBsq, wsq, _mDsq, _mtRsq,
-                   _mIsq, _s, _t, z,
-                   _S, _lamS, _R);
-  }
+cd fullDeckTerm(double costheta, double phi, double mS1sq, uint S1, int lamS1,
+                double RS1, double costheta_pr, double phi_pr, double wsq,
+                double t, double mtRsq, double stot, double mAsq, double mBsq,
+                double mDsq, double m1sq);
 
-  inline double getProjection(double wsq, uint J, uint L) const  {
-    return getProjectedDeck(_mAsq, _mBsq, wsq, _mDsq, _mtRsq,
-                            _mIsq, _s, _t,
-                            J, 0, L, _S, _R);
-  }
-  inline double getProjection(double wsq, double s1, uint J, uint L) const  {
-    return getProjectedDeck(_mAsq, _mBsq, wsq, _mDsq, _mtRsq,
-                            s1, _s, _t,
-                            J, 0, L, _S, _R);
-  }
-
+double psi(double costheta, double mS1sq, double wsq, double t, double mAsq,
+           double m1sq);
+double tmin(double m1sq, double m2sq, double m3sq, double m4sq, double s);
 };
 
-#endif  // SRC_MASCOLI_H_
+#endif // SRC_MASCOLI_H_

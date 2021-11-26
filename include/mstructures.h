@@ -41,6 +41,8 @@ TGraphErrors *draw(const DP & data);
 TGraph *draw(std::function<double(double)> funct,
              double lrange, double rrange, uint nPoints = 100);
 
+TGraph *draw(const std::vector<double> & xv, const std::vector<double> & yv);
+
 TGraph *style(TGraph *lgr, double color, double style = 1);
 
 #define SET1(f, a) ([&]()->TGraph* {TGraph *g = f; g->a; return g;})()
@@ -50,7 +52,6 @@ TGraph *style(TGraph *lgr, double color, double style = 1);
 #define SET5(f, a, b, c, d, e) ([&]()->TGraph* {TGraph *g = f; g->a; g->b; g->c; g->d; g->e; return g;})()
 
 TMultiGraph *combine(std::list<TGraph*> grs);
-TMultiGraph *combine(TGraph* g1);
 TMultiGraph *combine(TGraph* g1, TGraph* g2);
 TMultiGraph *combine(TGraph* g1, TGraph* g2, TGraph* g3);
 TMultiGraph *combine(TGraph* g1, TGraph* g2, TGraph* g3, TGraph* g4);

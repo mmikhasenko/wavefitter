@@ -9,7 +9,7 @@
 #include "deflib.h"
 
 MProductionPhysics::MProductionPhysics(const std::vector<MChannel*> &channels) :
-  MChannelPhysics<b::vector<cd> > (channels), _fC(0), _ubLookup(0) {
+  MChannelPhysics<b::vector<cd> > (channels), _fB(0), _fC(0), _fCloc(false), _ubLookup(0) {
   std::cout << "------------------------------------\n";
   std::cout << "MProductionPhysics instance is created!" << std::endl;
 }
@@ -25,9 +25,33 @@ void MProductionPhysics::addLongRange(const std::vector<std::function<cd(double)
 
   // fill long range term
   std::ostringstream ss; ss << par_name << "r";
-  _fB.first = MParKeeper::gI()->add(ss.str(), 1.0, -10., 10.);
   std::ostringstream iss; iss << par_name << "i";
-  _fB.second = MParKeeper::gI()->add(iss.str(), 0.0, -10., 10.);
+  uint iRealPar = MParKeeper::gI()->add(ss.str(), 1.0, -10., 10.);
+  uint iImagPar = MParKeeper::gI()->add(iss.str(), 0.0, -10., 10.);
+  _fB.resize(_Nch);
+  for (uint i = 0; i < _Nch; i++) {
+    _fB[i].first  = iRealPar;
+    _fB[i].second = iImagPar;
+  }
+
+  std::cout << "-----------> Long range production is added!\n";
+}
+
+void MProductionPhysics::addLongRangeSeparated(const std::vector<std::function<cd(double)> > &getB,
+                                               std::string par_name) {
+  if (getB.size() != _Nch) std::cerr << "Error<void MProductionPhysics::addLongRange> : getB.size() != _Nch\n";
+
+  _getB.resize(_Nch);
+  for (uint i = 0; i < _Nch; i++) _getB[i] = getB[i];
+
+  _fB.resize(_Nch);
+  for (uint i = 0; i < _Nch; i++) {
+    // fill long range term
+    std::ostringstream ss; ss << par_name << "r" << i;
+    std::ostringstream iss; iss << par_name << "i" << i;
+    _fB[i].first  = MParKeeper::gI()->add(ss.str(), 1.0, -10., 10.);
+    _fB[i].second = MParKeeper::gI()->add(iss.str(), 0.0, -10., 10.);
+  }
 
   std::cout << "-----------> Long range production is added!\n";
 }
@@ -62,6 +86,10 @@ void MProductionPhysics::addShortRange(const std::vector<std::string> powers,
     }
     _fC.push_back(vtmp);
   }
+}
+
+void MProductionPhysics::lockShortRangePhase() {
+  _fCloc = true;
 }
 
 /* calculate unitarisation term and put it to a lookup table */
@@ -99,16 +127,16 @@ void MProductionPhysics::calculate(double s) {
   // value I gonna calculate
   _value =  b::vector<cd>(_Nch, 0);
 
-  cd fB(0.0, 0.0);
   // pure Deck
+  b::vector<cd> fB(_Nch);
   if (_getB.size()) {
     b::vector<cd> B(_Nch);
-    for (uint i = 0; i < _Nch; i++)
-      B(i) = _getB[i](s);  // getvalue(s, [i].data(), table[i].size());
-    // get parameters
-    fB = cd(MParKeeper::gI()->get(_fB.first), MParKeeper::gI()->get(_fB.second));
+    for (uint i = 0; i < _Nch; i++) {
+      fB[i] = cd(MParKeeper::gI()->get(_fB[i].first), MParKeeper::gI()->get(_fB[i].second));  // get parameters
+      B(i) = _getB[i](s) * fB[i];
+    }
     // add to value
-    _value += B * fB;  //   b::vector<cd> bvect(_Nch); b::element_prod(, bvect)
+    _value += B;
   }
   if (!_fC.size() && !_ubLookup.size()) return;  // if no unitarisation, no direct production -> return
 
@@ -116,18 +144,28 @@ void MProductionPhysics::calculate(double s) {
   b::matrix<cd> CThat(_Nch, _Nch);
   const b::matrix<cd> &T = _getT(s);
   b::vector<cd> DumpC(_Nch);
-  for (uint i = 0; i < _Nch; i++) DumpC(i) = 1.;  // _iso[i]->DumpC(s);
+  for (uint i = 0; i < _Nch; i++) DumpC(i) = _iso[i]->DumpC(s);
 
   for (uint i = 0; i < _Nch; i++)
-    for (uint j = 0; j < _Nch; j++) CThat(i, j) = T(i, j)*DumpC(j);
+    for (uint j = 0; j < _Nch; j++) CThat(i, j) = T(i, j)*DumpC(i);
   // direct production
   if (_fC.size()) {
     b::vector<cd> cvect(_Nch, 0);
     for (uint w = 0; w < _fC.size(); w++) {
-      for (uint i = 0; i < _Nch; i++)
+      for (uint i = 0; i < _Nch; i++) {
+        // work around !!!!!!
+        double imag0 = MParKeeper::gI()->get(_fC[0][i].second);
+        double real0 = MParKeeper::gI()->get(_fC[0][i].first);
+        if (_fCloc && w != 0 && real0 != 0.0) {
+          MParKeeper::gI()->set(_fC[w][i].second,
+                                MParKeeper::gI()->get(_fC[w][i].first) *
+                                imag0 / real0);
+        }
+        // work around !!!!!!
         cvect[i] += cd(MParKeeper::gI()->get(_fC[w][i].first),
                        MParKeeper::gI()->get(_fC[w][i].second)) *
-          ((w==0) ? 1 : ((w==1) ?  _smap(s) : pow(_smap(s), w)));
+          ((w == 0) ? 1 : ((w == 1) ?  _smap(s) : pow(_smap(s), w)));
+      }
     }
     _value += prod(CThat, cvect);
   }
@@ -135,9 +173,9 @@ void MProductionPhysics::calculate(double s) {
   // unitarisation
   if (_ubLookup.size()) {
     b::vector<cd> UB(_Nch);
-    for (uint i = 0; i < _Nch; i++) UB(i) = getvalue(s, _ubLookup[i]);
+    for (uint i = 0; i < _Nch; i++) UB(i) = getvalue(s, _ubLookup[i].data(), _ubLookup[i].size());
     b::vector<cd> CThatUB = prod(CThat, UB);
     // add to value
-    _value += CThatUB * fB;  // element_prod(
+    for (uint j = 0; j < _Nch; j++) _value(j) += CThatUB(j) * fB(j);
   }
 }

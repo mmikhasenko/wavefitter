@@ -11,10 +11,10 @@
 #define SCALEX_FOR_CUT 1.01
 #define SCALEY_FOR_CUT 10.0
 
-MIsobarChannel::MIsobarChannel(const MIsobar &iso,
+MIsobarChannel::MIsobarChannel(MIsobar &iso,
                                double m3,
                                int iL, double iR) :
-  MChannel(iL, iR), _iso(iso), _m3(m3), ltable(0) {;}
+  MChannel(iL, iR), _iso(*iso.setIntU()), _m3(m3), ltable(0) {;}
 
 
 void MIsobarChannel::makeLookupTable(double from, double to, uint Npoints) {
@@ -62,6 +62,6 @@ cd MIsobarChannel::CalculateQuasiTwoBodyEdge(cd s) const {
 
 double MIsobarChannel::InterpolateQuasiTwoBody(double s) const {
   if (!ltable.size()) return -1;
-  if (s >= ltable[ltable.size()-1].first) return _iso.IntU()*RHO(s, POW2(_iso.GetM()), _m3*_m3);
-  return getvalue(s, ltable);
+  if (s >= ltable[ltable.size()-1].first) return RHO(s, POW2(_iso.GetM()), _m3*_m3);  // _iso.IntU()*
+  return getvalue(s, ltable.data(), ltable.size());
 }

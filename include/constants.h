@@ -22,5 +22,8 @@
 
 #define PROT_MASS   0.938
 
+// questionable
+#define PIPIS_MASS 1.0
+#define PIPIS_WIDTH 0.7
 
 #endif

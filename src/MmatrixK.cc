@@ -21,7 +21,7 @@ MmatrixK::MmatrixK(uint Nch,
 MmatrixK::MmatrixK(const std::vector<MChannel*> &channels, uint Npoles) :
   // mother class
   MChannelPhysics<b::matrix<cd> >(channels),
-  _bmass(0), _bcs(0) {
+  _bmasssq(0), _bcs(0) {
   // allocate poles parameters
   if (Npoles) SetNpoles(Npoles);
   // init matrix
@@ -31,15 +31,15 @@ MmatrixK::MmatrixK(const std::vector<MChannel*> &channels, uint Npoles) :
 }
 
 void MmatrixK::SetNpoles(uint Npoles) {
-  if (_mass.size() != 0) {std::cerr << "Error<MmatrixK::SetNpoles>: try to change nomber of poles!" << std::endl; return;}
-  _mass.resize(Npoles);
+  if (_masssq.size() != 0) {std::cerr << "Error<MmatrixK::SetNpoles>: try to change nomber of poles!" << std::endl; return;}
+  _masssq.resize(Npoles);
   _coupling.resize(_Nch*Npoles);
 
   // Fill parameters map
   for (uint ipole = 0; ipole < Npoles; ipole++) {
     // generate name
     std::ostringstream mname; mname << "m" << ipole;
-    _mass[ipole] = MParKeeper::gI()->add(mname.str(), 1.702, 1.001, 3.001);
+    _masssq[ipole] = MParKeeper::gI()->add(mname.str(), 1.702, 1.001, 3.001);
     for (uint jch = 0; jch < _Nch; jch++) {
       std::ostringstream gname; gname << char(103+ipole + ((ipole >= 7) ? 1 : 0))
                                       << jch;
@@ -49,24 +49,24 @@ void MmatrixK::SetNpoles(uint Npoles) {
   std::cout << "parameters for " << Npoles << " poles are allocated!" << std::endl;
 }
 
-void MmatrixK::addPole(const std::string &mass_name, const std::string &par_name) {
+void MmatrixK::addPole(const std::string &masssq_name, const std::string &par_name) {
   // add index to MParKeeper for mass and couplings
-  _mass.push_back(MParKeeper::gI()->add(mass_name, 1.702, 1.001, 3.001));
+  _masssq.push_back(MParKeeper::gI()->add(masssq_name, 1.702, 1.001, 3.001));
   for (uint jch = 0; jch < _Nch; jch++) {
     std::ostringstream gname; gname << par_name << jch;
     _coupling.push_back(MParKeeper::gI()->add(gname.str(), 0.0, -10., 10.));
   }
-  std::cout << "parameters " << mass_name << " and " << par_name << "0.." << _Nch
+  std::cout << "parameters " << masssq_name << " and " << par_name << "0.." << _Nch-1
             << " are allocated!" << std::endl;
 }
 
-void MmatrixK::addBackground(const std::string &bmass_name, const std::string &par_name) {
-  _bmass.push_back(MParKeeper::gI()->add(bmass_name, 1, 0, 3));
+void MmatrixK::addBackground(const std::string &bmasssq_name, const std::string &par_name) {
+  _bmasssq.push_back(MParKeeper::gI()->add(bmasssq_name, 1, 0, 3));
   for (uint jch = 0; jch < _Nch; jch++) {
     std::ostringstream gname; gname << par_name << jch;
     _bcs.push_back(MParKeeper::gI()->add(gname.str(), 0.0, -10., 10.));
   }
-  std::cout << "parameters " << bmass_name << " and " << par_name << "0.." << _Nch
+  std::cout << "parameters " << bmasssq_name << " and " << par_name << "0.." << _Nch-1
             << " are allocated!" << std::endl;
 }
 
@@ -99,23 +99,23 @@ b::matrix<cd> MmatrixK::getK(cd s) {
   // clear K
   b::symmetric_matrix<cd, b::upper> K = b::zero_matrix<cd>(_Nch);  // (_Nch) K*=0.;
   // add poles terms
-  const uint Npoles = _mass.size();
+  const uint Npoles = _masssq.size();
   for (uint i = 0; i < Npoles; i++) {
     double gpart[_Nch];
     for (uint j = 0; j < _Nch; j++) gpart[j] = MParKeeper::gI()->get(_coupling[i*_Nch+j]);
-    double mass = MParKeeper::gI()->get(_mass[i]);
+    double masssq = MParKeeper::gI()->get(_masssq[i]);
     for (uint j = 0; j < _Nch; j++)
       for (uint t = j; t < _Nch; t++)
-        K(j, t) += gpart[j]*gpart[t]/(mass*mass-s);
+        K(j, t) += gpart[j]*gpart[t]/(masssq-s);
   }
   // add background terms
-  for (uint i = 0; i < _bmass.size(); i++) {
+  for (uint i = 0; i < _bmasssq.size(); i++) {
     double gpart[_Nch];
     for (uint j = 0; j < _Nch; j++) gpart[j] = MParKeeper::gI()->get(_bcs[i*_Nch+j]);
-    double bmass = MParKeeper::gI()->get(_bmass[i]);
+    double bmasssq = MParKeeper::gI()->get(_bmasssq[i]);
     for (uint j = 0; j < _Nch; j++)
       for (uint t = j; t < _Nch; t++)
-        K(j, t) += gpart[j]*gpart[t]/(POW2(bmass)+s);
+        K(j, t) += gpart[j]*gpart[t]/(bmasssq+s);
   }
   return K;
 }
@@ -125,9 +125,10 @@ b::matrix<cd> MmatrixK::getSSvalue(cd s) {
   // rho
   b::symmetric_matrix<cd, b::upper> mrho(_Nch);
   for (uint i = 0; i < _Nch; i++)
-    for (uint j = 0; j < _Nch; j++)
-      mrho(i, j) = (i == j) ? _iso[i]->rho(s)*_iso[i]->DumpC(s) : 0.0;
-
+    for (uint j = 0; j < _Nch; j++) {
+      cd DCs = _iso[i]->DumpC(s);
+      mrho(i, j) = (i == j) ? _iso[i]->rho(s)*DCs*DCs : 0.0;
+    }
   b::matrix<cd> i2rhoTI = cd(0., 1)*prod(mrho, TI);
   b::matrix<cd> din = b::identity_matrix<cd>(_Nch) + i2rhoTI;
 
@@ -149,9 +150,10 @@ b::matrix<cd> MmatrixK::getSSdenominator(cd s) {
   // ph.sp.matrix
   b::symmetric_matrix<cd, b::upper> mrho(_Nch);
   for (uint i = 0; i < _Nch; i++)
-    for (uint j = 0; j < _Nch; j++)
-      mrho(i, j) = (i == j) ? _iso[i]->rho(s)*_iso[i]->DumpC(s) : 0.0;
-
+    for (uint j = 0; j < _Nch; j++) {
+      cd DCs = _iso[i]->DumpC(s);
+      mrho(i, j) = (i == j) ? _iso[i]->rho(s)*DCs*DCs : 0.0;
+    }
   b::matrix<cd> K = getK(s);
   b::matrix<cd> i2rhoK = cd(0, 1)*prod(mrho, K);
   b::matrix<cd> DII = DI + i2rhoK;
@@ -176,29 +178,29 @@ b::matrix<cd> MmatrixK::getFSdenominator(cd s) {
 void MmatrixK::Print() {
   std::cout << "------------ " << _Nch << "-channel K-matrix --------------" << std::endl;
   std::cout << "-----------------------------------------" << std::endl;
-  std::cout << "Number of poles: " << _mass.size() << std::endl;
-  std::cout << "Number of background terms: " << _bmass.size() << std::endl;
+  std::cout << "Number of poles: " << _masssq.size() << std::endl;
+  std::cout << "Number of background terms: " << _bmasssq.size() << std::endl;
   std::cout << "-----------------------------------------" << std::endl;
 }
 
 
 //b::zero_matrix<cd>(_Nch);  // (_Nch) K*=0.;
 //  // add poles terms
-//  const uint Npoles = _mass.size();
+//  const uint Npoles = _masssq.size();
 //  for (uint i = 0; i < Npoles; i++) {
 //    double gpart[_Nch];
 //    for (uint j = 0; j < _Nch; j++) gpart[j] = MParKeeper::gI()->get(_coupling[i*_Nch+j]);
-//    double mass = MParKeeper::gI()->get(_mass[i]);
+//    double masssq = MParKeeper::gI()->get(_masssq[i]);
 //    for (uint j = 0; j < _Nch; j++)
 //      for (uint t = j; t < _Nch; t++)
-//        K(j, t) += gpart[j]*gpart[t]/(mass*mass-s);
+//        K(j, t) += gpart[j]*gpart[t]/(masssq-s);
 //  }
 //  // add background terms
-//  for (uint i = 0; i < _bmass.size(); i++) {
+//  for (uint i = 0; i < _bmasssq.size(); i++) {
 //    double gpart[_Nch];
 //    for (uint j = 0; j < _Nch; j++) gpart[j] = MParKeeper::gI()->get(_bcs[i*_Nch+j]);
-//    double bmass = MParKeeper::gI()->get(_bmass[i]);
+//    double bmasssq = MParKeeper::gI()->get(_bmasssq[i]);
 //    for (uint j = 0; j < _Nch; j++)
 //      for (uint t = j; t < _Nch; t++)
-//        K(j, t) += gpart[j]*gpart[t]/(POW2(bmass)+s);
+//        K(j, t) += gpart[j]*gpart[t]/(bmasssq+s);
 //  }

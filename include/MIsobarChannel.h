@@ -18,7 +18,7 @@
 
 class MIsobarChannel : public MChannel {
  public:
-  MIsobarChannel(const MIsobar &iso,
+  MIsobarChannel(MIsobar &iso,
                  double m3,
                  int L = 0, double R = 5);
 
@@ -51,8 +51,6 @@ class MIsobarChannel : public MChannel {
   cd rho(cd s) const { return CalculateQuasiTwoBodyEdge(s); }
 
  private:
-  double _SHAPE_FROM;
-  double _SHAPE_TO;
   std::vector<std::pair<double, double> > ltable;
 };
 

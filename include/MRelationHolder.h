@@ -40,6 +40,8 @@ class MRelationHolder {
 
  public:
   double CalculateChi2();
+  uint ExtractChi2Array(uint iR, double* arr = 0);
+
   void passiveAll() {for (uint i=0; i < status.size(); i++) status[i] = false;}
   void activateRelation(uint i) {
     if (i >= store.size()) {std::cerr << "Error<void activateRelation>\n"; return;}

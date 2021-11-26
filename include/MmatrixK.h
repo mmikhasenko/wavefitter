@@ -25,7 +25,7 @@ class MmatrixK : public MChannelPhysics<b::matrix<cd> > {
   MmatrixK(uint Nchannels, uint Npoles);
 
   void SetNpoles(uint Npoles);
-  void addPole(const std::string &mass_name, const std::string &par_name);
+  void addPole(const std::string &masssq_name, const std::string &par_name);
   void addBackground(const std::string &msq_name, const std::string &par_name);
 
   b::matrix<cd> getSSvalue(cd s);         // second sheet value
@@ -38,10 +38,10 @@ class MmatrixK : public MChannelPhysics<b::matrix<cd> > {
   // matrix-vector structures
   b::matrix<cd> _T;
   // poles parameters keepers
-  std::vector<uint> _mass;
+  std::vector<uint> _masssq;
   std::vector<uint> _coupling;
   // background parameters keepers
-  std::vector<uint> _bmass;
+  std::vector<uint> _bmasssq;
   std::vector<uint> _bcs;
 
  private:
@@ -52,7 +52,7 @@ class MmatrixK : public MChannelPhysics<b::matrix<cd> > {
     void tmpl_calculate(sType s);
 
  public:
-  uint getNp () const {return _mass.size();}
+  uint getNp () const {return _masssq.size();}
 
  public:
   void Print();

@@ -90,3 +90,21 @@ void MParKeeper::printAll() {
   for (uint & it : _pool) std::cout << it << " ";
   std::cout << "\n";
 }
+
+/*********************** C O N S T R A I N T S ********************/
+
+void MParKeeper::addConstraint(uint i, uint j, double factor) {
+  check(i, _pars.size(), "addConstraint");
+  check(j, _pars.size(), "addConstraint");
+  auto pij = std::make_pair(i,j);
+  auto pijf = std::make_pair(pij, factor);
+  _constr.push_back(pijf);
+}
+
+void MParKeeper::satisfyConstraints() {
+  for (auto cc : _constr) _pars[cc.first.first] = cc.second*_pars[cc.first.second];
+}
+
+void MParKeeper::removeConstraints() {
+  _constr.resize(0);
+}

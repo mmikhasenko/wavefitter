@@ -9,82 +9,48 @@
 #include <vector>
 #include <utility>
 
-#include "TMath.h"
-#include "Math/SpecFuncMathMore.h"
-
 #include "deflib.h"
-#include "mstructures.h"
-
-#include "dFunction.hpp"
+#include "TLorentzVector.h"
 
 class MIsobar;
 
-class MDeck {
- public:
-  MDeck(double m1sq, double m2sq, double m3sq, double m4sq, double mtsq,
-        uint J, uint L,
-        uint Sp, int lamP,
-        uint S , int lamS,
-        double R) :
-  _m1sq(m1sq), _m2sq(m2sq), _m3sq(m3sq), _m4sq(m4sq), _mtsq(mtsq),
-    _J(J), _L(L), _Sp(Sp), _lamP(lamP), _S(S), _lamS(lamS), _R(R), _ltable(0) { ; }
+namespace MDeck {
+  cd getAmplitude(double costheta, double phi,
+                  double mS1sq, double RS1,
+                  double costheta_pr, double phi_pr,
+                  double wsq, double t,
+                  double mtRsq,
+                  double stot,
+                  double mAsq, double mBsq, double mDsq,
+                  double m1sq, double m2sq, double m3sq);
 
- private:
-  double _m1sq;
-  double _m2sq;
-  double _m3sq;
-  double _m4sq;
-  double _mtsq;
+  cd getAmplitude(double p1x, double p1y, double p1z,  // pi-
+                  double p2x, double p2y, double p2z,  // pi+
+                  double t, double mtRsq, double stot,
+                  double mAsq, double mBsq, double mDsq,
+                  double m1sq, double m2sq, double m3sq);
 
- private:
-  uint _J, _L;
-  uint _Sp; int _lamP;
-  uint _S;  int _lamS;
-  double _R;
+  uint fromLabToGJ(TLorentzVector &pi1_lv, TLorentzVector &pi2_lv, TLorentzVector &pi3_lv,
+                   TLorentzVector &beam_lv, TLorentzVector &trgt_lv);
 
- private:
-  std::vector<std::pair<double, double> > _ltable;
+  std::vector<TLorentzVector*>
+  fromLabToGJ(double p1x, double p1y, double p1z, double m1sq,  // pi-
+              double p2x, double p2y, double p2z, double m2sq,  // pi+
+              double p3x, double p3y, double p3z, double m3sq,   // pi-
+              double pAx, double pAy, double pAz, double mAsq,
+              double pBx, double pBy, double pBz, double mBsq);
 
- public:
-  static double getDeck(double m1sq, double m2sq, double m3sq, double m4sq, double mtsq,
-                        double s, double z,
-                        uint Sp, int lamP,
-                        uint S , int lamS, double R);
+  cd symmetriedFromLab(double p1x, double p1y, double p1z, double m1sq,  // pi-
+                       double p2x, double p2y, double p2z, double m2sq,  // pi+
+                       double p3x, double p3y, double p3z, double m3sq,   // pi-
+                       double pAx, double pAy, double pAz, double mAsq,
+                       double pBx, double pBy, double pBz, double mBsq);
 
-  static double getProjectedDeck(double m1sq, double m2sq, double m3sq, double m4sq, double mtsq,
-                                 double s,
-                                 uint J, uint L,
-                                 uint Sp, int lamP,
-                                 uint S, double R);
-
- public:
-  inline cd getValue(double s, double z) const { return getDeck(_m1sq, _m2sq, _m3sq, _m4sq, _mtsq, s, z, _Sp, _lamP, _S, _lamS, _R); }
-  inline cd getValue(double s, double z, double s3) const { return getDeck(_m1sq, _m2sq, _m3sq, _m4sq, _mtsq, s, z, _Sp, _lamP, _S, _lamS, _R); }
-  inline cd getValue(double s, double z, double s3, double t) const { return getDeck(_m1sq, t, s3, _m4sq, _mtsq, s, z, _Sp, _lamP, _S, _lamS, _R); }
-
- public:
-  inline double getProjection(double s) const  { return getProjectedDeck(_m1sq, _m2sq, _m3sq, _m4sq, _mtsq, s, _J, _L, _Sp, _lamP, _S, _R); }
-  inline double getProjection(double s, double s3) const { return getProjectedDeck(_m1sq, _m2sq, s3, _m4sq, _mtsq, s, _J, _L, _Sp, _lamP, _S, _R); }
-  inline double getProjection(double s, double s3, double t) const {
-    return getProjectedDeck(_m1sq, t, s3, _m4sq, _mtsq, s, _J, _L, _Sp, _lamP, _S, _R); }
-
- public:
-  void setLookupTable(const std::vector<std::pair<double, double> > &ltable);
-  void makeLookupTable(const MIsobar &iso, double m3, double from, double to, uint Npoints);
-  double getPrecalculated(double s) const;
-  const std::vector<std::pair<double, double> > & getLookupTable() const { return _ltable; }
-
- public:
-  inline double sth() const { return POW2(sqrt(_m3sq)+sqrt(_m4sq)); }
-  inline uint J() const { return _J; }
-  inline uint L() const { return _L; }
-  inline uint Sp() const { return _Sp; }
-  inline uint lamP() const { return _lamP; }
-  inline uint S() const { return _S; }
-  inline uint lamS() const { return _lamS; }
-
- public:
-  void Print() const;
+  cd nonSymmetriedFromLab(double p1x, double p1y, double p1z, double m1sq,  // pi-
+                          double p2x, double p2y, double p2z, double m2sq,  // pi+
+                          double p3x, double p3y, double p3z, double m3sq,   // pi-
+                          double pAx, double pAy, double pAz, double mAsq,
+                          double pBx, double pBy, double pBz, double mBsq);
 };
 
 #endif  // SRC_MDECK_H_
